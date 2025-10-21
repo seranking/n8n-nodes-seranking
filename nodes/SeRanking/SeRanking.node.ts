@@ -8,9 +8,13 @@ import {
 
 // Import descriptions
 import { aiSearchOperations, aiSearchFields } from './descriptions/AiSearchDescription';
+import { domainAnalysisOperations, domainAnalysisFields } from './descriptions/DomainAnalysisDescription';
+import { keywordResearchOperations, keywordResearchFields } from './descriptions/KeywordResearchDescription';
 
 // Import operations
 import { AiSearchOperations } from './operations/AiSearchOperations';
+import { DomainAnalysisOperations } from './operations/DomainAnalysisOperations';
+import { KeywordResearchOperations } from './operations/KeywordResearchOperations';
 
 
 export class SeRanking implements INodeType {
@@ -46,12 +50,28 @@ export class SeRanking implements INodeType {
 						value: 'aiSearch',
 						description: 'LLM visibility and AI search data',
 					},
-                    ],
-				default: 'aiSearch',
+                    {
+						name: 'Domain Analysis',
+						value: 'domainAnalysis',
+						description: 'Domain keyword rankings and competitor analysis',
+					},
+					{
+						name: 'Keyword Research',
+						value: 'keywordResearch',
+						description: 'Keyword metrics, volume, CPC, and related keywords',
+					},
+				],
+				default: 'domainAnalysis',
 			},
 			// AI Search
 			...aiSearchOperations,
 			...aiSearchFields,
+			// Domain Analysis
+			...domainAnalysisOperations,
+			...domainAnalysisFields,
+			// Keyword Research
+			...keywordResearchOperations,
+			...keywordResearchFields,
             ],
 	};
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -66,6 +86,12 @@ export class SeRanking implements INodeType {
 				switch (resource) {
 					case 'aiSearch':
 						responseData = await AiSearchOperations.call(this, i);
+						break;
+					case 'domainAnalysis':
+						responseData = await DomainAnalysisOperations.call(this, i);
+						break;
+					case 'keywordResearch':
+						responseData = await KeywordResearchOperations.call(this, i);
 						break;
                     default:
 						throw new NodeOperationError(

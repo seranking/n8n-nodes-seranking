@@ -144,23 +144,23 @@ export const aiSearchFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Domain',
+				name: 'Base Domain (All Subdomains)',
+				value: 'base_domain',
+				description: 'Analyze domain and all subdomains (e.g., example.com + blog.example.com)',
+			},
+			{
+				name: 'Domain (Specific Host)',
 				value: 'domain',
-				description: 'Analyze all subpages and subdomains',
+				description: 'Analyze specific subdomain only (e.g., only blog.example.com)',
 			},
 			{
-				name: 'Host',
-				value: 'host',
-				description: 'Analyze specific subdomain only',
-			},
-			{
-				name: 'URL',
+				name: 'URL (Exact URL)',
 				value: 'url',
-				description: 'Analyze exact URL only',
+				description: 'Analyze exact URL only (e.g., https://example.com/page)',
 			},
 		],
-		default: 'domain',
-		description: 'Scope of analysis',
+		default: 'base_domain',
+		description: 'Scope of analysis - base_domain is recommended for most use cases',
 	},
 	// Additional options for prompts operations
 	{

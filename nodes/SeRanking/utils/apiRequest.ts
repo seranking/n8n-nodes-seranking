@@ -21,31 +21,68 @@ export async function apiRequest(
 			'Authorization': `Token ${credentials.apiToken}`,
 			'Content-Type': 'application/json',
 		},
-		timeout: 30000,
+		timeout: 120000, // Increased to 120 seconds for slow endpoints
 	};
 
+	// Add query parameters
 	if (Object.keys(query).length > 0) {
 		config.params = query;
 	}
 
+	// Add body data
 	if (Object.keys(body).length > 0 && method !== 'GET') {
-		config.data = body;
+		// For POST requests with keywords array, send as form data
+		if (body.keywords && Array.isArray(body.keywords)) {
+			const formData = new URLSearchParams();
+			
+			// Add each keyword as keywords[]
+			body.keywords.forEach((kw: string) => {
+				formData.append('keywords[]', kw);
+			});
+			
+			// Add optional fields
+			if (body.cols) formData.append('cols', body.cols);
+			if (body.sort) formData.append('sort', body.sort);
+			if (body.sort_order) formData.append('sort_order', body.sort_order);
+			
+			config.data = formData.toString();
+			if (config.headers) {
+				config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+			}
+		} else {
+			config.data = body;
+		}
 	}
 
 	try {
 		const response = await axios(config);
 		return response.data;
 	} catch (error: any) {
-		const errorMessage = error.response?.data?.message ||
-							error.response?.data?.error ||
+		// Enhanced error logging
+		const errorData = error.response?.data;
+		const errorMessage = errorData?.message ||
+							errorData?.error ||
 							error.message;
+		
+		// Log full error details for debugging
+		if (process.env.NODE_ENV !== 'production') {
+			console.error('SE Ranking API Error Details:', {
+				status: error.response?.status,
+				statusText: error.response?.statusText,
+				data: errorData,
+				url: config.url,
+				params: config.params,
+				method: config.method,
+				body: config.data,
+			});
+		}
 		
 		throw new NodeOperationError(
 			this.getNode(),
 			`SE Ranking API Error: ${errorMessage}`,
 			{
 				itemIndex,
-				description: `Status: ${error.response?.status || 'Unknown'}`,
+				description: `Status: ${error.response?.status || 'Unknown'} - Check your domain, source code, and API credentials`,
 			}
 		);
 	}
