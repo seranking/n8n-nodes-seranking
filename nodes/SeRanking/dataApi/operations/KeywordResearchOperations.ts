@@ -1,5 +1,6 @@
 import { IExecuteFunctions } from 'n8n-workflow';
-import { apiRequest } from '../utils/apiRequest';
+import { apiRequest } from '../../utils/apiRequest';
+import { validateSource, parseKeywords } from '../../utils/validators';
 
 export async function KeywordResearchOperations(
 	this: IExecuteFunctions,
@@ -19,13 +20,10 @@ export async function KeywordResearchOperations(
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
 			method = 'POST';
-			endpoint = `/keywords/export?source=${source}`;
+			endpoint = `/keywords/export?source=${validateSource(source)}`;
 			
-			// Parse keywords (comma or newline separated)
-			const keywordList = keywords
-				.split(/[,\n]/)
-				.map(k => k.trim())
-				.filter(k => k.length > 0);
+			// Parse and validate keywords
+			const keywordList = parseKeywords(keywords);
 			
 			body.keywords = keywordList;
 			
@@ -45,9 +43,13 @@ export async function KeywordResearchOperations(
 			const keyword = this.getNodeParameter('keyword', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
+			if (!keyword || keyword.trim() === '') {
+				throw new Error('Keyword cannot be empty');
+			}
+			
 			endpoint = '/keywords/similar';
-			params.source = source;
-			params.keyword = keyword;
+			params.source = validateSource(source);
+			params.keyword = keyword.trim();
 			
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
@@ -74,9 +76,13 @@ export async function KeywordResearchOperations(
 			const keyword = this.getNodeParameter('keyword', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
+			if (!keyword || keyword.trim() === '') {
+				throw new Error('Keyword cannot be empty');
+			}
+			
 			endpoint = '/keywords/related';
-			params.source = source;
-			params.keyword = keyword;
+			params.source = validateSource(source);
+			params.keyword = keyword.trim();
 			
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
@@ -103,9 +109,13 @@ export async function KeywordResearchOperations(
 			const keyword = this.getNodeParameter('keyword', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
+			if (!keyword || keyword.trim() === '') {
+				throw new Error('Keyword cannot be empty');
+			}
+			
 			endpoint = '/keywords/questions';
-			params.source = source;
-			params.keyword = keyword;
+			params.source = validateSource(source);
+			params.keyword = keyword.trim();
 			
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
@@ -128,9 +138,13 @@ export async function KeywordResearchOperations(
 			const keyword = this.getNodeParameter('keyword', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
+			if (!keyword || keyword.trim() === '') {
+				throw new Error('Keyword cannot be empty');
+			}
+			
 			endpoint = '/keywords/longtail';
-			params.source = source;
-			params.keyword = keyword;
+			params.source = validateSource(source);
+			params.keyword = keyword.trim();
 			
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;

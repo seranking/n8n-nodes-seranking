@@ -1,5 +1,4 @@
 import { IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
-import axios, { AxiosRequestConfig } from 'axios';
 
 export async function apiRequest(
 	this: IExecuteFunctions,
@@ -14,75 +13,108 @@ export async function apiRequest(
 		? 'https://api4.seranking.com'
 		: 'https://api.seranking.com/v1';
 
-	const config: AxiosRequestConfig = {
+	const options: any = {
 		method,
 		url: `${baseUrl}${endpoint}`,
 		headers: {
 			'Authorization': `Token ${credentials.apiToken}`,
-			'Content-Type': 'application/json',
 		},
-		timeout: 120000, // Increased to 120 seconds for slow endpoints
+		timeout: 120000,
+		json: true,
 	};
 
 	// Add query parameters
 	if (Object.keys(query).length > 0) {
-		config.params = query;
+		options.qs = query;
 	}
 
 	// Add body data
 	if (Object.keys(body).length > 0 && method !== 'GET') {
-		// For POST requests with keywords array, send as form data
+		// For POST requests with keywords array, send as multipart/form-data
 		if (body.keywords && Array.isArray(body.keywords)) {
-			const formData = new URLSearchParams();
+			// Use FormData for multipart/form-data (like curl --form)
+			const FormData = require('form-data');
+			const formData = new FormData();
 			
-			// Add each keyword as keywords[]
+			// Add each keyword as keywords[] WITH quotes (SE Ranking requirement)
 			body.keywords.forEach((kw: string) => {
-				formData.append('keywords[]', kw);
+				formData.append('keywords[]', `"${kw}"`);
 			});
 			
-			// Add optional fields
-			if (body.cols) formData.append('cols', body.cols);
-			if (body.sort) formData.append('sort', body.sort);
-			if (body.sort_order) formData.append('sort_order', body.sort_order);
+			// Add optional fields WITH quotes
+			if (body.cols) formData.append('cols', `"${body.cols}"`);
+			if (body.sort) formData.append('sort', `"${body.sort}"`);
+			if (body.sort_order) formData.append('sort_order', `"${body.sort_order}"`);
 			
-			config.data = formData.toString();
-			if (config.headers) {
-				config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-			}
+			// n8n will automatically set content-type with boundary when body is FormData
+			options.body = formData;
+			options.json = false; // Don't JSON encode FormData
 		} else {
-			config.data = body;
+			options.body = body;
 		}
 	}
 
 	try {
-		const response = await axios(config);
-		return response.data;
+		// Use n8n's httpRequest helper (handles FormData properly)
+		const response = await this.helpers.httpRequest(options);
+		return response;
 	} catch (error: any) {
-		// Enhanced error logging
-		const errorData = error.response?.data;
-		const errorMessage = errorData?.message ||
-							errorData?.error ||
-							error.message;
+		// Enhanced error handling with detailed context
+		const errorData = error.response?.body || error.response?.data || {};
+		const statusCode = error.statusCode || error.response?.status || 'Unknown';
 		
-		// Log full error details for debugging
-		if (process.env.NODE_ENV !== 'production') {
-			console.error('SE Ranking API Error Details:', {
-				status: error.response?.status,
-				statusText: error.response?.statusText,
-				data: errorData,
-				url: config.url,
-				params: config.params,
-				method: config.method,
-				body: config.data,
-			});
+		// Determine specific error type and provide helpful message
+		let errorMessage = 'Unknown error occurred';
+		let errorDescription = '';
+		
+		if (statusCode === 400) {
+			errorMessage = 'Bad Request - Invalid parameters';
+			errorDescription = 'Check domain format (no http://, www), source code (us, uk, de), and parameter values';
+		} else if (statusCode === 401) {
+			errorMessage = 'Unauthorized - Invalid API credentials';
+			errorDescription = 'Check your API token in credentials. Get token from SE Ranking dashboard';
+		} else if (statusCode === 403) {
+			errorMessage = 'Forbidden - Access denied';
+			errorDescription = 'Your API key does not have permission for this operation';
+		} else if (statusCode === 404) {
+			errorMessage = 'Not Found - Invalid endpoint or domain';
+			errorDescription = 'Domain may not exist in SE Ranking database';
+		} else if (statusCode === 429) {
+			errorMessage = 'Rate Limit Exceeded';
+			errorDescription = 'Too many requests. Add delays between requests or reduce batch size';
+		} else if (statusCode === 500 || statusCode === 502 || statusCode === 503) {
+			errorMessage = 'SE Ranking Server Error';
+			errorDescription = 'SE Ranking API is experiencing issues. Try again in a few minutes';
+		} else if (statusCode === 504) {
+			errorMessage = 'Gateway Timeout - Request took too long';
+			errorDescription = 'Use a faster endpoint (e.g., Get Worldwide Aggregate instead of Get Overview)';
+		} else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+			errorMessage = 'Connection Failed';
+			errorDescription = 'Cannot reach SE Ranking API. Check your internet connection';
+		} else if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+			errorMessage = 'Request Timeout';
+			errorDescription = 'Request exceeded 120 seconds. Try with fewer items or use a faster operation';
+		} else {
+			errorMessage = errorData?.message || errorData?.error || error.message || 'Request failed';
 		}
+		
+		// Log detailed error for debugging
+		console.error('SE Ranking API Error:', {
+			status: statusCode,
+			message: errorMessage,
+			url: options.url,
+			method: options.method,
+			params: options.qs,
+			itemIndex,
+			errorData,
+		});
 		
 		throw new NodeOperationError(
 			this.getNode(),
 			`SE Ranking API Error: ${errorMessage}`,
 			{
 				itemIndex,
-				description: `Status: ${error.response?.status || 'Unknown'} - Check your domain, source code, and API credentials`,
+				description: errorDescription,
 			}
 		);
 	}

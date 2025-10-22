@@ -1,6 +1,6 @@
 {
-  "name": "n8n-nodes-se-ranking",
-  "version": "1.0.5",
+  "name": "n8n-nodes-seranking",
+  "version": "1.0.7",
   "description": "n8n connector for SE Ranking API",
   "main": "index.js",
   "scripts": {

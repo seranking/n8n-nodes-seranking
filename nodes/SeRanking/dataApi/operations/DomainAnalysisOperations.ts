@@ -1,6 +1,6 @@
 import { IExecuteFunctions } from 'n8n-workflow';
-import { apiRequest } from '../utils/apiRequest';
-import { validateDomain } from '../utils/validators';
+import { apiRequest } from '../../utils/apiRequest';
+import { validateDomain, validateSource } from '../../utils/validators';
 
 export async function DomainAnalysisOperations(
 	this: IExecuteFunctions,
@@ -13,20 +13,13 @@ export async function DomainAnalysisOperations(
 	let method = 'GET';
 
 	switch (operation) {
-		case 'getOverview': {
-			const domain = this.getNodeParameter('domain', index) as string;
-			endpoint = '/domain/overview';
-			params.domain = validateDomain(domain);
-			break;
-		}
-
 		case 'getOverviewDb': {
 			const domain = this.getNodeParameter('domain', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
 			endpoint = '/domain/overview/db';
-			params.source = source;
+			params.source = validateSource(source);
 			params.domain = validateDomain(domain);
 			params.with_subdomains = additionalFields.withSubdomains ? 1 : 0;
 			break;
@@ -54,7 +47,7 @@ export async function DomainAnalysisOperations(
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
 			endpoint = '/domain/keywords';
-			params.source = source;
+			params.source = validateSource(source);
 			params.domain = validateDomain(domain);
 			params.type = type;
 			
@@ -84,7 +77,7 @@ export async function DomainAnalysisOperations(
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
 			endpoint = '/domain/competitors';
-			params.source = source;
+			params.source = validateSource(source);
 			params.domain = validateDomain(domain);
 			params.type = type;
 			

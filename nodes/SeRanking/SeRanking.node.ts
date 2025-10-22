@@ -6,15 +6,17 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-// Import descriptions
-import { aiSearchOperations, aiSearchFields } from './descriptions/AiSearchDescription';
-import { domainAnalysisOperations, domainAnalysisFields } from './descriptions/DomainAnalysisDescription';
-import { keywordResearchOperations, keywordResearchFields } from './descriptions/KeywordResearchDescription';
+// Import Data API descriptions
+import { aiSearchOperations, aiSearchFields } from './dataApi/descriptions/AiSearchDescription';
+import { domainAnalysisOperations, domainAnalysisFields } from './dataApi/descriptions/DomainAnalysisDescription';
+import { keywordResearchOperations, keywordResearchFields } from './dataApi/descriptions/KeywordResearchDescription';
 
-// Import operations
-import { AiSearchOperations } from './operations/AiSearchOperations';
-import { DomainAnalysisOperations } from './operations/DomainAnalysisOperations';
-import { KeywordResearchOperations } from './operations/KeywordResearchOperations';
+// Import Data API operations
+import { AiSearchOperations } from './dataApi/operations/AiSearchOperations';
+import { DomainAnalysisOperations } from './dataApi/operations/DomainAnalysisOperations';
+import { KeywordResearchOperations } from './dataApi/operations/KeywordResearchOperations';
+
+
 
 
 export class SeRanking implements INodeType {

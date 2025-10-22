@@ -13,12 +13,6 @@ export const domainAnalysisOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get Overview',
-				value: 'getOverview',
-				description: 'Get all databases overview for a domain (SLOW: may take 30-60 seconds)',
-				action: 'Get domain overview across all databases',
-			},
-			{
 				name: 'Get Regional Database Overview',
 				value: 'getOverviewDb',
 				description: 'Get detailed statistics for a specific regional database (FAST)',

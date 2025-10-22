@@ -1,6 +1,6 @@
 import { IExecuteFunctions } from 'n8n-workflow';
-import { apiRequest } from '../utils/apiRequest';
-import { validateDomain } from '../utils/validators';
+import { apiRequest } from '../../utils/apiRequest';
+import { validateDomain, validateSource } from '../../utils/validators';
 
 export async function AiSearchOperations(
 	this: IExecuteFunctions,
@@ -16,12 +16,12 @@ export async function AiSearchOperations(
 			const domain = this.getNodeParameter('domain', index) as string;
 			const engine = this.getNodeParameter('engine', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
-			const scope = this.getNodeParameter('scope', index, 'domain') as string;
+			const scope = this.getNodeParameter('scope', index, 'base_domain') as string;
 			
 			endpoint = '/ai-search/overview';
 			params.target = validateDomain(domain);
 			params.engine = engine;
-			params.source = source;
+			params.source = validateSource(source);
 			params.scope = scope;
 			break;
 		}
@@ -29,11 +29,11 @@ export async function AiSearchOperations(
 		case 'discoverBrand': {
 			const domain = this.getNodeParameter('domain', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
-			const scope = this.getNodeParameter('scope', index, 'domain') as string;
+			const scope = this.getNodeParameter('scope', index, 'base_domain') as string;
 			
 			endpoint = '/ai-search/discover-brand';
 			params.target = validateDomain(domain);
-			params.source = source;
+			params.source = validateSource(source);
 			params.scope = scope;
 			break;
 		}
@@ -42,13 +42,13 @@ export async function AiSearchOperations(
 			const domain = this.getNodeParameter('domain', index) as string;
 			const engine = this.getNodeParameter('engine', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
-			const scope = this.getNodeParameter('scope', index, 'domain') as string;
+			const scope = this.getNodeParameter('scope', index, 'base_domain') as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
 			endpoint = '/ai-search/prompts-by-target';
 			params.target = validateDomain(domain);
 			params.engine = engine;
-			params.source = source;
+			params.source = validateSource(source);
 			params.scope = scope;
 			
 			if (additionalFields.sort) params.sort = additionalFields.sort;
@@ -64,10 +64,14 @@ export async function AiSearchOperations(
 			const source = this.getNodeParameter('source', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 			
+			if (!brandName || brandName.trim() === '') {
+				throw new Error('Brand name cannot be empty');
+			}
+			
 			endpoint = '/ai-search/prompts-by-brand';
-			params.brand = brandName;
+			params.brand = brandName.trim();
 			params.engine = engine;
-			params.source = source;
+			params.source = validateSource(source);
 			
 			if (additionalFields.sort) params.sort = additionalFields.sort;
 			if (additionalFields.sortOrder) params.sort_order = additionalFields.sortOrder;
