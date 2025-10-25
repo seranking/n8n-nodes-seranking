@@ -1,0 +1,2919 @@
+{
+  "name": "Keywords Research Test",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "9dccc8a2-a30f-405e-be7b-97683936539c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "keywordResearch",
+        "keywords": "seo\npython",
+        "additionalFields": {
+          "cols": [
+            "keyword",
+            "volume",
+            "cpc",
+            "competition",
+            "difficulty",
+            "history_trend"
+          ]
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "0b136515-1f8e-4154-a9b3-46a89aa4d5c2",
+      "name": "Export keyword metrics",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "keywordResearch",
+        "operation": "getSimilar",
+        "keyword": "seo",
+        "additionalFields": {}
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        240,
+        208
+      ],
+      "id": "da0790f6-cc0d-44a0-9e34-334727f7915a",
+      "name": "Get similar keywords",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "keywordResearch",
+        "operation": "getRelated",
+        "keyword": "seo",
+        "additionalFields": {
+          "limit": 10,
+          "historyTrend": true
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        240,
+        400
+      ],
+      "id": "1b07f490-8ff8-4533-8168-0315439381da",
+      "name": "Get related keywords",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "keywordResearch",
+        "operation": "getQuestions",
+        "keyword": "seo",
+        "additionalFields": {
+          "limit": 10,
+          "historyTrend": true
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -160
+      ],
+      "id": "cb9f5616-f9e2-4c28-91ba-000089cd01d7",
+      "name": "Get question keywords",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "keywordResearch",
+        "operation": "getLongtail",
+        "keyword": "seo",
+        "additionalFields": {
+          "limit": 10
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -320
+      ],
+      "id": "80147f6d-2f3b-4ac0-a21b-983dc00f19e4",
+      "name": "Get longtail keywords",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "00cc229a-0ee3-4af7-b650-8658ed6fb1b7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// SE Ranking Keyword Research Data Formatter - FIXED v2\nconst allInput = $input.all();\nconst timestamp = new Date().toISOString().split('T')[0];\n\nlet output = [];\n\n// Process each input item as a separate section\nallInput.forEach((item, sectionIndex) => {\n  const section = item.json;\n  \n  if (!section) {\n    output.push({\n      json: {\n        date: timestamp,\n        error: 'No data in item',\n        section_index: sectionIndex\n      }\n    });\n    return;\n  }\n  \n  // Section type 1: Simple totals with keyword list (strings)\n  if (section.total && Array.isArray(section.keywords) && typeof section.keywords[0] === 'string') {\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'keyword_list_summary',\n        section_index: sectionIndex,\n        total_keywords: section.total,\n        sample_keywords: section.keywords.slice(0, 5).join('; ')\n      }\n    });\n  }\n  \n  // Section type 2: Detailed keywords with metrics (objects with history_trend)\n  else if (section.total && Array.isArray(section.keywords) && \n           section.keywords[0]?.keyword && section.keywords[0]?.history_trend !== undefined) {\n    // Summary record\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'keyword_research_summary',\n        section_index: sectionIndex,\n        total_keywords: section.total,\n        keywords_with_data: section.keywords.length\n      }\n    });\n    \n    // Individual keyword records\n    section.keywords.forEach(kw => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'keyword_detail',\n          section_index: sectionIndex,\n          keyword: kw.keyword,\n          volume: kw.volume || 0,\n          cpc: kw.cpc || 0,\n          difficulty: kw.difficulty || 0,\n          competition: kw.competition || 0,\n          serp_features: kw.serp_features ? kw.serp_features.join('; ') : '',\n          intents: kw.intents ? kw.intents.join('; ') : '',\n          trend_avg: kw.history_trend ? \n            Math.round(Object.values(kw.history_trend).reduce((a, b) => a + b, 0) / Object.values(kw.history_trend).length) : 0,\n          trend_data: kw.history_trend ? JSON.stringify(kw.history_trend) : null\n        }\n      });\n    });\n  }\n  \n  // Section type 3: Single keyword metrics\n  else if (section.is_data_found !== undefined && section.keyword) {\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'single_keyword_metrics',\n        section_index: sectionIndex,\n        keyword: section.keyword,\n        volume: section.volume || 0,\n        cpc: section.cpc || 0,\n        difficulty: section.difficulty || 0,\n        competition: section.competition || 0,\n        is_data_found: section.is_data_found\n      }\n    });\n  }\n  \n  // Section type 4: Related keywords with relevance (objects with relevance and no history_trend OR null history_trend)\n  else if (section.total && Array.isArray(section.keywords) && \n           section.keywords[0]?.keyword && section.keywords[0]?.relevance !== undefined) {\n    // Summary record\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'related_keywords_summary',\n        section_index: sectionIndex,\n        total_keywords: section.total,\n        keywords_analyzed: section.keywords.length\n      }\n    });\n    \n    // Individual related keyword records\n    section.keywords.forEach(kw => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'related_keyword',\n          section_index: sectionIndex,\n          keyword: kw.keyword,\n          volume: kw.volume || 0,\n          cpc: kw.cpc || 0,\n          difficulty: kw.difficulty || 0,\n          competition: kw.competition || 0,\n          relevance: kw.relevance || 0,\n          serp_features: kw.serp_features ? kw.serp_features.join('; ') : '',\n          intents: kw.intents ? kw.intents.join('; ') : '',\n          trend_avg: kw.history_trend ? \n            Math.round(Object.values(kw.history_trend).reduce((a, b) => a + b, 0) / Object.values(kw.history_trend).length) : 0,\n          trend_min: kw.history_trend ? Math.min(...Object.values(kw.history_trend)) : 0,\n          trend_max: kw.history_trend ? Math.max(...Object.values(kw.history_trend)) : 0\n        }\n      });\n    });\n  }\n  \n  // Unknown section type - debug info\n  else {\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'unknown_section',\n        section_index: sectionIndex,\n        has_total: !!section.total,\n        has_keywords: !!section.keywords,\n        keywords_is_array: Array.isArray(section.keywords),\n        first_keyword_type: section.keywords?.[0] ? typeof section.keywords[0] : 'none',\n        first_keyword_keys: section.keywords?.[0] && typeof section.keywords[0] === 'object' ? \n          Object.keys(section.keywords[0]).join('; ') : 'n/a',\n        all_keys: Object.keys(section).join('; ')\n      }\n    });\n  }\n});\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -48
+      ],
+      "id": "6884744f-f9a5-42c2-99c5-7b1baf27caa9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1fQAwkaYo-JqTuwnH8fR0zOEfqTaNoYOOeeCoOKnLRM4",
+          "mode": "list",
+          "cachedResultName": "Keyword Research",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fQAwkaYo-JqTuwnH8fR0zOEfqTaNoYOOeeCoOKnLRM4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Keyword Research",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fQAwkaYo-JqTuwnH8fR0zOEfqTaNoYOOeeCoOKnLRM4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "section_index",
+              "displayName": "section_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_keywords",
+              "displayName": "total_keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sample_keywords",
+              "displayName": "sample_keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "keywords_with_data",
+              "displayName": "keywords_with_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cpc",
+              "displayName": "cpc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "difficulty",
+              "displayName": "difficulty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "competition",
+              "displayName": "competition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "serp_features",
+              "displayName": "serp_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "intents",
+              "displayName": "intents",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "trend_avg",
+              "displayName": "trend_avg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "trend_data",
+              "displayName": "trend_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_data_found",
+              "displayName": "is_data_found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -48
+      ],
+      "id": "0fe2e8d4-0ad9-417f-9dc1-26e8db252dd1",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "K2iUXQtuUAF8v9IT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Get longtail keywords": [
+      {
+        "json": {
+          "total": 29564,
+          "keywords": [
+            "000 keywords ranking estimated seo traffic 5",
+            "1 bài viết chuẩn seo",
+            "1 op 1 seo sessie",
+            "1 ranked seo company in the usa",
+            "1 search engine optimization seo",
+            "1 seo agency london",
+            "1 seo article rewriter",
+            "1 seo company atlanta",
+            "1 seo company sandy springs",
+            "1 seo company stockbridge"
+          ]
+        }
+      }
+    ],
+    "Get question keywords": [
+      {
+        "json": {
+          "total": 4092,
+          "keywords": [
+            {
+              "keyword": "what is seo marketing",
+              "cpc": 0.79,
+              "difficulty": 56,
+              "volume": 2900,
+              "competition": 0.14,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 3540,
+                "2024-11-01": 2900,
+                "2024-12-01": 2900,
+                "2025-01-01": 3540,
+                "2025-02-01": 3540,
+                "2025-03-01": 3540,
+                "2025-04-01": 3540,
+                "2025-05-01": 3540,
+                "2025-06-01": 2900,
+                "2025-07-01": 2360,
+                "2025-08-01": 2360,
+                "2025-09-01": 2900
+              }
+            },
+            {
+              "keyword": "what does seo stand for",
+              "cpc": 0.46,
+              "difficulty": 53,
+              "volume": 1900,
+              "competition": 0.03,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 1900,
+                "2024-11-01": 1550,
+                "2024-12-01": 1550,
+                "2025-01-01": 2320,
+                "2025-02-01": 2320,
+                "2025-03-01": 2320,
+                "2025-04-01": 2320,
+                "2025-05-01": 2320,
+                "2025-06-01": 1900,
+                "2025-07-01": 1900,
+                "2025-08-01": 1900,
+                "2025-09-01": 1900
+              }
+            },
+            {
+              "keyword": "what does seo",
+              "cpc": 1.29,
+              "difficulty": 44,
+              "volume": 660,
+              "competition": 0.07,
+              "serp_features": [
+                "featured_snippets",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 540,
+                "2024-11-01": 540,
+                "2024-12-01": 660,
+                "2025-01-01": 750,
+                "2025-02-01": 660,
+                "2025-03-01": 980,
+                "2025-04-01": 1200,
+                "2025-05-01": 1200,
+                "2025-06-01": 540,
+                "2025-07-01": 440,
+                "2025-08-01": 290,
+                "2025-09-01": 660
+              }
+            },
+            {
+              "keyword": "what is seo report",
+              "cpc": 0,
+              "difficulty": 17,
+              "volume": 590,
+              "competition": 0.01,
+              "serp_features": [
+                "featured_snippets",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 320,
+                "2024-11-01": 390,
+                "2024-12-01": 480,
+                "2025-01-01": 590,
+                "2025-02-01": 720,
+                "2025-03-01": 1000,
+                "2025-04-01": 1300,
+                "2025-05-01": 1000,
+                "2025-06-01": 480,
+                "2025-07-01": 390,
+                "2025-08-01": 260,
+                "2025-09-01": 590
+              }
+            },
+            {
+              "keyword": "what are the best seo tools",
+              "cpc": 9.5,
+              "difficulty": 23,
+              "volume": 590,
+              "competition": 0.06,
+              "serp_features": [
+                "images",
+                "sge",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 390,
+                "2024-11-01": 390,
+                "2024-12-01": 480,
+                "2025-01-01": 590,
+                "2025-02-01": 890,
+                "2025-03-01": 1230,
+                "2025-04-01": 1230,
+                "2025-05-01": 1080,
+                "2025-06-01": 390,
+                "2025-07-01": 320,
+                "2025-08-01": 260,
+                "2025-09-01": 590
+              }
+            },
+            {
+              "keyword": "what is crawl in seo",
+              "cpc": 0,
+              "difficulty": 28,
+              "volume": 590,
+              "competition": 0,
+              "serp_features": [
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 590,
+                "2024-11-01": 590,
+                "2024-12-01": 480,
+                "2025-01-01": 590,
+                "2025-02-01": 720,
+                "2025-03-01": 880,
+                "2025-04-01": 880,
+                "2025-05-01": 880,
+                "2025-06-01": 720,
+                "2025-07-01": 480,
+                "2025-08-01": 390,
+                "2025-09-01": 590
+              }
+            },
+            {
+              "keyword": "how to write seo",
+              "cpc": 1.2,
+              "difficulty": 40,
+              "volume": 590,
+              "competition": 0.06,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 390,
+                "2024-11-01": 390,
+                "2024-12-01": 480,
+                "2025-01-01": 590,
+                "2025-02-01": 480,
+                "2025-03-01": 880,
+                "2025-04-01": 1300,
+                "2025-05-01": 1300,
+                "2025-06-01": 590,
+                "2025-07-01": 390,
+                "2025-08-01": 210,
+                "2025-09-01": 590
+              }
+            },
+            {
+              "keyword": "how many keywords seo",
+              "cpc": 0,
+              "difficulty": 11,
+              "volume": 590,
+              "competition": 0,
+              "serp_features": [
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 320,
+                "2024-11-01": 390,
+                "2024-12-01": 480,
+                "2025-01-01": 590,
+                "2025-02-01": 480,
+                "2025-03-01": 880,
+                "2025-04-01": 1600,
+                "2025-05-01": 1300,
+                "2025-06-01": 480,
+                "2025-07-01": 320,
+                "2025-08-01": 170,
+                "2025-09-01": 590
+              }
+            },
+            {
+              "keyword": "how to be an seo writer",
+              "cpc": 1.2,
+              "difficulty": 19,
+              "volume": 590,
+              "competition": 0.06,
+              "serp_features": [
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 390,
+                "2024-11-01": 390,
+                "2024-12-01": 480,
+                "2025-01-01": 590,
+                "2025-02-01": 480,
+                "2025-03-01": 880,
+                "2025-04-01": 1300,
+                "2025-05-01": 1300,
+                "2025-06-01": 590,
+                "2025-07-01": 390,
+                "2025-08-01": 210,
+                "2025-09-01": 590
+              }
+            },
+            {
+              "keyword": "how to do seo yourself",
+              "cpc": 2.43,
+              "difficulty": 27,
+              "volume": 590,
+              "competition": 0.17,
+              "serp_features": [
+                "people_also_ask",
+                "images",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 390,
+                "2024-11-01": 590,
+                "2024-12-01": 590,
+                "2025-01-01": 720,
+                "2025-02-01": 720,
+                "2025-03-01": 1000,
+                "2025-04-01": 1300,
+                "2025-05-01": 1000,
+                "2025-06-01": 390,
+                "2025-07-01": 260,
+                "2025-08-01": 260,
+                "2025-09-01": 590
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "Export keyword metrics": [
+      {
+        "json": {
+          "is_data_found": true,
+          "keyword": "seo",
+          "volume": 33100,
+          "cpc": 4.11,
+          "competition": 0.18,
+          "difficulty": 77
+        }
+      },
+      {
+        "json": {
+          "is_data_found": true,
+          "keyword": "python",
+          "volume": 47500,
+          "cpc": 1.6,
+          "competition": 0.06,
+          "difficulty": 69
+        }
+      }
+    ],
+    "Get similar keywords": [
+      {
+        "json": {
+          "total": 82551,
+          "keywords": [
+            {
+              "keyword": "park seo",
+              "cpc": 0,
+              "difficulty": 75,
+              "volume": 47500,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches",
+                "image_in_block"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo services",
+              "cpc": 9.2,
+              "difficulty": 45,
+              "volume": 40500,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "park seo joon",
+              "cpc": 0,
+              "difficulty": 75,
+              "volume": 40500,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches",
+                "image_in_block"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "and seo services",
+              "cpc": 9.2,
+              "difficulty": 40,
+              "volume": 33100,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo agency",
+              "cpc": 10.93,
+              "difficulty": 42,
+              "volume": 20100,
+              "competition": 0.07,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo firm",
+              "cpc": 14.07,
+              "difficulty": 41,
+              "volume": 20100,
+              "competition": 0.12,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo consultant",
+              "cpc": 9.48,
+              "difficulty": 44,
+              "volume": 14800,
+              "competition": 0.04,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo agency near me",
+              "cpc": 12.22,
+              "difficulty": 48,
+              "volume": 14800,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo in guk",
+              "cpc": 0,
+              "difficulty": 83,
+              "volume": 14800,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "agency seo",
+              "cpc": 10.93,
+              "difficulty": 46,
+              "volume": 12100,
+              "competition": 0.07,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "optimizing seo",
+              "cpc": 5.84,
+              "difficulty": 56,
+              "volume": 9900,
+              "competition": 0.21,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "site seo",
+              "cpc": 8.26,
+              "difficulty": 51,
+              "volume": 9900,
+              "competition": 0.11,
+              "serp_features": [
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo ye ji",
+              "cpc": 0,
+              "difficulty": 55,
+              "volume": 9900,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo optimization",
+              "cpc": 9.91,
+              "difficulty": 61,
+              "volume": 8100,
+              "competition": 0.46,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo service",
+              "cpc": 9.2,
+              "difficulty": 34,
+              "volume": 8100,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo firms",
+              "cpc": 14.07,
+              "difficulty": 36,
+              "volume": 5700,
+              "competition": 0.12,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo near me",
+              "cpc": 13.37,
+              "difficulty": 39,
+              "volume": 5400,
+              "competition": 0.01,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "google seo",
+              "cpc": 8.35,
+              "difficulty": 68,
+              "volume": 4400,
+              "competition": 0.37,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo blog",
+              "cpc": 2.69,
+              "difficulty": 45,
+              "volume": 4400,
+              "competition": 0.05,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "free seo optimization tools",
+              "cpc": 2.5,
+              "difficulty": 48,
+              "volume": 4400,
+              "competition": 0.22,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "surfer seo",
+              "cpc": 4.09,
+              "difficulty": 52,
+              "volume": 4400,
+              "competition": 0.32,
+              "serp_features": [
+                "sitelinks",
+                "top_stories",
+                "images",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I",
+                "N"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo agency interamplify",
+              "cpc": 5.53,
+              "difficulty": 51,
+              "volume": 4400,
+              "competition": 0.01,
+              "serp_features": [
+                "sitelinks",
+                "people_also_ask",
+                "images"
+              ],
+              "intents": [
+                "I",
+                "N"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "lee seo",
+              "cpc": 0,
+              "difficulty": 58,
+              "volume": 4400,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches",
+                "image_in_block"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo site",
+              "cpc": 8.26,
+              "difficulty": 48,
+              "volume": 3600,
+              "competition": 0.11,
+              "serp_features": [
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo specialist",
+              "cpc": 6.5,
+              "difficulty": 35,
+              "volume": 3600,
+              "competition": 0.18,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo checker",
+              "cpc": 2.51,
+              "difficulty": 43,
+              "volume": 3200,
+              "competition": 0.35,
+              "serp_features": [
+                "top_stories",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo consultants",
+              "cpc": 10,
+              "difficulty": 27,
+              "volume": 3200,
+              "competition": 0.06,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo consulting",
+              "cpc": 10,
+              "difficulty": 28,
+              "volume": 3200,
+              "competition": 0.06,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo for local",
+              "cpc": 8.49,
+              "difficulty": 48,
+              "volume": 3200,
+              "competition": 0.04,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "define seo",
+              "cpc": 0.71,
+              "difficulty": 55,
+              "volume": 2900,
+              "competition": 0.05,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo agencies",
+              "cpc": 10.93,
+              "difficulty": 37,
+              "volume": 2900,
+              "competition": 0.07,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "what is seo marketing",
+              "cpc": 0.79,
+              "difficulty": 56,
+              "volume": 2900,
+              "competition": 0.14,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo ji hoon",
+              "cpc": 0,
+              "difficulty": 54,
+              "volume": 2900,
+              "competition": 0,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches",
+                "image_in_block"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "local seo services",
+              "cpc": 8.88,
+              "difficulty": 28,
+              "volume": 2400,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo best practices",
+              "cpc": 2,
+              "difficulty": 48,
+              "volume": 2400,
+              "competition": 0.11,
+              "serp_features": [
+                "images",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo content writing",
+              "cpc": 3.54,
+              "difficulty": 43,
+              "volume": 2400,
+              "competition": 0.07,
+              "serp_features": [
+                "people_also_ask",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "what is seo on etsy",
+              "cpc": 1.63,
+              "difficulty": 42,
+              "volume": 2400,
+              "competition": 0.19,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "frog seo",
+              "cpc": 2.54,
+              "difficulty": 59,
+              "volume": 2400,
+              "competition": 0.13,
+              "serp_features": [
+                "sitelinks",
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I",
+                "N"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "what does seo stand for",
+              "cpc": 0.46,
+              "difficulty": 53,
+              "volume": 1900,
+              "competition": 0.03,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "youtube seo",
+              "cpc": 1.59,
+              "difficulty": 55,
+              "volume": 1900,
+              "competition": 0.19,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo hyun",
+              "cpc": 0,
+              "difficulty": 61,
+              "volume": 1900,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "knowledge_graph",
+                "related_searches",
+                "image_in_block"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo jun",
+              "cpc": 0,
+              "difficulty": 57,
+              "volume": 1900,
+              "competition": 0,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "check seo",
+              "cpc": 2.51,
+              "difficulty": 45,
+              "volume": 1800,
+              "competition": 0.35,
+              "serp_features": [
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "denver seo",
+              "cpc": 12.75,
+              "difficulty": 26,
+              "volume": 1600,
+              "competition": 0.05,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "shopify seo",
+              "cpc": 4.97,
+              "difficulty": 60,
+              "volume": 1600,
+              "competition": 0.25,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo check",
+              "cpc": 2.51,
+              "difficulty": 44,
+              "volume": 1500,
+              "competition": 0.35,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo youtube",
+              "cpc": 1.59,
+              "difficulty": 59,
+              "volume": 1500,
+              "competition": 0.19,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "hyein seo",
+              "cpc": 0.65,
+              "difficulty": 42,
+              "volume": 1500,
+              "competition": 0.96,
+              "serp_features": [
+                "sitelinks",
+                "people_also_ask",
+                "images",
+                "shopping_results",
+                "digital_complaints",
+                "related_searches",
+                "image_in_block"
+              ],
+              "intents": [
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "consultant seo",
+              "cpc": 10,
+              "difficulty": 31,
+              "volume": 1300,
+              "competition": 0.06,
+              "serp_features": [
+                "reviews",
+                "video",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo agentur",
+              "cpc": 7.77,
+              "difficulty": 30,
+              "volume": 1300,
+              "competition": 0.01,
+              "serp_features": [
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo rankings",
+              "cpc": 3.95,
+              "difficulty": 45,
+              "volume": 1300,
+              "competition": 0.22,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo rank tracking",
+              "cpc": 11.53,
+              "difficulty": 36,
+              "volume": 1300,
+              "competition": 0.01,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo words",
+              "cpc": 2.18,
+              "difficulty": 50,
+              "volume": 1300,
+              "competition": 0.12,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "ai for seo",
+              "cpc": 6.2,
+              "difficulty": 39,
+              "volume": 1300,
+              "competition": 0.46,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "ai seo",
+              "cpc": 6.2,
+              "difficulty": 38,
+              "volume": 1300,
+              "competition": 0.46,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "blog seo",
+              "cpc": 2.69,
+              "difficulty": 52,
+              "volume": 1100,
+              "competition": 0.05,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "help seo",
+              "cpc": 13.19,
+              "difficulty": 62,
+              "volume": 1100,
+              "competition": 0.18,
+              "serp_features": [
+                "people_also_ask",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo competitor analysis",
+              "cpc": 6.93,
+              "difficulty": 40,
+              "volume": 1000,
+              "competition": 0.03,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo plugin",
+              "cpc": 2.17,
+              "difficulty": 56,
+              "volume": 1000,
+              "competition": 0.08,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo solution",
+              "cpc": 8.79,
+              "difficulty": 42,
+              "volume": 1000,
+              "competition": 0.06,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "website seo design",
+              "cpc": 8.11,
+              "difficulty": 29,
+              "volume": 990,
+              "competition": 0.09,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo page",
+              "cpc": 4.4,
+              "difficulty": 52,
+              "volume": 990,
+              "competition": 0.04,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "automated seo",
+              "cpc": 5.65,
+              "difficulty": 16,
+              "volume": 920,
+              "competition": 0.07,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "on-page seo tools",
+              "cpc": 3.76,
+              "difficulty": 31,
+              "volume": 920,
+              "competition": 0.01,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo certification google",
+              "cpc": 3.13,
+              "difficulty": 46,
+              "volume": 880,
+              "competition": 0.2,
+              "serp_features": [
+                "people_also_ask",
+                "images",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo expert",
+              "cpc": 10.56,
+              "difficulty": 31,
+              "volume": 880,
+              "competition": 0.09,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "service seo",
+              "cpc": 9.2,
+              "difficulty": 38,
+              "volume": 880,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "website seo services",
+              "cpc": 19.97,
+              "difficulty": 33,
+              "volume": 880,
+              "competition": 0.05,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo rank tracker free",
+              "cpc": 2.93,
+              "difficulty": 28,
+              "volume": 880,
+              "competition": 0.01,
+              "serp_features": [
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "wix seo",
+              "cpc": 4.51,
+              "difficulty": 36,
+              "volume": 810,
+              "competition": 0.18,
+              "serp_features": [
+                "people_also_ask",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "agencia seo",
+              "cpc": 6.94,
+              "difficulty": 4,
+              "volume": 810,
+              "competition": 0.02,
+              "serp_features": [
+                "reviews",
+                "people_also_ask",
+                "gmb",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "page seo",
+              "cpc": 4.4,
+              "difficulty": 45,
+              "volume": 760,
+              "competition": 0.04,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo for law",
+              "cpc": 14.77,
+              "difficulty": 25,
+              "volume": 740,
+              "competition": 0.08,
+              "serp_features": [
+                "sitelinks",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I",
+                "N"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "increase seo",
+              "cpc": 4.69,
+              "difficulty": 50,
+              "volume": 720,
+              "competition": 0.08,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "sge",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "top seo",
+              "cpc": 10.2,
+              "difficulty": 35,
+              "volume": 720,
+              "competition": 0.05,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "on-page seo",
+              "cpc": 4.11,
+              "difficulty": 49,
+              "volume": 720,
+              "competition": 0.08,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo washington d.c",
+              "cpc": 6.12,
+              "difficulty": 13,
+              "volume": 720,
+              "competition": 0.06,
+              "serp_features": [
+                "local_pack",
+                "reviews"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo excel tool",
+              "cpc": 0,
+              "difficulty": 13,
+              "volume": 720,
+              "competition": 0.01,
+              "serp_features": [
+                "sitelinks",
+                "images",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I",
+                "N"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo a/b testing",
+              "cpc": 10.2,
+              "difficulty": 19,
+              "volume": 720,
+              "competition": 0.02,
+              "serp_features": [
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "ab testing for seo",
+              "cpc": 10.2,
+              "difficulty": 26,
+              "volume": 720,
+              "competition": 0.03,
+              "serp_features": [
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "affordable seo services",
+              "cpc": 10.89,
+              "difficulty": 10,
+              "volume": 660,
+              "competition": 0.03,
+              "serp_features": [
+                "reviews",
+                "gmb",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo optimized",
+              "cpc": 9.91,
+              "difficulty": 48,
+              "volume": 660,
+              "competition": 0.46,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo websites",
+              "cpc": 8.26,
+              "difficulty": 36,
+              "volume": 660,
+              "competition": 0.11,
+              "serp_features": [
+                "top_stories",
+                "images",
+                "sge",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo wordpress",
+              "cpc": 3.47,
+              "difficulty": 48,
+              "volume": 660,
+              "competition": 0.12,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "what does seo",
+              "cpc": 1.29,
+              "difficulty": 44,
+              "volume": 660,
+              "competition": 0.07,
+              "serp_features": [
+                "featured_snippets",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo audit services",
+              "cpc": 5.98,
+              "difficulty": 11,
+              "volume": 660,
+              "competition": 0.01,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "best seo",
+              "cpc": 12.44,
+              "difficulty": 40,
+              "volume": 610,
+              "competition": 0.13,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "video",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo google",
+              "cpc": 8.35,
+              "difficulty": 55,
+              "volume": 610,
+              "competition": 0.37,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "saas seo",
+              "cpc": 6.91,
+              "difficulty": 13,
+              "volume": 610,
+              "competition": 0.08,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "seo taiji",
+              "cpc": 0,
+              "difficulty": 21,
+              "volume": 610,
+              "competition": 0,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "adwords seo",
+              "cpc": 8.54,
+              "difficulty": 32,
+              "volume": 590,
+              "competition": 0.01,
+              "serp_features": [
+                "people_also_ask",
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "arizona seo",
+              "cpc": 10.73,
+              "difficulty": 10,
+              "volume": 590,
+              "competition": 0.02,
+              "serp_features": [
+                "reviews",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "austin seo consultant",
+              "cpc": 8.06,
+              "difficulty": 10,
+              "volume": 590,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "austin seo consultants",
+              "cpc": 8.06,
+              "difficulty": 10,
+              "volume": 590,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "baidu seo",
+              "cpc": 4.05,
+              "difficulty": 9,
+              "volume": 590,
+              "competition": 0.01,
+              "serp_features": [
+                "images",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "best seo report",
+              "cpc": 12.05,
+              "difficulty": 20,
+              "volume": 590,
+              "competition": 0.02,
+              "serp_features": [
+                "sge",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "best seo reports",
+              "cpc": 12.05,
+              "difficulty": 12,
+              "volume": 590,
+              "competition": 0.02,
+              "serp_features": [
+                "people_also_ask",
+                "related_searches",
+                "places_sites_products"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "black hat seo techniques",
+              "cpc": 0,
+              "difficulty": 24,
+              "volume": 590,
+              "competition": 0,
+              "serp_features": [
+                "featured_snippets",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "black hat seo tools",
+              "cpc": 3.45,
+              "difficulty": 9,
+              "volume": 590,
+              "competition": 0.03,
+              "serp_features": [
+                "related_searches"
+              ],
+              "intents": [
+                "I"
+              ],
+              "history_trend": null
+            },
+            {
+              "keyword": "boca raton seo company",
+              "cpc": 12.96,
+              "difficulty": 9,
+              "volume": 590,
+              "competition": 0.01,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": null
+            }
+          ]
+        }
+      }
+    ],
+    "Get related keywords": [
+      {
+        "json": {
+          "total": 16575,
+          "keywords": [
+            {
+              "keyword": "search engine",
+              "cpc": 0.66,
+              "difficulty": 67,
+              "volume": 165000,
+              "competition": 0.03,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "related_searches"
+              ],
+              "relevance": 7,
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 110000,
+                "2024-11-01": 90500,
+                "2024-12-01": 368000,
+                "2025-01-01": 550000,
+                "2025-02-01": 90500,
+                "2025-03-01": 110000,
+                "2025-04-01": 135000,
+                "2025-05-01": 110000,
+                "2025-06-01": 90500,
+                "2025-07-01": 110000,
+                "2025-08-01": 90500,
+                "2025-09-01": 165000
+              }
+            },
+            {
+              "keyword": "keyword",
+              "cpc": 1.71,
+              "difficulty": 79,
+              "volume": 90500,
+              "competition": 0.01,
+              "serp_features": [
+                "top_stories",
+                "related_searches"
+              ],
+              "relevance": 6,
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 90500,
+                "2024-11-01": 74000,
+                "2024-12-01": 74000,
+                "2025-01-01": 74000,
+                "2025-02-01": 90500,
+                "2025-03-01": 111000,
+                "2025-04-01": 135000,
+                "2025-05-01": 165000,
+                "2025-06-01": 90500,
+                "2025-07-01": 90500,
+                "2025-08-01": 90500,
+                "2025-09-01": 90500
+              }
+            },
+            {
+              "keyword": "engine optimization services",
+              "cpc": 9.2,
+              "difficulty": 47,
+              "volume": 60500,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "relevance": 11,
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": {
+                "2024-10-01": 27100,
+                "2024-11-01": 27100,
+                "2024-12-01": 27100,
+                "2025-01-01": 27100,
+                "2025-02-01": 27100,
+                "2025-03-01": 60500,
+                "2025-04-01": 73500,
+                "2025-05-01": 164000,
+                "2025-06-01": 134000,
+                "2025-07-01": 110000,
+                "2025-08-01": 73500,
+                "2025-09-01": 60500
+              }
+            },
+            {
+              "keyword": "search engine optimization",
+              "cpc": 4.85,
+              "difficulty": 74,
+              "volume": 40500,
+              "competition": 0.16,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "relevance": 44,
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 33100,
+                "2024-11-01": 40500,
+                "2024-12-01": 40500,
+                "2025-01-01": 49500,
+                "2025-02-01": 33100,
+                "2025-03-01": 49500,
+                "2025-04-01": 49500,
+                "2025-05-01": 40500,
+                "2025-06-01": 27100,
+                "2025-07-01": 22200,
+                "2025-08-01": 22200,
+                "2025-09-01": 40500
+              }
+            },
+            {
+              "keyword": "seo services",
+              "cpc": 9.2,
+              "difficulty": 45,
+              "volume": 40500,
+              "competition": 0.02,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "relevance": 12,
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": {
+                "2024-10-01": 18100,
+                "2024-11-01": 18100,
+                "2024-12-01": 18100,
+                "2025-01-01": 18100,
+                "2025-02-01": 18100,
+                "2025-03-01": 40500,
+                "2025-04-01": 49200,
+                "2025-05-01": 110000,
+                "2025-06-01": 90000,
+                "2025-07-01": 73800,
+                "2025-08-01": 49200,
+                "2025-09-01": 40500
+              }
+            },
+            {
+              "keyword": "dearch engine",
+              "cpc": 0.71,
+              "difficulty": 76,
+              "volume": 40500,
+              "competition": 0.03,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "images",
+                "related_searches"
+              ],
+              "relevance": 7,
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 27000,
+                "2024-11-01": 22200,
+                "2024-12-01": 90300,
+                "2025-01-01": 135000,
+                "2025-02-01": 22200,
+                "2025-03-01": 27000,
+                "2025-04-01": 33100,
+                "2025-05-01": 27000,
+                "2025-06-01": 22200,
+                "2025-07-01": 27000,
+                "2025-08-01": 22200,
+                "2025-09-01": 40500
+              }
+            },
+            {
+              "keyword": "seo agency",
+              "cpc": 10.93,
+              "difficulty": 42,
+              "volume": 20100,
+              "competition": 0.07,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "related_searches"
+              ],
+              "relevance": 6,
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": {
+                "2024-10-01": 16400,
+                "2024-11-01": 24600,
+                "2024-12-01": 20100,
+                "2025-01-01": 20100,
+                "2025-02-01": 20100,
+                "2025-03-01": 24600,
+                "2025-04-01": 24600,
+                "2025-05-01": 20100,
+                "2025-06-01": 20100,
+                "2025-07-01": 16400,
+                "2025-08-01": 16400,
+                "2025-09-01": 20100
+              }
+            },
+            {
+              "keyword": "seo firm",
+              "cpc": 14.07,
+              "difficulty": 41,
+              "volume": 20100,
+              "competition": 0.12,
+              "serp_features": [
+                "local_pack",
+                "reviews",
+                "top_stories",
+                "people_also_ask",
+                "sge",
+                "related_searches"
+              ],
+              "relevance": 8,
+              "intents": [
+                "L",
+                "C"
+              ],
+              "history_trend": {
+                "2024-10-01": 16500,
+                "2024-11-01": 20100,
+                "2024-12-01": 20100,
+                "2025-01-01": 24600,
+                "2025-02-01": 24600,
+                "2025-03-01": 30100,
+                "2025-04-01": 24600,
+                "2025-05-01": 20100,
+                "2025-06-01": 13500,
+                "2025-07-01": 11000,
+                "2025-08-01": 13500,
+                "2025-09-01": 20100
+              }
+            },
+            {
+              "keyword": "optimisation search engine",
+              "cpc": 5.84,
+              "difficulty": 64,
+              "volume": 20100,
+              "competition": 0.21,
+              "serp_features": [
+                "people_also_ask",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "relevance": 31,
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 16400,
+                "2024-11-01": 20100,
+                "2024-12-01": 20100,
+                "2025-01-01": 24600,
+                "2025-02-01": 16400,
+                "2025-03-01": 24600,
+                "2025-04-01": 24600,
+                "2025-05-01": 20100,
+                "2025-06-01": 13500,
+                "2025-07-01": 11000,
+                "2025-08-01": 11000,
+                "2025-09-01": 20100
+              }
+            },
+            {
+              "keyword": "a search engine optimization",
+              "cpc": 5.84,
+              "difficulty": 65,
+              "volume": 20100,
+              "competition": 0.21,
+              "serp_features": [
+                "top_stories",
+                "people_also_ask",
+                "knowledge_graph",
+                "sge",
+                "related_searches"
+              ],
+              "relevance": 31,
+              "intents": [
+                "I"
+              ],
+              "history_trend": {
+                "2024-10-01": 16400,
+                "2024-11-01": 20100,
+                "2024-12-01": 20100,
+                "2025-01-01": 24600,
+                "2025-02-01": 16400,
+                "2025-03-01": 24600,
+                "2025-04-01": 24600,
+                "2025-05-01": 20100,
+                "2025-06-01": 13500,
+                "2025-07-01": 11000,
+                "2025-08-01": 11000,
+                "2025-09-01": 20100
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Export keyword metrics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get similar keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get related keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get question keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get longtail keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export keyword metrics": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get similar keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Get related keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Get question keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get longtail keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cd9a14ce-1323-4140-b494-8829aa873a08",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
+  },
+  "id": "iEYM7FxNXV6pqqQQ",
+  "tags": []
+}

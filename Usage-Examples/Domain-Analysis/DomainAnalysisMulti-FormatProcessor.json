@@ -1,0 +1,5530 @@
+{
+  "name": "Domain Analysis Test",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -32
+      ],
+      "id": "0e3ca301-6c97-4b8b-a42f-7f5eba113f69",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "domain": "seranking.com",
+        "additionalFields": {
+          "currency": "USD",
+          "fields": [
+            "price",
+            "traffic",
+            "keywords",
+            "positions_diff",
+            "positions_tops"
+          ],
+          "showZonesList": true
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -320
+      ],
+      "id": "cfaa1154-9eb1-451c-ace9-d07b23a5d7fa",
+      "name": "Get worldwide aggregate statistics",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getOverviewDb",
+        "domain": "seranking.com",
+        "additionalFields": {
+          "withSubdomains": true
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -112
+      ],
+      "id": "75c82c06-2181-45cf-a6e1-4f4e6271fef9",
+      "name": "Get regional database overview",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getKeywords",
+        "domain": "seranking.com",
+        "type": "adv",
+        "additionalFields": {
+          "withSubdomains": true,
+          "orderType": "asc"
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        112
+      ],
+      "id": "245dbb33-e8b4-460a-aee9-5d32d7669ae9",
+      "name": "Get domain keywords",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getCompetitors",
+        "domain": "seranking.com",
+        "type": "adv",
+        "additionalFields": {
+          "stats": true
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        320
+      ],
+      "id": "23fbae33-c778-4649-9a0a-2adc976d27cd",
+      "name": "Get domain competitors",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        80,
+        -80
+      ],
+      "id": "d9e78452-d31f-4df8-8243-fb8ca708e9ff",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Universal SE Ranking Data Formatter - FINAL FIX\nconst allInput = $input.all();\nconst timestamp = new Date().toISOString().split('T')[0];\n\n// Get the actual data\nlet data;\nif (allInput.length > 0) {\n  data = allInput[0].json;\n} else {\n  data = $input.first().json;\n}\n\nlet output = [];\n\nif (!data) {\n  output = [{ json: { date: timestamp, error: 'No data' } }];\n} \n// Check if it's the top-level object with organic/adv\nelse if (data.organic && data.adv) {\n  const organic = data.organic;\n  const adv = data.adv;\n  \n  // Check if organic is an array (multi-region) or object (single region)\n  if (Array.isArray(organic)) {\n    // MULTI-REGION: organic and adv are arrays\n    organic.forEach(region => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'regional_organic',\n          source: region.source,\n          country: region.country,\n          keywords_count: region.keywords_count || 0,\n          traffic_sum: region.traffic_sum || 0,\n          price_sum: region.price_sum || 0,\n          positions_new: region.positions_new_count || 0,\n          positions_up: region.positions_up_count || 0,\n          positions_down: region.positions_down_count || 0,\n          positions_lost: region.positions_lost_count || 0,\n          positions_equal: region.positions_equal_count || 0,\n          top_1_5: region.positions_tops?.top1_5 || 0,\n          top_6_10: region.positions_tops?.top6_10 || 0,\n          top_11_20: region.positions_tops?.top11_20 || 0,\n          top_21_50: region.positions_tops?.top21_50 || 0,\n          top_51_100: region.positions_tops?.top51_100 || 0\n        }\n      });\n    });\n    \n    adv.forEach(region => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'regional_paid',\n          source: region.source,\n          country: region.country,\n          keywords_count: region.keywords_count || 0,\n          traffic_sum: region.traffic_sum || 0,\n          price_sum: region.price_sum || 0,\n          positions_new: region.positions_new_count || 0,\n          top_1_2: region.positions_tops?.top1_2 || 0,\n          top_3_5: region.positions_tops?.top3_5 || 0,\n          top_6_8: region.positions_tops?.top6_8 || 0,\n          top_9_11: region.positions_tops?.top9_11 || 0\n        }\n      });\n    });\n  } else {\n    // SINGLE REGION: organic and adv are objects\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'domain_summary',\n        domain: organic.base_domain || adv.base_domain || '',\n        year: organic.year || 0,\n        month: organic.month || 0,\n        // Organic\n        organic_keywords: organic.keywords_count || 0,\n        organic_traffic: organic.traffic_sum || 0,\n        organic_value: organic.price_sum || 0,\n        organic_new: organic.keywords_new_count || 0,\n        organic_up: organic.keywords_up_count || 0,\n        organic_down: organic.keywords_down_count || 0,\n        organic_lost: organic.keywords_lost_count || 0,\n        organic_equal: organic.keywords_equal_count || 0,\n        organic_top_1_5: organic.top1_5 || 0,\n        organic_top_6_10: organic.top6_10 || 0,\n        organic_top_11_20: organic.top11_20 || 0,\n        organic_top_21_50: organic.top21_50 || 0,\n        organic_top_51_100: organic.top51_100 || 0,\n        // Paid\n        paid_keywords: adv.keywords_count || 0,\n        paid_traffic: adv.traffic_sum || 0,\n        paid_value: adv.price_sum || 0,\n        paid_new: adv.keywords_new_count || 0,\n        paid_top_1_2: adv.top1_2 || 0,\n        paid_top_3_5: adv.top3_5 || 0,\n        paid_top_6_8: adv.top6_8 || 0,\n        // Totals\n        total_keywords: (organic.keywords_count || 0) + (adv.keywords_count || 0),\n        total_traffic: (organic.traffic_sum || 0) + (adv.traffic_sum || 0),\n        total_value: (organic.price_sum || 0) + (adv.price_sum || 0)\n      }\n    });\n  }\n}\n// Check if it's an array (keywords or competitors)\nelse if (Array.isArray(data)) {\n  if (data.length === 0) {\n    output = [{ json: { date: timestamp, message: 'Empty array' } }];\n  } else {\n    const first = data[0];\n    \n    // Keywords\n    if (first.keyword && first.position !== undefined) {\n      output = data.map(kw => ({\n        json: {\n          date: timestamp,\n          data_type: 'keyword',\n          keyword: kw.keyword,\n          position: kw.position || 0,\n          prev_position: kw.prev_pos || 0,\n          volume: kw.volume || 0,\n          cpc: kw.cpc || 0,\n          difficulty: kw.difficulty || 0,\n          url: kw.url || '',\n          traffic: kw.traffic || 0,\n          block: kw.block || ''\n        }\n      }));\n    }\n    // Competitors\n    else if (first.domain && first.common_keywords !== undefined) {\n      output = data.map(comp => ({\n        json: {\n          date: timestamp,\n          data_type: 'competitor',\n          domain: comp.domain,\n          common_keywords: comp.common_keywords || 0,\n          total_keywords: comp.total_keywords || 0,\n          missing_keywords: comp.missing_keywords || 0,\n          traffic_sum: comp.traffic_sum || 0,\n          price_sum: comp.price_sum || 0\n        }\n      }));\n    } else {\n      output = [{\n        json: {\n          date: timestamp,\n          error: 'Unknown array type',\n          first_keys: Object.keys(first).join(', ')\n        }\n      }];\n    }\n  }\n} else {\n  output = [{\n    json: {\n      date: timestamp,\n      error: 'Unknown structure',\n      keys: Object.keys(data).join(', ')\n    }\n  }];\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -48
+      ],
+      "id": "8080188f-bede-4105-a53b-69a50504e765",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ADinONNjNp_05eaiSgiRfKwezjeg36kkPuPnQXe9lqE",
+          "mode": "list",
+          "cachedResultName": "Domain Analysis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ADinONNjNp_05eaiSgiRfKwezjeg36kkPuPnQXe9lqE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Domain Analysis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ADinONNjNp_05eaiSgiRfKwezjeg36kkPuPnQXe9lqE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "keywords_count",
+              "displayName": "keywords_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "traffic_sum",
+              "displayName": "traffic_sum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "price_sum",
+              "displayName": "price_sum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "positions_new",
+              "displayName": "positions_new",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "positions_up",
+              "displayName": "positions_up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "positions_down",
+              "displayName": "positions_down",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "positions_lost",
+              "displayName": "positions_lost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "positions_equal",
+              "displayName": "positions_equal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_1_5",
+              "displayName": "top_1_5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_6_10",
+              "displayName": "top_6_10",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_11_20",
+              "displayName": "top_11_20",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_21_50",
+              "displayName": "top_21_50",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_51_100",
+              "displayName": "top_51_100",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_1_2",
+              "displayName": "top_1_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_3_5",
+              "displayName": "top_3_5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_6_8",
+              "displayName": "top_6_8",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_9_11",
+              "displayName": "top_9_11",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        -48
+      ],
+      "id": "22f2e8be-564b-4847-81e9-288b767861b0",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "K2iUXQtuUAF8v9IT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Get domain competitors": [
+      {
+        "json": {
+          "domain": "moz.com",
+          "common_keywords": 3,
+          "total_keywords": 60,
+          "missing_keywords": 57,
+          "traffic_sum": 486,
+          "price_sum": 802.96
+        }
+      },
+      {
+        "json": {
+          "domain": "agencyanalytics.com",
+          "common_keywords": 2,
+          "total_keywords": 38,
+          "missing_keywords": 36,
+          "traffic_sum": 57,
+          "price_sum": 354.81
+        }
+      },
+      {
+        "json": {
+          "domain": "semrush.com",
+          "common_keywords": 2,
+          "total_keywords": 241,
+          "missing_keywords": 239,
+          "traffic_sum": 324,
+          "price_sum": 930.41
+        }
+      },
+      {
+        "json": {
+          "domain": "ahrefs.com",
+          "common_keywords": 1,
+          "total_keywords": 20,
+          "missing_keywords": 19,
+          "traffic_sum": 36,
+          "price_sum": 118.64
+        }
+      },
+      {
+        "json": {
+          "domain": "mailchimp.com",
+          "common_keywords": 1,
+          "total_keywords": 2002,
+          "missing_keywords": 2001,
+          "traffic_sum": 5975,
+          "price_sum": 8723.26
+        }
+      },
+      {
+        "json": {
+          "domain": "amplitude.com",
+          "common_keywords": 1,
+          "total_keywords": 60,
+          "missing_keywords": 59,
+          "traffic_sum": 90,
+          "price_sum": 617.74
+        }
+      },
+      {
+        "json": {
+          "domain": "penaltyhammer.com",
+          "common_keywords": 1,
+          "total_keywords": 1,
+          "missing_keywords": 0,
+          "traffic_sum": 0,
+          "price_sum": 0
+        }
+      },
+      {
+        "json": {
+          "domain": "posthog.com",
+          "common_keywords": 1,
+          "total_keywords": 96,
+          "missing_keywords": 95,
+          "traffic_sum": 34,
+          "price_sum": 232.16
+        }
+      },
+      {
+        "json": {
+          "domain": "tryprofound.com",
+          "common_keywords": 1,
+          "total_keywords": 2,
+          "missing_keywords": 1,
+          "traffic_sum": 3,
+          "price_sum": 17.33
+        }
+      },
+      {
+        "json": {
+          "domain": "similarweb.com",
+          "common_keywords": 1,
+          "total_keywords": 139,
+          "missing_keywords": 138,
+          "traffic_sum": 157,
+          "price_sum": 357.02
+        }
+      },
+      {
+        "json": {
+          "domain": "acquia.com",
+          "common_keywords": 1,
+          "total_keywords": 6,
+          "missing_keywords": 5,
+          "traffic_sum": 14,
+          "price_sum": 37.36
+        }
+      },
+      {
+        "json": {
+          "domain": "godaddy.com",
+          "common_keywords": 1,
+          "total_keywords": 2445,
+          "missing_keywords": 2444,
+          "traffic_sum": 5533,
+          "price_sum": 19275.25
+        }
+      },
+      {
+        "json": {
+          "domain": "clutch.co",
+          "common_keywords": 1,
+          "total_keywords": 160,
+          "missing_keywords": 159,
+          "traffic_sum": 213,
+          "price_sum": 749.53
+        }
+      },
+      {
+        "json": {
+          "domain": "searchatlas.com",
+          "common_keywords": 1,
+          "total_keywords": 26,
+          "missing_keywords": 25,
+          "traffic_sum": 36,
+          "price_sum": 34.13
+        }
+      },
+      {
+        "json": {
+          "domain": "siteimprove.com",
+          "common_keywords": 1,
+          "total_keywords": 4,
+          "missing_keywords": 3,
+          "traffic_sum": 5,
+          "price_sum": 0
+        }
+      }
+    ],
+    "Get regional database overview": [
+      {
+        "json": {
+          "organic": {
+            "base_domain": "seranking.com",
+            "price_sum": 101887.55,
+            "traffic_sum": 41599,
+            "keywords_new_count": 44100,
+            "keywords_down_count": 39183,
+            "keywords_up_count": 30881,
+            "keywords_equal_count": 27362,
+            "keywords_lost_count": 39587,
+            "keywords_count": 113796,
+            "top1_5": 20789,
+            "top6_10": 10856,
+            "top11_20": 18767,
+            "top21_50": 40767,
+            "top51_100": 50081,
+            "year": 2025,
+            "month": 10
+          },
+          "adv": {
+            "base_domain": "seranking.com",
+            "price_sum": 79.5,
+            "traffic_sum": 35,
+            "keywords_new_count": 10,
+            "keywords_down_count": 0,
+            "keywords_up_count": 0,
+            "keywords_equal_count": 6,
+            "keywords_lost_count": 31,
+            "keywords_count": 16,
+            "top1_2": 15,
+            "top3_5": 1,
+            "top6_8": 0,
+            "top9_11": 0,
+            "year": 2025,
+            "month": 10
+          }
+        }
+      }
+    ],
+    "Get domain keywords": [
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 2,
+          "keyword": "backlink counter",
+          "position": 2,
+          "prev_pos": null,
+          "volume": 480,
+          "cpc": 3.46,
+          "competition": 0.06,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 43,
+          "total_sites": null,
+          "traffic": 14,
+          "traffic_percent": 40,
+          "price": 50,
+          "block": "top",
+          "snippet_num": 705,
+          "snippets_count": 1,
+          "snippet_title": "Analyze Your Site Backlinks - Backlink CounterSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours!",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 2,
+          "keyword": "domein rating",
+          "position": 2,
+          "prev_pos": 2,
+          "volume": 320,
+          "cpc": 2.78,
+          "competition": 0.08,
+          "url": "https://seranking.com/position-tracking.html",
+          "difficulty": 20,
+          "total_sites": null,
+          "traffic": 10,
+          "traffic_percent": 28.57,
+          "price": 26.77,
+          "block": "top",
+          "snippet_num": 849,
+          "snippets_count": 1,
+          "snippet_title": "Domain Ranking Check | Every Major Search EngineSE Rankinghttps://www.seranking.com › seo_rank › tracking_tool",
+          "snippet_description": "Gain a competitive edge with our keyword position tracker—start your free trial today",
+          "snippet_display_url": "seranking.com/position-tracking.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 1,
+          "keyword": "site backlink check",
+          "position": 1,
+          "prev_pos": null,
+          "volume": 70,
+          "cpc": 0,
+          "competition": 0,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 44,
+          "total_sites": null,
+          "traffic": 5,
+          "traffic_percent": 14.29,
+          "price": 0,
+          "block": "top",
+          "snippet_num": 878,
+          "snippets_count": 1,
+          "snippet_title": "Backlink Checker ToolSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Check Backlinks To A Page — Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours!",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 1,
+          "keyword": "backlink online checker",
+          "position": 1,
+          "prev_pos": null,
+          "volume": 30,
+          "cpc": 0,
+          "competition": 0,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 41,
+          "total_sites": null,
+          "traffic": 2,
+          "traffic_percent": 5.71,
+          "price": 0,
+          "block": "top",
+          "snippet_num": 396,
+          "snippets_count": 1,
+          "snippet_title": "Backlink Checker ToolSE Rankinghttps://www.seranking.com › backlink › checker",
+          "snippet_description": "Highly Rated on G2Crowd — Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours! Get actionable SEO data on backlinks, referring domains, pages, anchors, IPs...",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 1,
+          "keyword": "look up links",
+          "position": 1,
+          "prev_pos": 1,
+          "volume": 20,
+          "cpc": 0,
+          "competition": 0.09,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 24,
+          "total_sites": null,
+          "traffic": 1,
+          "traffic_percent": 2.86,
+          "price": 0,
+          "block": "top",
+          "snippet_num": 858,
+          "snippets_count": 1,
+          "snippet_title": "Backlink Checker Tool - Check Backlinks To A PageSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours!",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 1,
+          "keyword": "linkbacks checker",
+          "position": 1,
+          "prev_pos": 1,
+          "volume": 10,
+          "cpc": 0,
+          "competition": 0,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 34,
+          "total_sites": null,
+          "traffic": 1,
+          "traffic_percent": 2.86,
+          "price": 0,
+          "block": "top",
+          "snippet_num": 227,
+          "snippets_count": 1,
+          "snippet_title": "Backlink Checker ToolSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Best Backlink Checker — Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours!",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 1,
+          "keyword": "check google keywords",
+          "position": 1,
+          "prev_pos": null,
+          "volume": 10,
+          "cpc": 3,
+          "competition": 0.03,
+          "url": "https://seranking.com/google-ranking-checker.html",
+          "difficulty": 61,
+          "total_sites": null,
+          "traffic": 1,
+          "traffic_percent": 2.86,
+          "price": 2.13,
+          "block": "top",
+          "snippet_num": 566,
+          "snippets_count": 1,
+          "snippet_title": "Google Keyword Rank Checkerseranking.comhttps://www.seranking.com",
+          "snippet_description": "Daily Ranking Updates — Gain a Competitive Edge with our Online Keyword Ranking Tool—Start Your Free Trial Today. Monitor Real-Time Ranking Shifts with Precision using SE Ranking’s Rank Tracker Tool.",
+          "snippet_display_url": "seranking.com/google-ranking-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 1,
+          "keyword": "sprawdzacz linkow",
+          "position": 1,
+          "prev_pos": 1,
+          "volume": 10,
+          "cpc": 0,
+          "competition": 0,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 16,
+          "total_sites": null,
+          "traffic": 1,
+          "traffic_percent": 2.86,
+          "price": 0,
+          "block": "top",
+          "snippet_num": 741,
+          "snippets_count": 1,
+          "snippet_title": "Backlink Checker Tool - Backlink ToolSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours!",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 100,
+          "keyword": "seoranking",
+          "position": 1,
+          "prev_pos": null,
+          "volume": 390,
+          "cpc": 2,
+          "competition": 0.11,
+          "url": "https://seranking.com/",
+          "difficulty": 30,
+          "total_sites": null,
+          "traffic": 0,
+          "traffic_percent": 0,
+          "price": 0,
+          "block": "bottom",
+          "snippet_num": 351,
+          "snippets_count": 1,
+          "snippet_title": "SE RankingSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Your SEO Innovation Partner — Shift from Stressful to Hassle-Free SEO with an Innovative AI- and ML-Backed Platform. Bridge the Gap Between SEO and Cutting-Edge Technology. Start Your Trial Now!",
+          "snippet_display_url": "seranking.com/"
+        }
+      },
+      {
+        "json": {
+          "block_type": null,
+          "block_position": 101,
+          "keyword": "test backlinks",
+          "position": 1,
+          "prev_pos": null,
+          "volume": 10,
+          "cpc": 3.3,
+          "competition": 0.08,
+          "url": "https://seranking.com/backlink-checker.html",
+          "difficulty": 41,
+          "total_sites": null,
+          "traffic": 0,
+          "traffic_percent": 0,
+          "price": 0,
+          "block": "bottom",
+          "snippet_num": 194,
+          "snippets_count": 1,
+          "snippet_title": "Backlink Checker ToolSE Rankinghttps://www.seranking.com",
+          "snippet_description": "Check Your Backlinks — Intuitive backlink tool to spy on competitors. Discover their strategies and adjust yours!",
+          "snippet_display_url": "seranking.com/backlink-checker.html"
+        }
+      }
+    ],
+    "Get worldwide aggregate statistics": [
+      {
+        "json": {
+          "organic": [
+            {
+              "source": "worldwide",
+              "country": "Worldwide",
+              "keywords_count": 944895,
+              "traffic_sum": 348008,
+              "price_sum": 329218.25,
+              "positions_new_count": 273884,
+              "positions_up_count": 242259,
+              "positions_down_count": 237569,
+              "positions_lost_count": 270034,
+              "positions_equal_count": 529387,
+              "positions_tops": {
+                "top1_5": 179069,
+                "top6_10": 121317,
+                "top11_20": 196053,
+                "top21_50": 398805,
+                "top51_100": 385561
+              }
+            },
+            {
+              "source": "us",
+              "country": "USA",
+              "keywords_count": 113796,
+              "traffic_sum": 41599,
+              "price_sum": 101887.55,
+              "positions_new_count": 44100,
+              "positions_up_count": 30881,
+              "positions_down_count": 39183,
+              "positions_lost_count": 39587,
+              "positions_equal_count": 27362,
+              "positions_tops": {
+                "top1_5": 20789,
+                "top6_10": 10856,
+                "top11_20": 18767,
+                "top21_50": 40767,
+                "top51_100": 50081
+              }
+            },
+            {
+              "source": "uk",
+              "country": "United Kingdom",
+              "keywords_count": 45486,
+              "traffic_sum": 26793,
+              "price_sum": 50503.27,
+              "positions_new_count": 18596,
+              "positions_up_count": 12794,
+              "positions_down_count": 15757,
+              "positions_lost_count": 15139,
+              "positions_equal_count": 11185,
+              "positions_tops": {
+                "top1_5": 8474,
+                "top6_10": 5057,
+                "top11_20": 8376,
+                "top21_50": 17468,
+                "top51_100": 18836
+              }
+            },
+            {
+              "source": "in",
+              "country": "India",
+              "keywords_count": 39428,
+              "traffic_sum": 40417,
+              "price_sum": 8423.53,
+              "positions_new_count": 8584,
+              "positions_up_count": 6426,
+              "positions_down_count": 7136,
+              "positions_lost_count": 9417,
+              "positions_equal_count": 32443,
+              "positions_tops": {
+                "top1_5": 8476,
+                "top6_10": 5958,
+                "top11_20": 9045,
+                "top21_50": 15267,
+                "top51_100": 15759
+              }
+            },
+            {
+              "source": "nl",
+              "country": "Netherlands",
+              "keywords_count": 35313,
+              "traffic_sum": 11807,
+              "price_sum": 14818.14,
+              "positions_new_count": 11365,
+              "positions_up_count": 12239,
+              "positions_down_count": 10526,
+              "positions_lost_count": 12540,
+              "positions_equal_count": 13394,
+              "positions_tops": {
+                "top1_5": 6787,
+                "top6_10": 4102,
+                "top11_20": 7109,
+                "top21_50": 14935,
+                "top51_100": 14458
+              }
+            },
+            {
+              "source": "ua",
+              "country": "Ukraine",
+              "keywords_count": 32237,
+              "traffic_sum": 8592,
+              "price_sum": 3032.11,
+              "positions_new_count": 11559,
+              "positions_up_count": 9496,
+              "positions_down_count": 6947,
+              "positions_lost_count": 7481,
+              "positions_equal_count": 15723,
+              "positions_tops": {
+                "top1_5": 6402,
+                "top6_10": 4051,
+                "top11_20": 6696,
+                "top21_50": 13294,
+                "top51_100": 13126
+              }
+            },
+            {
+              "source": "au",
+              "country": "Australia",
+              "keywords_count": 30490,
+              "traffic_sum": 3721,
+              "price_sum": 8047.25,
+              "positions_new_count": 12771,
+              "positions_up_count": 8568,
+              "positions_down_count": 9813,
+              "positions_lost_count": 9653,
+              "positions_equal_count": 9114,
+              "positions_tops": {
+                "top1_5": 6247,
+                "top6_10": 3332,
+                "top11_20": 5439,
+                "top21_50": 12186,
+                "top51_100": 12922
+              }
+            },
+            {
+              "source": "es",
+              "country": "Spain",
+              "keywords_count": 30464,
+              "traffic_sum": 18657,
+              "price_sum": 13409.54,
+              "positions_new_count": 13833,
+              "positions_up_count": 11521,
+              "positions_down_count": 9720,
+              "positions_lost_count": 19113,
+              "positions_equal_count": 4931,
+              "positions_tops": {
+                "top1_5": 8797,
+                "top6_10": 4298,
+                "top11_20": 5445,
+                "top21_50": 10585,
+                "top51_100": 10787
+              }
+            },
+            {
+              "source": "de",
+              "country": "Germany",
+              "keywords_count": 29735,
+              "traffic_sum": 38847,
+              "price_sum": 56933.9,
+              "positions_new_count": 8138,
+              "positions_up_count": 8420,
+              "positions_down_count": 7752,
+              "positions_lost_count": 8077,
+              "positions_equal_count": 15026,
+              "positions_tops": {
+                "top1_5": 5998,
+                "top6_10": 3390,
+                "top11_20": 5666,
+                "top21_50": 12032,
+                "top51_100": 12189
+              }
+            },
+            {
+              "source": "it",
+              "country": "Italy",
+              "keywords_count": 25581,
+              "traffic_sum": 8982,
+              "price_sum": 6664.9,
+              "positions_new_count": 7245,
+              "positions_up_count": 9109,
+              "positions_down_count": 6893,
+              "positions_lost_count": 8020,
+              "positions_equal_count": 9560,
+              "positions_tops": {
+                "top1_5": 3781,
+                "top6_10": 2555,
+                "top11_20": 4491,
+                "top21_50": 10338,
+                "top51_100": 11612
+              }
+            },
+            {
+              "source": "by",
+              "country": "Belarus",
+              "keywords_count": 25347,
+              "traffic_sum": 2128,
+              "price_sum": 3.7,
+              "positions_new_count": 9277,
+              "positions_up_count": 8977,
+              "positions_down_count": 8303,
+              "positions_lost_count": 8855,
+              "positions_equal_count": 7199,
+              "positions_tops": {
+                "top1_5": 4373,
+                "top6_10": 2478,
+                "top11_20": 4678,
+                "top21_50": 10967,
+                "top51_100": 11167
+              }
+            },
+            {
+              "source": "ru",
+              "country": "Russia",
+              "keywords_count": 25022,
+              "traffic_sum": 8633,
+              "price_sum": 1144.17,
+              "positions_new_count": 5543,
+              "positions_up_count": 6560,
+              "positions_down_count": 5288,
+              "positions_lost_count": 5119,
+              "positions_equal_count": 12356,
+              "positions_tops": {
+                "top1_5": 2776,
+                "top6_10": 1968,
+                "top11_20": 4060,
+                "top21_50": 10041,
+                "top51_100": 10838
+              }
+            },
+            {
+              "source": "ca",
+              "country": "Canada",
+              "keywords_count": 24738,
+              "traffic_sum": 7261,
+              "price_sum": 11688.82,
+              "positions_new_count": 8420,
+              "positions_up_count": 6806,
+              "positions_down_count": 6840,
+              "positions_lost_count": 6753,
+              "positions_equal_count": 10700,
+              "positions_tops": {
+                "top1_5": 4469,
+                "top6_10": 2738,
+                "top11_20": 4700,
+                "top21_50": 9983,
+                "top51_100": 10810
+              }
+            },
+            {
+              "source": "fr",
+              "country": "France",
+              "keywords_count": 24560,
+              "traffic_sum": 11771,
+              "price_sum": 10735.99,
+              "positions_new_count": 5048,
+              "positions_up_count": 5076,
+              "positions_down_count": 5976,
+              "positions_lost_count": 5782,
+              "positions_equal_count": 17221,
+              "positions_tops": {
+                "top1_5": 5162,
+                "top6_10": 2990,
+                "top11_20": 4706,
+                "top21_50": 9781,
+                "top51_100": 10592
+              }
+            },
+            {
+              "source": "br",
+              "country": "Brazil",
+              "keywords_count": 20408,
+              "traffic_sum": 4046,
+              "price_sum": 740.09,
+              "positions_new_count": 7821,
+              "positions_up_count": 6584,
+              "positions_down_count": 7116,
+              "positions_lost_count": 9118,
+              "positions_equal_count": 6456,
+              "positions_tops": {
+                "top1_5": 2994,
+                "top6_10": 2999,
+                "top11_20": 4349,
+                "top21_50": 8915,
+                "top51_100": 8688
+              }
+            },
+            {
+              "source": "vn",
+              "country": "Vietnam",
+              "keywords_count": 17876,
+              "traffic_sum": 1728,
+              "price_sum": 353.89,
+              "positions_new_count": 4996,
+              "positions_up_count": 4072,
+              "positions_down_count": 4340,
+              "positions_lost_count": 5572,
+              "positions_equal_count": 10721,
+              "positions_tops": {
+                "top1_5": 2113,
+                "top6_10": 2398,
+                "top11_20": 3857,
+                "top21_50": 7945,
+                "top51_100": 7804
+              }
+            },
+            {
+              "source": "ge",
+              "country": "Georgia",
+              "keywords_count": 17757,
+              "traffic_sum": 1595,
+              "price_sum": 53.4,
+              "positions_new_count": 4594,
+              "positions_up_count": 3974,
+              "positions_down_count": 3356,
+              "positions_lost_count": 3966,
+              "positions_equal_count": 11039,
+              "positions_tops": {
+                "top1_5": 1758,
+                "top6_10": 1918,
+                "top11_20": 3686,
+                "top21_50": 8182,
+                "top51_100": 7402
+              }
+            },
+            {
+              "source": "tr",
+              "country": "Turkey",
+              "keywords_count": 17125,
+              "traffic_sum": 2047,
+              "price_sum": 360.12,
+              "positions_new_count": 1909,
+              "positions_up_count": 1669,
+              "positions_down_count": 1693,
+              "positions_lost_count": 2078,
+              "positions_equal_count": 19991,
+              "positions_tops": {
+                "top1_5": 3099,
+                "top6_10": 2655,
+                "top11_20": 4372,
+                "top21_50": 8474,
+                "top51_100": 6617
+              }
+            },
+            {
+              "source": "af",
+              "country": "Afghanistan",
+              "keywords_count": 15921,
+              "traffic_sum": 922,
+              "price_sum": 0.16,
+              "positions_new_count": 4433,
+              "positions_up_count": 3761,
+              "positions_down_count": 3030,
+              "positions_lost_count": 4603,
+              "positions_equal_count": 9457,
+              "positions_tops": {
+                "top1_5": 1927,
+                "top6_10": 1864,
+                "top11_20": 3322,
+                "top21_50": 7118,
+                "top51_100": 6442
+              }
+            },
+            {
+              "source": "co",
+              "country": "Colombia",
+              "keywords_count": 15654,
+              "traffic_sum": 3960,
+              "price_sum": 1231.35,
+              "positions_new_count": 4394,
+              "positions_up_count": 4240,
+              "positions_down_count": 4530,
+              "positions_lost_count": 4762,
+              "positions_equal_count": 7636,
+              "positions_tops": {
+                "top1_5": 1935,
+                "top6_10": 2209,
+                "top11_20": 3621,
+                "top21_50": 6887,
+                "top51_100": 6135
+              }
+            },
+            {
+              "source": "mx",
+              "country": "Mexico",
+              "keywords_count": 14376,
+              "traffic_sum": 4261,
+              "price_sum": 1632.32,
+              "positions_new_count": 3106,
+              "positions_up_count": 2396,
+              "positions_down_count": 2618,
+              "positions_lost_count": 3642,
+              "positions_equal_count": 11994,
+              "positions_tops": {
+                "top1_5": 3036,
+                "top6_10": 2207,
+                "top11_20": 3346,
+                "top21_50": 6257,
+                "top51_100": 5254
+              }
+            },
+            {
+              "source": "eg",
+              "country": "Egypt",
+              "keywords_count": 13331,
+              "traffic_sum": 1028,
+              "price_sum": 112.59,
+              "positions_new_count": 2329,
+              "positions_up_count": 1876,
+              "positions_down_count": 2093,
+              "positions_lost_count": 2606,
+              "positions_equal_count": 11829,
+              "positions_tops": {
+                "top1_5": 2020,
+                "top6_10": 1842,
+                "top11_20": 3020,
+                "top21_50": 5768,
+                "top51_100": 5464
+              }
+            },
+            {
+              "source": "id",
+              "country": "Indonesia",
+              "keywords_count": 12989,
+              "traffic_sum": 2609,
+              "price_sum": 307.55,
+              "positions_new_count": 591,
+              "positions_up_count": 604,
+              "positions_down_count": 579,
+              "positions_lost_count": 676,
+              "positions_equal_count": 19041,
+              "positions_tops": {
+                "top1_5": 3618,
+                "top6_10": 2453,
+                "top11_20": 3297,
+                "top21_50": 6272,
+                "top51_100": 5125
+              }
+            },
+            {
+              "source": "sg",
+              "country": "Singapore",
+              "keywords_count": 12862,
+              "traffic_sum": 882,
+              "price_sum": 681.13,
+              "positions_new_count": 3283,
+              "positions_up_count": 2454,
+              "positions_down_count": 2612,
+              "positions_lost_count": 2866,
+              "positions_equal_count": 9494,
+              "positions_tops": {
+                "top1_5": 2421,
+                "top6_10": 1616,
+                "top11_20": 2630,
+                "top21_50": 5862,
+                "top51_100": 5282
+              }
+            },
+            {
+              "source": "at",
+              "country": "Austria",
+              "keywords_count": 12398,
+              "traffic_sum": 2892,
+              "price_sum": 3076.14,
+              "positions_new_count": 2479,
+              "positions_up_count": 2413,
+              "positions_down_count": 2229,
+              "positions_lost_count": 2713,
+              "positions_equal_count": 10145,
+              "positions_tops": {
+                "top1_5": 2744,
+                "top6_10": 1384,
+                "top11_20": 2512,
+                "top21_50": 5242,
+                "top51_100": 5325
+              }
+            },
+            {
+              "source": "ph",
+              "country": "Philippines",
+              "keywords_count": 11532,
+              "traffic_sum": 2055,
+              "price_sum": 243.08,
+              "positions_new_count": 1756,
+              "positions_up_count": 1449,
+              "positions_down_count": 1547,
+              "positions_lost_count": 1544,
+              "positions_equal_count": 10313,
+              "positions_tops": {
+                "top1_5": 1207,
+                "top6_10": 1397,
+                "top11_20": 2373,
+                "top21_50": 5158,
+                "top51_100": 4920
+              }
+            },
+            {
+              "source": "pk",
+              "country": "Pakistan",
+              "keywords_count": 11531,
+              "traffic_sum": 14558,
+              "price_sum": 2797.21,
+              "positions_new_count": 2655,
+              "positions_up_count": 3121,
+              "positions_down_count": 2458,
+              "positions_lost_count": 2984,
+              "positions_equal_count": 7730,
+              "positions_tops": {
+                "top1_5": 1883,
+                "top6_10": 1311,
+                "top11_20": 2631,
+                "top21_50": 5277,
+                "top51_100": 4832
+              }
+            },
+            {
+              "source": "nz",
+              "country": "New Zealand",
+              "keywords_count": 10013,
+              "traffic_sum": 430,
+              "price_sum": 400.29,
+              "positions_new_count": 3859,
+              "positions_up_count": 2895,
+              "positions_down_count": 3414,
+              "positions_lost_count": 2516,
+              "positions_equal_count": 3152,
+              "positions_tops": {
+                "top1_5": 1773,
+                "top6_10": 1052,
+                "top11_20": 1753,
+                "top21_50": 4181,
+                "top51_100": 4521
+              }
+            },
+            {
+              "source": "pl",
+              "country": "Poland",
+              "keywords_count": 9873,
+              "traffic_sum": 4604,
+              "price_sum": 1672.7,
+              "positions_new_count": 1191,
+              "positions_up_count": 1575,
+              "positions_down_count": 1264,
+              "positions_lost_count": 1442,
+              "positions_equal_count": 11860,
+              "positions_tops": {
+                "top1_5": 2849,
+                "top6_10": 1772,
+                "top11_20": 2720,
+                "top21_50": 4936,
+                "top51_100": 3592
+              }
+            },
+            {
+              "source": "sa",
+              "country": "Saudi Arabia",
+              "keywords_count": 9737,
+              "traffic_sum": 960,
+              "price_sum": 636.73,
+              "positions_new_count": 3410,
+              "positions_up_count": 2708,
+              "positions_down_count": 3437,
+              "positions_lost_count": 3786,
+              "positions_equal_count": 3794,
+              "positions_tops": {
+                "top1_5": 1431,
+                "top6_10": 1552,
+                "top11_20": 2117,
+                "top21_50": 4421,
+                "top51_100": 3817
+              }
+            },
+            {
+              "source": "my",
+              "country": "Malaysia",
+              "keywords_count": 9253,
+              "traffic_sum": 1032,
+              "price_sum": 228.64,
+              "positions_new_count": 2252,
+              "positions_up_count": 1794,
+              "positions_down_count": 1952,
+              "positions_lost_count": 2752,
+              "positions_equal_count": 6621,
+              "positions_tops": {
+                "top1_5": 1384,
+                "top6_10": 1490,
+                "top11_20": 2164,
+                "top21_50": 3860,
+                "top51_100": 3706
+              }
+            },
+            {
+              "source": "za",
+              "country": "South Africa",
+              "keywords_count": 8803,
+              "traffic_sum": 1479,
+              "price_sum": 692.56,
+              "positions_new_count": 1953,
+              "positions_up_count": 1604,
+              "positions_down_count": 1761,
+              "positions_lost_count": 1615,
+              "positions_equal_count": 7305,
+              "positions_tops": {
+                "top1_5": 1843,
+                "top6_10": 1416,
+                "top11_20": 2041,
+                "top21_50": 3816,
+                "top51_100": 3480
+              }
+            },
+            {
+              "source": "ar",
+              "country": "Argentina",
+              "keywords_count": 8711,
+              "traffic_sum": 2288,
+              "price_sum": 274.4,
+              "positions_new_count": 1162,
+              "positions_up_count": 947,
+              "positions_down_count": 986,
+              "positions_lost_count": 1692,
+              "positions_equal_count": 10222,
+              "positions_tops": {
+                "top1_5": 2186,
+                "top6_10": 1625,
+                "top11_20": 2261,
+                "top21_50": 4193,
+                "top51_100": 3034
+              }
+            },
+            {
+              "source": "tw",
+              "country": "Taiwan",
+              "keywords_count": 8012,
+              "traffic_sum": 378,
+              "price_sum": 156.54,
+              "positions_new_count": 2900,
+              "positions_up_count": 1442,
+              "positions_down_count": 1350,
+              "positions_lost_count": 2001,
+              "positions_equal_count": 5554,
+              "positions_tops": {
+                "top1_5": 1082,
+                "top6_10": 1025,
+                "top11_20": 1679,
+                "top21_50": 4077,
+                "top51_100": 3369
+              }
+            },
+            {
+              "source": "ae",
+              "country": "United Arab Emirates",
+              "keywords_count": 7651,
+              "traffic_sum": 956,
+              "price_sum": 965.46,
+              "positions_new_count": 2333,
+              "positions_up_count": 1700,
+              "positions_down_count": 2011,
+              "positions_lost_count": 2679,
+              "positions_equal_count": 4793,
+              "positions_tops": {
+                "top1_5": 1477,
+                "top6_10": 1060,
+                "top11_20": 1788,
+                "top21_50": 3482,
+                "top51_100": 3016
+              }
+            },
+            {
+              "source": "ie",
+              "country": "Ireland",
+              "keywords_count": 7646,
+              "traffic_sum": 741,
+              "price_sum": 643.47,
+              "positions_new_count": 1615,
+              "positions_up_count": 1602,
+              "positions_down_count": 999,
+              "positions_lost_count": 1571,
+              "positions_equal_count": 6289,
+              "positions_tops": {
+                "top1_5": 1445,
+                "top6_10": 998,
+                "top11_20": 1528,
+                "top21_50": 3062,
+                "top51_100": 3448
+              }
+            },
+            {
+              "source": "bd",
+              "country": "Bangladesh",
+              "keywords_count": 7446,
+              "traffic_sum": 6952,
+              "price_sum": 1779.6,
+              "positions_new_count": 2375,
+              "positions_up_count": 2266,
+              "positions_down_count": 1922,
+              "positions_lost_count": 2234,
+              "positions_equal_count": 3451,
+              "positions_tops": {
+                "top1_5": 1324,
+                "top6_10": 1097,
+                "top11_20": 1777,
+                "top21_50": 2947,
+                "top51_100": 2863
+              }
+            },
+            {
+              "source": "ch",
+              "country": "Switzerland",
+              "keywords_count": 7380,
+              "traffic_sum": 3310,
+              "price_sum": 4110.85,
+              "positions_new_count": 3172,
+              "positions_up_count": 2351,
+              "positions_down_count": 2983,
+              "positions_lost_count": 2632,
+              "positions_equal_count": 1834,
+              "positions_tops": {
+                "top1_5": 1871,
+                "top6_10": 914,
+                "top11_20": 1486,
+                "top21_50": 3064,
+                "top51_100": 2975
+              }
+            },
+            {
+              "source": "pe",
+              "country": "Peru",
+              "keywords_count": 7286,
+              "traffic_sum": 1332,
+              "price_sum": 242.43,
+              "positions_new_count": 1020,
+              "positions_up_count": 812,
+              "positions_down_count": 881,
+              "positions_lost_count": 1335,
+              "positions_equal_count": 7848,
+              "positions_tops": {
+                "top1_5": 1671,
+                "top6_10": 1210,
+                "top11_20": 1816,
+                "top21_50": 3253,
+                "top51_100": 2594
+              }
+            },
+            {
+              "source": "th",
+              "country": "Thailand",
+              "keywords_count": 7205,
+              "traffic_sum": 2031,
+              "price_sum": 268.34,
+              "positions_new_count": 2187,
+              "positions_up_count": 2007,
+              "positions_down_count": 1905,
+              "positions_lost_count": 2367,
+              "positions_equal_count": 4675,
+              "positions_tops": {
+                "top1_5": 1344,
+                "top6_10": 1294,
+                "top11_20": 1781,
+                "top21_50": 3414,
+                "top51_100": 2936
+              }
+            },
+            {
+              "source": "gr",
+              "country": "Greece",
+              "keywords_count": 6937,
+              "traffic_sum": 1037,
+              "price_sum": 444.78,
+              "positions_new_count": 532,
+              "positions_up_count": 586,
+              "positions_down_count": 464,
+              "positions_lost_count": 594,
+              "positions_equal_count": 9763,
+              "positions_tops": {
+                "top1_5": 1862,
+                "top6_10": 1336,
+                "top11_20": 1954,
+                "top21_50": 3521,
+                "top51_100": 2645
+              }
+            },
+            {
+              "source": "cz",
+              "country": "Czechia",
+              "keywords_count": 6906,
+              "traffic_sum": 1422,
+              "price_sum": 752.42,
+              "positions_new_count": 1278,
+              "positions_up_count": 1172,
+              "positions_down_count": 1008,
+              "positions_lost_count": 1229,
+              "positions_equal_count": 8273,
+              "positions_tops": {
+                "top1_5": 2268,
+                "top6_10": 1392,
+                "top11_20": 2090,
+                "top21_50": 3542,
+                "top51_100": 2410
+              }
+            },
+            {
+              "source": "se",
+              "country": "Sweden",
+              "keywords_count": 6480,
+              "traffic_sum": 2029,
+              "price_sum": 1324.7,
+              "positions_new_count": 877,
+              "positions_up_count": 992,
+              "positions_down_count": 671,
+              "positions_lost_count": 938,
+              "positions_equal_count": 6897,
+              "positions_tops": {
+                "top1_5": 1302,
+                "top6_10": 999,
+                "top11_20": 1440,
+                "top21_50": 2906,
+                "top51_100": 2773
+              }
+            },
+            {
+              "source": "pt",
+              "country": "Portugal",
+              "keywords_count": 6255,
+              "traffic_sum": 3778,
+              "price_sum": 1105.4,
+              "positions_new_count": 914,
+              "positions_up_count": 919,
+              "positions_down_count": 1190,
+              "positions_lost_count": 887,
+              "positions_equal_count": 7549,
+              "positions_tops": {
+                "top1_5": 1980,
+                "top6_10": 1246,
+                "top11_20": 1782,
+                "top21_50": 3209,
+                "top51_100": 2335
+              }
+            },
+            {
+              "source": "cy",
+              "country": "Cyprus",
+              "keywords_count": 5963,
+              "traffic_sum": 1105,
+              "price_sum": 481.88,
+              "positions_new_count": 1592,
+              "positions_up_count": 3032,
+              "positions_down_count": 2292,
+              "positions_lost_count": 2662,
+              "positions_equal_count": 2249,
+              "positions_tops": {
+                "top1_5": 1631,
+                "top6_10": 1082,
+                "top11_20": 1751,
+                "top21_50": 2724,
+                "top51_100": 1970
+              }
+            },
+            {
+              "source": "cl",
+              "country": "Chile",
+              "keywords_count": 5646,
+              "traffic_sum": 754,
+              "price_sum": 199.4,
+              "positions_new_count": 1233,
+              "positions_up_count": 950,
+              "positions_down_count": 1014,
+              "positions_lost_count": 1337,
+              "positions_equal_count": 4958,
+              "positions_tops": {
+                "top1_5": 1384,
+                "top6_10": 858,
+                "top11_20": 1260,
+                "top21_50": 2501,
+                "top51_100": 2140
+              }
+            },
+            {
+              "source": "be",
+              "country": "Belgium",
+              "keywords_count": 5418,
+              "traffic_sum": 1719,
+              "price_sum": 1478.9,
+              "positions_new_count": 1127,
+              "positions_up_count": 1090,
+              "positions_down_count": 909,
+              "positions_lost_count": 1409,
+              "positions_equal_count": 4547,
+              "positions_tops": {
+                "top1_5": 1141,
+                "top6_10": 660,
+                "top11_20": 1043,
+                "top21_50": 2380,
+                "top51_100": 2423
+              }
+            },
+            {
+              "source": "kz",
+              "country": "Kazakhstan",
+              "keywords_count": 5413,
+              "traffic_sum": 867,
+              "price_sum": 11.34,
+              "positions_new_count": 1499,
+              "positions_up_count": 1832,
+              "positions_down_count": 2155,
+              "positions_lost_count": 1180,
+              "positions_equal_count": 1826,
+              "positions_tops": {
+                "top1_5": 728,
+                "top6_10": 591,
+                "top11_20": 1307,
+                "top21_50": 2632,
+                "top51_100": 2050
+              }
+            },
+            {
+              "source": "jp",
+              "country": "Japan",
+              "keywords_count": 4921,
+              "traffic_sum": 1816,
+              "price_sum": 2748.6,
+              "positions_new_count": 1184,
+              "positions_up_count": 507,
+              "positions_down_count": 485,
+              "positions_lost_count": 804,
+              "positions_equal_count": 4976,
+              "positions_tops": {
+                "top1_5": 786,
+                "top6_10": 617,
+                "top11_20": 1074,
+                "top21_50": 2430,
+                "top51_100": 2234
+              }
+            },
+            {
+              "source": "il",
+              "country": "Israel",
+              "keywords_count": 4643,
+              "traffic_sum": 1160,
+              "price_sum": 2131.19,
+              "positions_new_count": 381,
+              "positions_up_count": 562,
+              "positions_down_count": 398,
+              "positions_lost_count": 482,
+              "positions_equal_count": 5253,
+              "positions_tops": {
+                "top1_5": 915,
+                "top6_10": 887,
+                "top11_20": 1156,
+                "top21_50": 2030,
+                "top51_100": 1602
+              }
+            },
+            {
+              "source": "kr",
+              "country": "South Korea",
+              "keywords_count": 4603,
+              "traffic_sum": 2150,
+              "price_sum": 1237.7,
+              "positions_new_count": 1444,
+              "positions_up_count": 1244,
+              "positions_down_count": 1165,
+              "positions_lost_count": 973,
+              "positions_equal_count": 3005,
+              "positions_tops": {
+                "top1_5": 1225,
+                "top6_10": 688,
+                "top11_20": 1055,
+                "top21_50": 2245,
+                "top51_100": 1635
+              }
+            },
+            {
+              "source": "ro",
+              "country": "Romania",
+              "keywords_count": 4219,
+              "traffic_sum": 1283,
+              "price_sum": 359.81,
+              "positions_new_count": 575,
+              "positions_up_count": 507,
+              "positions_down_count": 467,
+              "positions_lost_count": 459,
+              "positions_equal_count": 4851,
+              "positions_tops": {
+                "top1_5": 1112,
+                "top6_10": 700,
+                "top11_20": 1065,
+                "top21_50": 1985,
+                "top51_100": 1523
+              }
+            },
+            {
+              "source": "kh",
+              "country": "Cambodia",
+              "keywords_count": 4145,
+              "traffic_sum": 2923,
+              "price_sum": 629.35,
+              "positions_new_count": 806,
+              "positions_up_count": 1756,
+              "positions_down_count": 1078,
+              "positions_lost_count": 1307,
+              "positions_equal_count": 2415,
+              "positions_tops": {
+                "top1_5": 855,
+                "top6_10": 893,
+                "top11_20": 1042,
+                "top21_50": 1909,
+                "top51_100": 1356
+              }
+            },
+            {
+              "source": "mk",
+              "country": "North Macedonia",
+              "keywords_count": 4144,
+              "traffic_sum": 1035,
+              "price_sum": 156.65,
+              "positions_new_count": 1010,
+              "positions_up_count": 2566,
+              "positions_down_count": 1627,
+              "positions_lost_count": 1030,
+              "positions_equal_count": 1178,
+              "positions_tops": {
+                "top1_5": 853,
+                "top6_10": 764,
+                "top11_20": 1257,
+                "top21_50": 2083,
+                "top51_100": 1424
+              }
+            },
+            {
+              "source": "hk",
+              "country": "Hong Kong",
+              "keywords_count": 4121,
+              "traffic_sum": 1051,
+              "price_sum": 678.44,
+              "positions_new_count": 952,
+              "positions_up_count": 893,
+              "positions_down_count": 852,
+              "positions_lost_count": 1109,
+              "positions_equal_count": 3060,
+              "positions_tops": {
+                "top1_5": 802,
+                "top6_10": 512,
+                "top11_20": 777,
+                "top21_50": 1945,
+                "top51_100": 1706
+              }
+            },
+            {
+              "source": "ec",
+              "country": "Ecuador",
+              "keywords_count": 3954,
+              "traffic_sum": 547,
+              "price_sum": 13.93,
+              "positions_new_count": 1012,
+              "positions_up_count": 612,
+              "positions_down_count": 759,
+              "positions_lost_count": 1227,
+              "positions_equal_count": 3674,
+              "positions_tops": {
+                "top1_5": 1076,
+                "top6_10": 619,
+                "top11_20": 971,
+                "top21_50": 1898,
+                "top51_100": 1481
+              }
+            },
+            {
+              "source": "ng",
+              "country": "Nigeria",
+              "keywords_count": 3561,
+              "traffic_sum": 1276,
+              "price_sum": 106.7,
+              "positions_new_count": 984,
+              "positions_up_count": 1254,
+              "positions_down_count": 976,
+              "positions_lost_count": 978,
+              "positions_equal_count": 1280,
+              "positions_tops": {
+                "top1_5": 432,
+                "top6_10": 386,
+                "top11_20": 712,
+                "top21_50": 1526,
+                "top51_100": 1432
+              }
+            },
+            {
+              "source": "rs",
+              "country": "Serbia",
+              "keywords_count": 3543,
+              "traffic_sum": 1127,
+              "price_sum": 284.58,
+              "positions_new_count": 626,
+              "positions_up_count": 804,
+              "positions_down_count": 648,
+              "positions_lost_count": 849,
+              "positions_equal_count": 3313,
+              "positions_tops": {
+                "top1_5": 989,
+                "top6_10": 644,
+                "top11_20": 943,
+                "top21_50": 1680,
+                "top51_100": 1130
+              }
+            },
+            {
+              "source": "ma",
+              "country": "Morocco",
+              "keywords_count": 3372,
+              "traffic_sum": 2215,
+              "price_sum": 456.46,
+              "positions_new_count": 767,
+              "positions_up_count": 797,
+              "positions_down_count": 465,
+              "positions_lost_count": 529,
+              "positions_equal_count": 2580,
+              "positions_tops": {
+                "top1_5": 788,
+                "top6_10": 501,
+                "top11_20": 723,
+                "top21_50": 1326,
+                "top51_100": 1269
+              }
+            },
+            {
+              "source": "no",
+              "country": "Norway",
+              "keywords_count": 3127,
+              "traffic_sum": 262,
+              "price_sum": 132.91,
+              "positions_new_count": 311,
+              "positions_up_count": 349,
+              "positions_down_count": 283,
+              "positions_lost_count": 356,
+              "positions_equal_count": 3765,
+              "positions_tops": {
+                "top1_5": 697,
+                "top6_10": 489,
+                "top11_20": 780,
+                "top21_50": 1465,
+                "top51_100": 1269
+              }
+            },
+            {
+              "source": "bg",
+              "country": "Bulgaria",
+              "keywords_count": 2853,
+              "traffic_sum": 955,
+              "price_sum": 186.52,
+              "positions_new_count": 1291,
+              "positions_up_count": 1101,
+              "positions_down_count": 977,
+              "positions_lost_count": 1164,
+              "positions_equal_count": 940,
+              "positions_tops": {
+                "top1_5": 828,
+                "top6_10": 465,
+                "top11_20": 706,
+                "top21_50": 1316,
+                "top51_100": 988
+              }
+            },
+            {
+              "source": "dk",
+              "country": "Denmark",
+              "keywords_count": 2783,
+              "traffic_sum": 639,
+              "price_sum": 470.94,
+              "positions_new_count": 448,
+              "positions_up_count": 567,
+              "positions_down_count": 416,
+              "positions_lost_count": 473,
+              "positions_equal_count": 2506,
+              "positions_tops": {
+                "top1_5": 402,
+                "top6_10": 346,
+                "top11_20": 607,
+                "top21_50": 1374,
+                "top51_100": 1199
+              }
+            },
+            {
+              "source": "hu",
+              "country": "Hungary",
+              "keywords_count": 2745,
+              "traffic_sum": 805,
+              "price_sum": 136.62,
+              "positions_new_count": 693,
+              "positions_up_count": 728,
+              "positions_down_count": 724,
+              "positions_lost_count": 986,
+              "positions_equal_count": 1897,
+              "positions_tops": {
+                "top1_5": 685,
+                "top6_10": 460,
+                "top11_20": 667,
+                "top21_50": 1244,
+                "top51_100": 979
+              }
+            },
+            {
+              "source": "ke",
+              "country": "Kenya",
+              "keywords_count": 2701,
+              "traffic_sum": 1707,
+              "price_sum": 321.01,
+              "positions_new_count": 666,
+              "positions_up_count": 753,
+              "positions_down_count": 549,
+              "positions_lost_count": 760,
+              "positions_equal_count": 2116,
+              "positions_tops": {
+                "top1_5": 772,
+                "top6_10": 483,
+                "top11_20": 657,
+                "top21_50": 1305,
+                "top51_100": 858
+              }
+            },
+            {
+              "source": "dz",
+              "country": "Algeria",
+              "keywords_count": 2529,
+              "traffic_sum": 2079,
+              "price_sum": 153.48,
+              "positions_new_count": 685,
+              "positions_up_count": 751,
+              "positions_down_count": 587,
+              "positions_lost_count": 776,
+              "positions_equal_count": 1777,
+              "positions_tops": {
+                "top1_5": 467,
+                "top6_10": 354,
+                "top11_20": 692,
+                "top21_50": 1328,
+                "top51_100": 959
+              }
+            },
+            {
+              "source": "np",
+              "country": "Nepal",
+              "keywords_count": 2416,
+              "traffic_sum": 1134,
+              "price_sum": 98.64,
+              "positions_new_count": 327,
+              "positions_up_count": 452,
+              "positions_down_count": 289,
+              "positions_lost_count": 425,
+              "positions_equal_count": 2355,
+              "positions_tops": {
+                "top1_5": 417,
+                "top6_10": 391,
+                "top11_20": 645,
+                "top21_50": 1119,
+                "top51_100": 849
+              }
+            },
+            {
+              "source": "mt",
+              "country": "Malta",
+              "keywords_count": 2098,
+              "traffic_sum": 754,
+              "price_sum": 404.54,
+              "positions_new_count": 504,
+              "positions_up_count": 1027,
+              "positions_down_count": 654,
+              "positions_lost_count": 560,
+              "positions_equal_count": 379,
+              "positions_tops": {
+                "top1_5": 275,
+                "top6_10": 285,
+                "top11_20": 392,
+                "top21_50": 824,
+                "top51_100": 788
+              }
+            },
+            {
+              "source": "cn",
+              "country": "China",
+              "keywords_count": 2026,
+              "traffic_sum": 842,
+              "price_sum": 456.03,
+              "positions_new_count": 536,
+              "positions_up_count": 781,
+              "positions_down_count": 381,
+              "positions_lost_count": 587,
+              "positions_equal_count": 876,
+              "positions_tops": {
+                "top1_5": 355,
+                "top6_10": 291,
+                "top11_20": 327,
+                "top21_50": 825,
+                "top51_100": 775
+              }
+            },
+            {
+              "source": "ve",
+              "country": "Venezuela",
+              "keywords_count": 1908,
+              "traffic_sum": 808,
+              "price_sum": 38.96,
+              "positions_new_count": 730,
+              "positions_up_count": 583,
+              "positions_down_count": 580,
+              "positions_lost_count": 557,
+              "positions_equal_count": 971,
+              "positions_tops": {
+                "top1_5": 443,
+                "top6_10": 270,
+                "top11_20": 504,
+                "top21_50": 980,
+                "top51_100": 665
+              }
+            },
+            {
+              "source": "hr",
+              "country": "Croatia",
+              "keywords_count": 1731,
+              "traffic_sum": 593,
+              "price_sum": 85.49,
+              "positions_new_count": 472,
+              "positions_up_count": 478,
+              "positions_down_count": 477,
+              "positions_lost_count": 610,
+              "positions_equal_count": 1233,
+              "positions_tops": {
+                "top1_5": 455,
+                "top6_10": 278,
+                "top11_20": 462,
+                "top21_50": 845,
+                "top51_100": 617
+              }
+            },
+            {
+              "source": "pa",
+              "country": "Panama",
+              "keywords_count": 1667,
+              "traffic_sum": 114,
+              "price_sum": 3.39,
+              "positions_new_count": 505,
+              "positions_up_count": 652,
+              "positions_down_count": 518,
+              "positions_lost_count": 762,
+              "positions_equal_count": 557,
+              "positions_tops": {
+                "top1_5": 325,
+                "top6_10": 213,
+                "top11_20": 369,
+                "top21_50": 717,
+                "top51_100": 605
+              }
+            },
+            {
+              "source": "uy",
+              "country": "Uruguay",
+              "keywords_count": 1664,
+              "traffic_sum": 148,
+              "price_sum": 3.61,
+              "positions_new_count": 524,
+              "positions_up_count": 737,
+              "positions_down_count": 459,
+              "positions_lost_count": 778,
+              "positions_equal_count": 511,
+              "positions_tops": {
+                "top1_5": 321,
+                "top6_10": 249,
+                "top11_20": 363,
+                "top21_50": 725,
+                "top51_100": 573
+              }
+            },
+            {
+              "source": "sk",
+              "country": "Slovakia",
+              "keywords_count": 1604,
+              "traffic_sum": 368,
+              "price_sum": 94.83,
+              "positions_new_count": 303,
+              "positions_up_count": 324,
+              "positions_down_count": 296,
+              "positions_lost_count": 370,
+              "positions_equal_count": 1456,
+              "positions_tops": {
+                "top1_5": 376,
+                "top6_10": 241,
+                "top11_20": 413,
+                "top21_50": 777,
+                "top51_100": 564
+              }
+            },
+            {
+              "source": "lk",
+              "country": "Sri Lanka",
+              "keywords_count": 1375,
+              "traffic_sum": 670,
+              "price_sum": 58.74,
+              "positions_new_count": 250,
+              "positions_up_count": 408,
+              "positions_down_count": 301,
+              "positions_lost_count": 232,
+              "positions_equal_count": 744,
+              "positions_tops": {
+                "top1_5": 164,
+                "top6_10": 130,
+                "top11_20": 250,
+                "top21_50": 599,
+                "top51_100": 558
+              }
+            },
+            {
+              "source": "ee",
+              "country": "Estonia",
+              "keywords_count": 1374,
+              "traffic_sum": 295,
+              "price_sum": 43.99,
+              "positions_new_count": 329,
+              "positions_up_count": 651,
+              "positions_down_count": 506,
+              "positions_lost_count": 418,
+              "positions_equal_count": 378,
+              "positions_tops": {
+                "top1_5": 242,
+                "top6_10": 220,
+                "top11_20": 299,
+                "top21_50": 622,
+                "top51_100": 480
+              }
+            },
+            {
+              "source": "ba",
+              "country": "Bosnia and Herzegovina",
+              "keywords_count": 1372,
+              "traffic_sum": 245,
+              "price_sum": 6.5,
+              "positions_new_count": 327,
+              "positions_up_count": 580,
+              "positions_down_count": 333,
+              "positions_lost_count": 377,
+              "positions_equal_count": 741,
+              "positions_tops": {
+                "top1_5": 211,
+                "top6_10": 221,
+                "top11_20": 355,
+                "top21_50": 695,
+                "top51_100": 499
+              }
+            },
+            {
+              "source": "al",
+              "country": "Albania",
+              "keywords_count": 1337,
+              "traffic_sum": 258,
+              "price_sum": 15.01,
+              "positions_new_count": 372,
+              "positions_up_count": 674,
+              "positions_down_count": 353,
+              "positions_lost_count": 394,
+              "positions_equal_count": 555,
+              "positions_tops": {
+                "top1_5": 246,
+                "top6_10": 235,
+                "top11_20": 354,
+                "top21_50": 670,
+                "top51_100": 449
+              }
+            },
+            {
+              "source": "md",
+              "country": "Moldova",
+              "keywords_count": 1317,
+              "traffic_sum": 256,
+              "price_sum": 26.27,
+              "positions_new_count": 361,
+              "positions_up_count": 727,
+              "positions_down_count": 383,
+              "positions_lost_count": 506,
+              "positions_equal_count": 445,
+              "positions_tops": {
+                "top1_5": 326,
+                "top6_10": 214,
+                "top11_20": 352,
+                "top21_50": 600,
+                "top51_100": 422
+              }
+            },
+            {
+              "source": "si",
+              "country": "Slovenia",
+              "keywords_count": 1255,
+              "traffic_sum": 265,
+              "price_sum": 33.6,
+              "positions_new_count": 274,
+              "positions_up_count": 444,
+              "positions_down_count": 326,
+              "positions_lost_count": 464,
+              "positions_equal_count": 816,
+              "positions_tops": {
+                "top1_5": 189,
+                "top6_10": 216,
+                "top11_20": 342,
+                "top21_50": 660,
+                "top51_100": 452
+              }
+            },
+            {
+              "source": "lt",
+              "country": "Lithuania",
+              "keywords_count": 1201,
+              "traffic_sum": 656,
+              "price_sum": 182.45,
+              "positions_new_count": 206,
+              "positions_up_count": 267,
+              "positions_down_count": 187,
+              "positions_lost_count": 288,
+              "positions_equal_count": 1075,
+              "positions_tops": {
+                "top1_5": 261,
+                "top6_10": 150,
+                "top11_20": 304,
+                "top21_50": 576,
+                "top51_100": 441
+              }
+            },
+            {
+              "source": "fi",
+              "country": "Finland",
+              "keywords_count": 1195,
+              "traffic_sum": 349,
+              "price_sum": 218.41,
+              "positions_new_count": 261,
+              "positions_up_count": 197,
+              "positions_down_count": 202,
+              "positions_lost_count": 202,
+              "positions_equal_count": 1176,
+              "positions_tops": {
+                "top1_5": 209,
+                "top6_10": 180,
+                "top11_20": 334,
+                "top21_50": 596,
+                "top51_100": 517
+              }
+            },
+            {
+              "source": "iq",
+              "country": "Iraq",
+              "keywords_count": 1043,
+              "traffic_sum": 258,
+              "price_sum": 6.74,
+              "positions_new_count": 235,
+              "positions_up_count": 174,
+              "positions_down_count": 179,
+              "positions_lost_count": 148,
+              "positions_equal_count": 1044,
+              "positions_tops": {
+                "top1_5": 229,
+                "top6_10": 168,
+                "top11_20": 301,
+                "top21_50": 586,
+                "top51_100": 347
+              }
+            },
+            {
+              "source": "am",
+              "country": "Armenia",
+              "keywords_count": 1019,
+              "traffic_sum": 373,
+              "price_sum": 44.63,
+              "positions_new_count": 291,
+              "positions_up_count": 284,
+              "positions_down_count": 221,
+              "positions_lost_count": 240,
+              "positions_equal_count": 630,
+              "positions_tops": {
+                "top1_5": 109,
+                "top6_10": 151,
+                "top11_20": 283,
+                "top21_50": 460,
+                "top51_100": 423
+              }
+            },
+            {
+              "source": "tn",
+              "country": "Tunisia",
+              "keywords_count": 972,
+              "traffic_sum": 464,
+              "price_sum": 86.09,
+              "positions_new_count": 381,
+              "positions_up_count": 345,
+              "positions_down_count": 345,
+              "positions_lost_count": 309,
+              "positions_equal_count": 270,
+              "positions_tops": {
+                "top1_5": 163,
+                "top6_10": 112,
+                "top11_20": 212,
+                "top21_50": 449,
+                "top51_100": 405
+              }
+            },
+            {
+              "source": "jo",
+              "country": "Jordan",
+              "keywords_count": 933,
+              "traffic_sum": 491,
+              "price_sum": 4.13,
+              "positions_new_count": 274,
+              "positions_up_count": 287,
+              "positions_down_count": 233,
+              "positions_lost_count": 206,
+              "positions_equal_count": 539,
+              "positions_tops": {
+                "top1_5": 173,
+                "top6_10": 149,
+                "top11_20": 257,
+                "top21_50": 444,
+                "top51_100": 305
+              }
+            },
+            {
+              "source": "lu",
+              "country": "Luxembourg",
+              "keywords_count": 812,
+              "traffic_sum": 481,
+              "price_sum": 122.18,
+              "positions_new_count": 243,
+              "positions_up_count": 425,
+              "positions_down_count": 274,
+              "positions_lost_count": 291,
+              "positions_equal_count": 144,
+              "positions_tops": {
+                "top1_5": 121,
+                "top6_10": 92,
+                "top11_20": 185,
+                "top21_50": 369,
+                "top51_100": 319
+              }
+            },
+            {
+              "source": "do",
+              "country": "Dominican Republic",
+              "keywords_count": 807,
+              "traffic_sum": 184,
+              "price_sum": 13.41,
+              "positions_new_count": 355,
+              "positions_up_count": 294,
+              "positions_down_count": 303,
+              "positions_lost_count": 342,
+              "positions_equal_count": 236,
+              "positions_tops": {
+                "top1_5": 181,
+                "top6_10": 137,
+                "top11_20": 213,
+                "top21_50": 424,
+                "top51_100": 231
+              }
+            },
+            {
+              "source": "lv",
+              "country": "Latvia",
+              "keywords_count": 773,
+              "traffic_sum": 310,
+              "price_sum": 53.99,
+              "positions_new_count": 203,
+              "positions_up_count": 397,
+              "positions_down_count": 269,
+              "positions_lost_count": 294,
+              "positions_equal_count": 153,
+              "positions_tops": {
+                "top1_5": 93,
+                "top6_10": 92,
+                "top11_20": 175,
+                "top21_50": 358,
+                "top51_100": 304
+              }
+            },
+            {
+              "source": "gh",
+              "country": "Ghana",
+              "keywords_count": 699,
+              "traffic_sum": 155,
+              "price_sum": 7.1,
+              "positions_new_count": 144,
+              "positions_up_count": 180,
+              "positions_down_count": 150,
+              "positions_lost_count": 183,
+              "positions_equal_count": 370,
+              "positions_tops": {
+                "top1_5": 76,
+                "top6_10": 68,
+                "top11_20": 129,
+                "top21_50": 290,
+                "top51_100": 279
+              }
+            },
+            {
+              "source": "qa",
+              "country": "Qatar",
+              "keywords_count": 638,
+              "traffic_sum": 194,
+              "price_sum": 3.91,
+              "positions_new_count": 119,
+              "positions_up_count": 142,
+              "positions_down_count": 150,
+              "positions_lost_count": 117,
+              "positions_equal_count": 374,
+              "positions_tops": {
+                "top1_5": 55,
+                "top6_10": 59,
+                "top11_20": 108,
+                "top21_50": 287,
+                "top51_100": 275
+              }
+            },
+            {
+              "source": "uz",
+              "country": "Uzbekistan",
+              "keywords_count": 617,
+              "traffic_sum": 239,
+              "price_sum": 8.52,
+              "positions_new_count": 84,
+              "positions_up_count": 94,
+              "positions_down_count": 73,
+              "positions_lost_count": 75,
+              "positions_equal_count": 641,
+              "positions_tops": {
+                "top1_5": 114,
+                "top6_10": 108,
+                "top11_20": 189,
+                "top21_50": 283,
+                "top51_100": 196
+              }
+            },
+            {
+              "source": "me",
+              "country": "Montenegro",
+              "keywords_count": 588,
+              "traffic_sum": 81,
+              "price_sum": 0.34,
+              "positions_new_count": 131,
+              "positions_up_count": 328,
+              "positions_down_count": 178,
+              "positions_lost_count": 232,
+              "positions_equal_count": 161,
+              "positions_tops": {
+                "top1_5": 97,
+                "top6_10": 96,
+                "top11_20": 150,
+                "top21_50": 245,
+                "top51_100": 209
+              }
+            },
+            {
+              "source": "et",
+              "country": "Ethiopia",
+              "keywords_count": 575,
+              "traffic_sum": 127,
+              "price_sum": 7.85,
+              "positions_new_count": 189,
+              "positions_up_count": 193,
+              "positions_down_count": 204,
+              "positions_lost_count": 223,
+              "positions_equal_count": 290,
+              "positions_tops": {
+                "top1_5": 103,
+                "top6_10": 114,
+                "top11_20": 163,
+                "top21_50": 291,
+                "top51_100": 202
+              }
+            },
+            {
+              "source": "tt",
+              "country": "Trinidad and Tobago",
+              "keywords_count": 558,
+              "traffic_sum": 127,
+              "price_sum": 0.6,
+              "positions_new_count": 121,
+              "positions_up_count": 175,
+              "positions_down_count": 138,
+              "positions_lost_count": 201,
+              "positions_equal_count": 292,
+              "positions_tops": {
+                "top1_5": 83,
+                "top6_10": 60,
+                "top11_20": 123,
+                "top21_50": 257,
+                "top51_100": 203
+              }
+            },
+            {
+              "source": "is",
+              "country": "Iceland",
+              "keywords_count": 555,
+              "traffic_sum": 46,
+              "price_sum": 2,
+              "positions_new_count": 153,
+              "positions_up_count": 268,
+              "positions_down_count": 195,
+              "positions_lost_count": 225,
+              "positions_equal_count": 104,
+              "positions_tops": {
+                "top1_5": 47,
+                "top6_10": 73,
+                "top11_20": 126,
+                "top21_50": 233,
+                "top51_100": 241
+              }
+            },
+            {
+              "source": "bo",
+              "country": "Bolivia",
+              "keywords_count": 553,
+              "traffic_sum": 130,
+              "price_sum": 0.62,
+              "positions_new_count": 239,
+              "positions_up_count": 164,
+              "positions_down_count": 155,
+              "positions_lost_count": 221,
+              "positions_equal_count": 267,
+              "positions_tops": {
+                "top1_5": 127,
+                "top6_10": 83,
+                "top11_20": 152,
+                "top21_50": 278,
+                "top51_100": 184
+              }
+            },
+            {
+              "source": "cr",
+              "country": "Costa Rica",
+              "keywords_count": 439,
+              "traffic_sum": 83,
+              "price_sum": 45.75,
+              "positions_new_count": 104,
+              "positions_up_count": 107,
+              "positions_down_count": 80,
+              "positions_lost_count": 115,
+              "positions_equal_count": 294,
+              "positions_tops": {
+                "top1_5": 86,
+                "top6_10": 38,
+                "top11_20": 104,
+                "top21_50": 218,
+                "top51_100": 139
+              }
+            },
+            {
+              "source": "mm",
+              "country": "Myanmar",
+              "keywords_count": 434,
+              "traffic_sum": 104,
+              "price_sum": 5.37,
+              "positions_new_count": 134,
+              "positions_up_count": 143,
+              "positions_down_count": 127,
+              "positions_lost_count": 97,
+              "positions_equal_count": 113,
+              "positions_tops": {
+                "top1_5": 28,
+                "top6_10": 43,
+                "top11_20": 68,
+                "top21_50": 212,
+                "top51_100": 166
+              }
+            },
+            {
+              "source": "bj",
+              "country": "Benin",
+              "keywords_count": 424,
+              "traffic_sum": 13,
+              "price_sum": 0,
+              "positions_new_count": 149,
+              "positions_up_count": 194,
+              "positions_down_count": 83,
+              "positions_lost_count": 130,
+              "positions_equal_count": 78,
+              "positions_tops": {
+                "top1_5": 41,
+                "top6_10": 86,
+                "top11_20": 62,
+                "top21_50": 181,
+                "top51_100": 133
+              }
+            },
+            {
+              "source": "ad",
+              "country": "Andorra",
+              "keywords_count": 420,
+              "traffic_sum": 46,
+              "price_sum": 0,
+              "positions_new_count": 112,
+              "positions_up_count": 215,
+              "positions_down_count": 112,
+              "positions_lost_count": 129,
+              "positions_equal_count": 119,
+              "positions_tops": {
+                "top1_5": 43,
+                "top6_10": 75,
+                "top11_20": 98,
+                "top21_50": 191,
+                "top51_100": 151
+              }
+            },
+            {
+              "source": "lb",
+              "country": "Lebanon",
+              "keywords_count": 420,
+              "traffic_sum": 193,
+              "price_sum": 0.14,
+              "positions_new_count": 86,
+              "positions_up_count": 125,
+              "positions_down_count": 106,
+              "positions_lost_count": 105,
+              "positions_equal_count": 202,
+              "positions_tops": {
+                "top1_5": 50,
+                "top6_10": 50,
+                "top11_20": 83,
+                "top21_50": 188,
+                "top51_100": 146
+              }
+            },
+            {
+              "source": "ps",
+              "country": "Palestine",
+              "keywords_count": 417,
+              "traffic_sum": 41,
+              "price_sum": 0.11,
+              "positions_new_count": 125,
+              "positions_up_count": 121,
+              "positions_down_count": 111,
+              "positions_lost_count": 104,
+              "positions_equal_count": 246,
+              "positions_tops": {
+                "top1_5": 51,
+                "top6_10": 53,
+                "top11_20": 128,
+                "top21_50": 217,
+                "top51_100": 154
+              }
+            },
+            {
+              "source": "pr",
+              "country": "Puerto Rico",
+              "keywords_count": 397,
+              "traffic_sum": 110,
+              "price_sum": 4.28,
+              "positions_new_count": 131,
+              "positions_up_count": 129,
+              "positions_down_count": 122,
+              "positions_lost_count": 132,
+              "positions_equal_count": 105,
+              "positions_tops": {
+                "top1_5": 57,
+                "top6_10": 35,
+                "top11_20": 73,
+                "top21_50": 169,
+                "top51_100": 153
+              }
+            },
+            {
+              "source": "tz",
+              "country": "Tanzania",
+              "keywords_count": 397,
+              "traffic_sum": 142,
+              "price_sum": 2.2,
+              "positions_new_count": 65,
+              "positions_up_count": 48,
+              "positions_down_count": 71,
+              "positions_lost_count": 70,
+              "positions_equal_count": 269,
+              "positions_tops": {
+                "top1_5": 29,
+                "top6_10": 42,
+                "top11_20": 67,
+                "top21_50": 141,
+                "top51_100": 174
+              }
+            },
+            {
+              "source": "az",
+              "country": "Azerbaijan",
+              "keywords_count": 364,
+              "traffic_sum": 211,
+              "price_sum": 38.97,
+              "positions_new_count": 85,
+              "positions_up_count": 81,
+              "positions_down_count": 59,
+              "positions_lost_count": 71,
+              "positions_equal_count": 246,
+              "positions_tops": {
+                "top1_5": 46,
+                "top6_10": 43,
+                "top11_20": 88,
+                "top21_50": 160,
+                "top51_100": 132
+              }
+            },
+            {
+              "source": "li",
+              "country": "Liechtenstein",
+              "keywords_count": 345,
+              "traffic_sum": 13,
+              "price_sum": 0,
+              "positions_new_count": 93,
+              "positions_up_count": 190,
+              "positions_down_count": 105,
+              "positions_lost_count": 129,
+              "positions_equal_count": 52,
+              "positions_tops": {
+                "top1_5": 32,
+                "top6_10": 46,
+                "top11_20": 73,
+                "top21_50": 154,
+                "top51_100": 135
+              }
+            },
+            {
+              "source": "gt",
+              "country": "Guatemala",
+              "keywords_count": 343,
+              "traffic_sum": 60,
+              "price_sum": 1.44,
+              "positions_new_count": 95,
+              "positions_up_count": 85,
+              "positions_down_count": 79,
+              "positions_lost_count": 85,
+              "positions_equal_count": 212,
+              "positions_tops": {
+                "top1_5": 80,
+                "top6_10": 34,
+                "top11_20": 94,
+                "top21_50": 167,
+                "top51_100": 96
+              }
+            },
+            {
+              "source": "la",
+              "country": "Laos",
+              "keywords_count": 303,
+              "traffic_sum": 41,
+              "price_sum": 0.03,
+              "positions_new_count": 58,
+              "positions_up_count": 76,
+              "positions_down_count": 63,
+              "positions_lost_count": 62,
+              "positions_equal_count": 279,
+              "positions_tops": {
+                "top1_5": 85,
+                "top6_10": 57,
+                "top11_20": 80,
+                "top21_50": 157,
+                "top51_100": 97
+              }
+            },
+            {
+              "source": "om",
+              "country": "Oman",
+              "keywords_count": 284,
+              "traffic_sum": 128,
+              "price_sum": 0.68,
+              "positions_new_count": 76,
+              "positions_up_count": 75,
+              "positions_down_count": 58,
+              "positions_lost_count": 60,
+              "positions_equal_count": 122,
+              "positions_tops": {
+                "top1_5": 24,
+                "top6_10": 30,
+                "top11_20": 56,
+                "top21_50": 105,
+                "top51_100": 115
+              }
+            },
+            {
+              "source": "bh",
+              "country": "Bahrain",
+              "keywords_count": 268,
+              "traffic_sum": 65,
+              "price_sum": 0.35,
+              "positions_new_count": 99,
+              "positions_up_count": 88,
+              "positions_down_count": 47,
+              "positions_lost_count": 89,
+              "positions_equal_count": 142,
+              "positions_tops": {
+                "top1_5": 44,
+                "top6_10": 36,
+                "top11_20": 63,
+                "top21_50": 122,
+                "top51_100": 111
+              }
+            },
+            {
+              "source": "ug",
+              "country": "Uganda",
+              "keywords_count": 266,
+              "traffic_sum": 62,
+              "price_sum": 0.37,
+              "positions_new_count": 72,
+              "positions_up_count": 60,
+              "positions_down_count": 65,
+              "positions_lost_count": 64,
+              "positions_equal_count": 116,
+              "positions_tops": {
+                "top1_5": 37,
+                "top6_10": 24,
+                "top11_20": 53,
+                "top21_50": 98,
+                "top51_100": 101
+              }
+            },
+            {
+              "source": "jm",
+              "country": "Jamaica",
+              "keywords_count": 257,
+              "traffic_sum": 81,
+              "price_sum": 2,
+              "positions_new_count": 71,
+              "positions_up_count": 86,
+              "positions_down_count": 65,
+              "positions_lost_count": 95,
+              "positions_equal_count": 93,
+              "positions_tops": {
+                "top1_5": 34,
+                "top6_10": 28,
+                "top11_20": 38,
+                "top21_50": 136,
+                "top51_100": 79
+              }
+            },
+            {
+              "source": "kw",
+              "country": "Kuwait",
+              "keywords_count": 255,
+              "traffic_sum": 48,
+              "price_sum": 0.5,
+              "positions_new_count": 47,
+              "positions_up_count": 66,
+              "positions_down_count": 49,
+              "positions_lost_count": 85,
+              "positions_equal_count": 130,
+              "positions_tops": {
+                "top1_5": 13,
+                "top6_10": 30,
+                "top11_20": 37,
+                "top21_50": 93,
+                "top51_100": 119
+              }
+            },
+            {
+              "source": "hn",
+              "country": "Honduras",
+              "keywords_count": 237,
+              "traffic_sum": 11,
+              "price_sum": 2.85,
+              "positions_new_count": 52,
+              "positions_up_count": 65,
+              "positions_down_count": 48,
+              "positions_lost_count": 43,
+              "positions_equal_count": 178,
+              "positions_tops": {
+                "top1_5": 40,
+                "top6_10": 30,
+                "top11_20": 58,
+                "top21_50": 131,
+                "top51_100": 84
+              }
+            },
+            {
+              "source": "bs",
+              "country": "Bahamas",
+              "keywords_count": 233,
+              "traffic_sum": 18,
+              "price_sum": 0.21,
+              "positions_new_count": 89,
+              "positions_up_count": 120,
+              "positions_down_count": 81,
+              "positions_lost_count": 127,
+              "positions_equal_count": 62,
+              "positions_tops": {
+                "top1_5": 36,
+                "top6_10": 45,
+                "top11_20": 69,
+                "top21_50": 128,
+                "top51_100": 74
+              }
+            },
+            {
+              "source": "py",
+              "country": "Paraguay",
+              "keywords_count": 219,
+              "traffic_sum": 26,
+              "price_sum": 0,
+              "positions_new_count": 44,
+              "positions_up_count": 40,
+              "positions_down_count": 55,
+              "positions_lost_count": 47,
+              "positions_equal_count": 147,
+              "positions_tops": {
+                "top1_5": 33,
+                "top6_10": 21,
+                "top11_20": 44,
+                "top21_50": 114,
+                "top51_100": 74
+              }
+            },
+            {
+              "source": "mn",
+              "country": "Mongolia",
+              "keywords_count": 217,
+              "traffic_sum": 69,
+              "price_sum": 0.04,
+              "positions_new_count": 39,
+              "positions_up_count": 61,
+              "positions_down_count": 40,
+              "positions_lost_count": 49,
+              "positions_equal_count": 113,
+              "positions_tops": {
+                "top1_5": 16,
+                "top6_10": 21,
+                "top11_20": 50,
+                "top21_50": 99,
+                "top51_100": 67
+              }
+            },
+            {
+              "source": "cm",
+              "country": "Cameroon",
+              "keywords_count": 202,
+              "traffic_sum": 73,
+              "price_sum": 19.7,
+              "positions_new_count": 78,
+              "positions_up_count": 56,
+              "positions_down_count": 49,
+              "positions_lost_count": 69,
+              "positions_equal_count": 98,
+              "positions_tops": {
+                "top1_5": 25,
+                "top6_10": 33,
+                "top11_20": 55,
+                "top21_50": 81,
+                "top51_100": 87
+              }
+            },
+            {
+              "source": "mu",
+              "country": "Mauritius",
+              "keywords_count": 196,
+              "traffic_sum": 44,
+              "price_sum": 0.53,
+              "positions_new_count": 37,
+              "positions_up_count": 59,
+              "positions_down_count": 50,
+              "positions_lost_count": 53,
+              "positions_equal_count": 73,
+              "positions_tops": {
+                "top1_5": 18,
+                "top6_10": 13,
+                "top11_20": 36,
+                "top21_50": 79,
+                "top51_100": 72
+              }
+            },
+            {
+              "source": "vg",
+              "country": "British Virgin Islands",
+              "keywords_count": 188,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 41,
+              "positions_up_count": 113,
+              "positions_down_count": 45,
+              "positions_lost_count": 40,
+              "positions_equal_count": 37,
+              "positions_tops": {
+                "top1_5": 20,
+                "top6_10": 33,
+                "top11_20": 46,
+                "top21_50": 80,
+                "top51_100": 57
+              }
+            },
+            {
+              "source": "sv",
+              "country": "El Salvador",
+              "keywords_count": 186,
+              "traffic_sum": 32,
+              "price_sum": 0.61,
+              "positions_new_count": 32,
+              "positions_up_count": 35,
+              "positions_down_count": 28,
+              "positions_lost_count": 43,
+              "positions_equal_count": 157,
+              "positions_tops": {
+                "top1_5": 42,
+                "top6_10": 13,
+                "top11_20": 43,
+                "top21_50": 95,
+                "top51_100": 58
+              }
+            },
+            {
+              "source": "sm",
+              "country": "San Marino",
+              "keywords_count": 186,
+              "traffic_sum": 6,
+              "price_sum": 0,
+              "positions_new_count": 49,
+              "positions_up_count": 103,
+              "positions_down_count": 64,
+              "positions_lost_count": 76,
+              "positions_equal_count": 25,
+              "positions_tops": {
+                "top1_5": 22,
+                "top6_10": 20,
+                "top11_20": 39,
+                "top21_50": 75,
+                "top51_100": 84
+              }
+            },
+            {
+              "source": "ag",
+              "country": "Antigua And Barbuda",
+              "keywords_count": 174,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 86,
+              "positions_up_count": 93,
+              "positions_down_count": 33,
+              "positions_lost_count": 52,
+              "positions_equal_count": 28,
+              "positions_tops": {
+                "top1_5": 16,
+                "top6_10": 27,
+                "top11_20": 39,
+                "top21_50": 82,
+                "top51_100": 76
+              }
+            },
+            {
+              "source": "so",
+              "country": "Somali",
+              "keywords_count": 172,
+              "traffic_sum": 261,
+              "price_sum": 0,
+              "positions_new_count": 32,
+              "positions_up_count": 43,
+              "positions_down_count": 42,
+              "positions_lost_count": 57,
+              "positions_equal_count": 116,
+              "positions_tops": {
+                "top1_5": 12,
+                "top6_10": 25,
+                "top11_20": 43,
+                "top21_50": 76,
+                "top51_100": 76
+              }
+            },
+            {
+              "source": "zw",
+              "country": "Zimbabwe",
+              "keywords_count": 168,
+              "traffic_sum": 30,
+              "price_sum": 0,
+              "positions_new_count": 41,
+              "positions_up_count": 54,
+              "positions_down_count": 45,
+              "positions_lost_count": 45,
+              "positions_equal_count": 64,
+              "positions_tops": {
+                "top1_5": 22,
+                "top6_10": 18,
+                "top11_20": 32,
+                "top21_50": 68,
+                "top51_100": 64
+              }
+            },
+            {
+              "source": "ly",
+              "country": "Libya",
+              "keywords_count": 156,
+              "traffic_sum": 7,
+              "price_sum": 0,
+              "positions_new_count": 35,
+              "positions_up_count": 21,
+              "positions_down_count": 38,
+              "positions_lost_count": 37,
+              "positions_equal_count": 134,
+              "positions_tops": {
+                "top1_5": 30,
+                "top6_10": 23,
+                "top11_20": 48,
+                "top21_50": 64,
+                "top51_100": 63
+              }
+            },
+            {
+              "source": "ci",
+              "country": "Cote d'Ivoire",
+              "keywords_count": 156,
+              "traffic_sum": 26,
+              "price_sum": 0,
+              "positions_new_count": 50,
+              "positions_up_count": 35,
+              "positions_down_count": 41,
+              "positions_lost_count": 63,
+              "positions_equal_count": 101,
+              "positions_tops": {
+                "top1_5": 42,
+                "top6_10": 19,
+                "top11_20": 24,
+                "top21_50": 75,
+                "top51_100": 67
+              }
+            },
+            {
+              "source": "bz",
+              "country": "Belize",
+              "keywords_count": 152,
+              "traffic_sum": 4,
+              "price_sum": 0,
+              "positions_new_count": 42,
+              "positions_up_count": 33,
+              "positions_down_count": 27,
+              "positions_lost_count": 43,
+              "positions_equal_count": 123,
+              "positions_tops": {
+                "top1_5": 36,
+                "top6_10": 19,
+                "top11_20": 44,
+                "top21_50": 66,
+                "top51_100": 60
+              }
+            },
+            {
+              "source": "ni",
+              "country": "Nicaragua",
+              "keywords_count": 144,
+              "traffic_sum": 19,
+              "price_sum": 0.62,
+              "positions_new_count": 33,
+              "positions_up_count": 35,
+              "positions_down_count": 38,
+              "positions_lost_count": 32,
+              "positions_equal_count": 73,
+              "positions_tops": {
+                "top1_5": 21,
+                "top6_10": 8,
+                "top11_20": 28,
+                "top21_50": 69,
+                "top51_100": 53
+              }
+            },
+            {
+              "source": "kg",
+              "country": "Kyrgyzstan",
+              "keywords_count": 142,
+              "traffic_sum": 55,
+              "price_sum": 0.15,
+              "positions_new_count": 21,
+              "positions_up_count": 33,
+              "positions_down_count": 37,
+              "positions_lost_count": 20,
+              "positions_equal_count": 77,
+              "positions_tops": {
+                "top1_5": 19,
+                "top6_10": 11,
+                "top11_20": 39,
+                "top21_50": 64,
+                "top51_100": 35
+              }
+            },
+            {
+              "source": "zm",
+              "country": "Zambia",
+              "keywords_count": 121,
+              "traffic_sum": 10,
+              "price_sum": 0.12,
+              "positions_new_count": 24,
+              "positions_up_count": 35,
+              "positions_down_count": 29,
+              "positions_lost_count": 29,
+              "positions_equal_count": 42,
+              "positions_tops": {
+                "top1_5": 3,
+                "top6_10": 9,
+                "top11_20": 26,
+                "top21_50": 49,
+                "top51_100": 43
+              }
+            },
+            {
+              "source": "tm",
+              "country": "Turkmenistan",
+              "keywords_count": 120,
+              "traffic_sum": 53,
+              "price_sum": 0,
+              "positions_new_count": 38,
+              "positions_up_count": 45,
+              "positions_down_count": 24,
+              "positions_lost_count": 27,
+              "positions_equal_count": 21,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 10,
+                "top11_20": 25,
+                "top21_50": 46,
+                "top51_100": 43
+              }
+            },
+            {
+              "source": "bi",
+              "country": "Burundi",
+              "keywords_count": 119,
+              "traffic_sum": 5,
+              "price_sum": 0,
+              "positions_new_count": 46,
+              "positions_up_count": 63,
+              "positions_down_count": 25,
+              "positions_lost_count": 49,
+              "positions_equal_count": 26,
+              "positions_tops": {
+                "top1_5": 11,
+                "top6_10": 25,
+                "top11_20": 24,
+                "top21_50": 53,
+                "top51_100": 47
+              }
+            },
+            {
+              "source": "mg",
+              "country": "Madagascar",
+              "keywords_count": 118,
+              "traffic_sum": 143,
+              "price_sum": 0.36,
+              "positions_new_count": 24,
+              "positions_up_count": 29,
+              "positions_down_count": 22,
+              "positions_lost_count": 39,
+              "positions_equal_count": 76,
+              "positions_tops": {
+                "top1_5": 15,
+                "top6_10": 15,
+                "top11_20": 19,
+                "top21_50": 46,
+                "top51_100": 56
+              }
+            },
+            {
+              "source": "fj",
+              "country": "Fiji",
+              "keywords_count": 113,
+              "traffic_sum": 21,
+              "price_sum": 0,
+              "positions_new_count": 33,
+              "positions_up_count": 31,
+              "positions_down_count": 24,
+              "positions_lost_count": 42,
+              "positions_equal_count": 55,
+              "positions_tops": {
+                "top1_5": 15,
+                "top6_10": 9,
+                "top11_20": 28,
+                "top21_50": 45,
+                "top51_100": 46
+              }
+            },
+            {
+              "source": "ck",
+              "country": "Cook Islands",
+              "keywords_count": 113,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 42,
+              "positions_up_count": 56,
+              "positions_down_count": 34,
+              "positions_lost_count": 44,
+              "positions_equal_count": 17,
+              "positions_tops": {
+                "top1_5": 24,
+                "top6_10": 22,
+                "top11_20": 13,
+                "top21_50": 42,
+                "top51_100": 47
+              }
+            },
+            {
+              "source": "sn",
+              "country": "Senegal",
+              "keywords_count": 104,
+              "traffic_sum": 11,
+              "price_sum": 0.5,
+              "positions_new_count": 28,
+              "positions_up_count": 39,
+              "positions_down_count": 29,
+              "positions_lost_count": 37,
+              "positions_equal_count": 38,
+              "positions_tops": {
+                "top1_5": 21,
+                "top6_10": 10,
+                "top11_20": 20,
+                "top21_50": 39,
+                "top51_100": 44
+              }
+            },
+            {
+              "source": "bt",
+              "country": "Bhutan",
+              "keywords_count": 103,
+              "traffic_sum": 4,
+              "price_sum": 0,
+              "positions_new_count": 35,
+              "positions_up_count": 29,
+              "positions_down_count": 22,
+              "positions_lost_count": 38,
+              "positions_equal_count": 59,
+              "positions_tops": {
+                "top1_5": 16,
+                "top6_10": 17,
+                "top11_20": 20,
+                "top21_50": 41,
+                "top51_100": 50
+              }
+            },
+            {
+              "source": "cv",
+              "country": "Cape Verde",
+              "keywords_count": 100,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 33,
+              "positions_up_count": 48,
+              "positions_down_count": 24,
+              "positions_lost_count": 40,
+              "positions_equal_count": 25,
+              "positions_tops": {
+                "top1_5": 9,
+                "top6_10": 12,
+                "top11_20": 20,
+                "top21_50": 51,
+                "top51_100": 38
+              }
+            },
+            {
+              "source": "bf",
+              "country": "Burkina Faso",
+              "keywords_count": 99,
+              "traffic_sum": 13,
+              "price_sum": 0,
+              "positions_new_count": 39,
+              "positions_up_count": 30,
+              "positions_down_count": 11,
+              "positions_lost_count": 30,
+              "positions_equal_count": 40,
+              "positions_tops": {
+                "top1_5": 12,
+                "top6_10": 12,
+                "top11_20": 23,
+                "top21_50": 33,
+                "top51_100": 40
+              }
+            },
+            {
+              "source": "rw",
+              "country": "Rwanda",
+              "keywords_count": 97,
+              "traffic_sum": 16,
+              "price_sum": 0.01,
+              "positions_new_count": 17,
+              "positions_up_count": 23,
+              "positions_down_count": 22,
+              "positions_lost_count": 11,
+              "positions_equal_count": 49,
+              "positions_tops": {
+                "top1_5": 5,
+                "top6_10": 7,
+                "top11_20": 21,
+                "top21_50": 42,
+                "top51_100": 36
+              }
+            },
+            {
+              "source": "bn",
+              "country": "Brunei",
+              "keywords_count": 88,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 29,
+              "positions_up_count": 35,
+              "positions_down_count": 18,
+              "positions_lost_count": 28,
+              "positions_equal_count": 25,
+              "positions_tops": {
+                "top1_5": 8,
+                "top6_10": 5,
+                "top11_20": 18,
+                "top21_50": 37,
+                "top51_100": 39
+              }
+            },
+            {
+              "source": "dm",
+              "country": "Dominica",
+              "keywords_count": 83,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 30,
+              "positions_up_count": 46,
+              "positions_down_count": 21,
+              "positions_lost_count": 33,
+              "positions_equal_count": 7,
+              "positions_tops": {
+                "top1_5": 6,
+                "top6_10": 5,
+                "top11_20": 17,
+                "top21_50": 38,
+                "top51_100": 37
+              }
+            },
+            {
+              "source": "bw",
+              "country": "Botswana",
+              "keywords_count": 82,
+              "traffic_sum": 24,
+              "price_sum": 0.08,
+              "positions_new_count": 21,
+              "positions_up_count": 26,
+              "positions_down_count": 11,
+              "positions_lost_count": 30,
+              "positions_equal_count": 37,
+              "positions_tops": {
+                "top1_5": 14,
+                "top6_10": 9,
+                "top11_20": 13,
+                "top21_50": 35,
+                "top51_100": 24
+              }
+            },
+            {
+              "source": "re",
+              "country": "Reunion",
+              "keywords_count": 79,
+              "traffic_sum": 9,
+              "price_sum": 0,
+              "positions_new_count": 23,
+              "positions_up_count": 27,
+              "positions_down_count": 14,
+              "positions_lost_count": 22,
+              "positions_equal_count": 35,
+              "positions_tops": {
+                "top1_5": 6,
+                "top6_10": 10,
+                "top11_20": 20,
+                "top21_50": 37,
+                "top51_100": 26
+              }
+            },
+            {
+              "source": "gm",
+              "country": "Gambia",
+              "keywords_count": 76,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 12,
+              "positions_up_count": 10,
+              "positions_down_count": 20,
+              "positions_lost_count": 8,
+              "positions_equal_count": 54,
+              "positions_tops": {
+                "top1_5": 5,
+                "top6_10": 4,
+                "top11_20": 13,
+                "top21_50": 38,
+                "top51_100": 36
+              }
+            },
+            {
+              "source": "ao",
+              "country": "Angola",
+              "keywords_count": 70,
+              "traffic_sum": 22,
+              "price_sum": 0,
+              "positions_new_count": 29,
+              "positions_up_count": 12,
+              "positions_down_count": 16,
+              "positions_lost_count": 31,
+              "positions_equal_count": 26,
+              "positions_tops": {
+                "top1_5": 7,
+                "top6_10": 10,
+                "top11_20": 7,
+                "top21_50": 28,
+                "top51_100": 31
+              }
+            },
+            {
+              "source": "na",
+              "country": "Namibia",
+              "keywords_count": 69,
+              "traffic_sum": 10,
+              "price_sum": 0.03,
+              "positions_new_count": 17,
+              "positions_up_count": 15,
+              "positions_down_count": 15,
+              "positions_lost_count": 18,
+              "positions_equal_count": 27,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 7,
+                "top11_20": 6,
+                "top21_50": 31,
+                "top51_100": 26
+              }
+            },
+            {
+              "source": "vu",
+              "country": "Vanuatu",
+              "keywords_count": 67,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 12,
+              "positions_up_count": 43,
+              "positions_down_count": 17,
+              "positions_lost_count": 14,
+              "positions_equal_count": 12,
+              "positions_tops": {
+                "top1_5": 3,
+                "top6_10": 14,
+                "top11_20": 11,
+                "top21_50": 32,
+                "top51_100": 24
+              }
+            },
+            {
+              "source": "mc",
+              "country": "Monaco",
+              "keywords_count": 67,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 31,
+              "positions_up_count": 31,
+              "positions_down_count": 29,
+              "positions_lost_count": 22,
+              "positions_equal_count": 10,
+              "positions_tops": {
+                "top1_5": 17,
+                "top6_10": 7,
+                "top11_20": 11,
+                "top21_50": 41,
+                "top51_100": 25
+              }
+            },
+            {
+              "source": "tj",
+              "country": "Tajikistan",
+              "keywords_count": 65,
+              "traffic_sum": 20,
+              "price_sum": 0,
+              "positions_new_count": 17,
+              "positions_up_count": 17,
+              "positions_down_count": 14,
+              "positions_lost_count": 11,
+              "positions_equal_count": 23,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 2,
+                "top11_20": 21,
+                "top21_50": 30,
+                "top51_100": 14
+              }
+            },
+            {
+              "source": "mv",
+              "country": "Maldives",
+              "keywords_count": 63,
+              "traffic_sum": 15,
+              "price_sum": 0.04,
+              "positions_new_count": 5,
+              "positions_up_count": 13,
+              "positions_down_count": 14,
+              "positions_lost_count": 10,
+              "positions_equal_count": 46,
+              "positions_tops": {
+                "top1_5": 9,
+                "top6_10": 6,
+                "top11_20": 15,
+                "top21_50": 17,
+                "top51_100": 31
+              }
+            },
+            {
+              "source": "as",
+              "country": "American Samoa",
+              "keywords_count": 54,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 28,
+              "positions_up_count": 24,
+              "positions_down_count": 15,
+              "positions_lost_count": 24,
+              "positions_equal_count": 9,
+              "positions_tops": {
+                "top1_5": 6,
+                "top6_10": 5,
+                "top11_20": 12,
+                "top21_50": 29,
+                "top51_100": 24
+              }
+            },
+            {
+              "source": "tg",
+              "country": "Togo",
+              "keywords_count": 53,
+              "traffic_sum": 3,
+              "price_sum": 0,
+              "positions_new_count": 14,
+              "positions_up_count": 12,
+              "positions_down_count": 19,
+              "positions_lost_count": 8,
+              "positions_equal_count": 27,
+              "positions_tops": {
+                "top1_5": 10,
+                "top6_10": 8,
+                "top11_20": 12,
+                "top21_50": 24,
+                "top51_100": 18
+              }
+            },
+            {
+              "source": "td",
+              "country": "Chad",
+              "keywords_count": 53,
+              "traffic_sum": 3,
+              "price_sum": 0,
+              "positions_new_count": 15,
+              "positions_up_count": 21,
+              "positions_down_count": 10,
+              "positions_lost_count": 18,
+              "positions_equal_count": 15,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 3,
+                "top11_20": 9,
+                "top21_50": 24,
+                "top51_100": 21
+              }
+            },
+            {
+              "source": "ne",
+              "country": "Niger",
+              "keywords_count": 52,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 10,
+              "positions_up_count": 21,
+              "positions_down_count": 9,
+              "positions_lost_count": 10,
+              "positions_equal_count": 24,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 7,
+                "top11_20": 7,
+                "top21_50": 29,
+                "top51_100": 17
+              }
+            },
+            {
+              "source": "vi",
+              "country": "U.S. Virgin Islands",
+              "keywords_count": 51,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 16,
+              "positions_up_count": 30,
+              "positions_down_count": 11,
+              "positions_lost_count": 10,
+              "positions_equal_count": 11,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 1,
+                "top11_20": 15,
+                "top21_50": 30,
+                "top51_100": 21
+              }
+            },
+            {
+              "source": "ws",
+              "country": "Samoa",
+              "keywords_count": 49,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 11,
+              "positions_up_count": 31,
+              "positions_down_count": 8,
+              "positions_lost_count": 19,
+              "positions_equal_count": 11,
+              "positions_tops": {
+                "top1_5": 5,
+                "top6_10": 12,
+                "top11_20": 10,
+                "top21_50": 17,
+                "top51_100": 17
+              }
+            },
+            {
+              "source": "sb",
+              "country": "Solomon Islands",
+              "keywords_count": 48,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 8,
+              "positions_up_count": 21,
+              "positions_down_count": 24,
+              "positions_lost_count": 10,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_5": 2,
+                "top6_10": 2,
+                "top11_20": 9,
+                "top21_50": 21,
+                "top51_100": 23
+              }
+            },
+            {
+              "source": "dj",
+              "country": "Djibouti",
+              "keywords_count": 46,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 16,
+              "positions_up_count": 20,
+              "positions_down_count": 12,
+              "positions_lost_count": 10,
+              "positions_equal_count": 6,
+              "positions_tops": {
+                "top1_5": 2,
+                "top6_10": 5,
+                "top11_20": 10,
+                "top21_50": 19,
+                "top51_100": 18
+              }
+            },
+            {
+              "source": "mw",
+              "country": "Malawi",
+              "keywords_count": 45,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 19,
+              "positions_up_count": 8,
+              "positions_down_count": 10,
+              "positions_lost_count": 11,
+              "positions_equal_count": 13,
+              "positions_tops": {
+                "top1_5": 2,
+                "top6_10": 1,
+                "top11_20": 9,
+                "top21_50": 20,
+                "top51_100": 18
+              }
+            },
+            {
+              "source": "tc",
+              "country": "Turks and Caicos Islands",
+              "keywords_count": 43,
+              "traffic_sum": 3,
+              "price_sum": 0,
+              "positions_new_count": 7,
+              "positions_up_count": 22,
+              "positions_down_count": 17,
+              "positions_lost_count": 10,
+              "positions_equal_count": 8,
+              "positions_tops": {
+                "top1_5": 3,
+                "top6_10": 5,
+                "top11_20": 7,
+                "top21_50": 24,
+                "top51_100": 15
+              }
+            },
+            {
+              "source": "sr",
+              "country": "Suriname",
+              "keywords_count": 39,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 17,
+              "positions_up_count": 13,
+              "positions_down_count": 9,
+              "positions_lost_count": 8,
+              "positions_equal_count": 12,
+              "positions_tops": {
+                "top1_5": 2,
+                "top6_10": 3,
+                "top11_20": 7,
+                "top21_50": 21,
+                "top51_100": 18
+              }
+            },
+            {
+              "source": "mz",
+              "country": "Mozambique",
+              "keywords_count": 39,
+              "traffic_sum": 20,
+              "price_sum": 0,
+              "positions_new_count": 9,
+              "positions_up_count": 8,
+              "positions_down_count": 2,
+              "positions_lost_count": 6,
+              "positions_equal_count": 23,
+              "positions_tops": {
+                "top1_5": 5,
+                "top6_10": 2,
+                "top11_20": 14,
+                "top21_50": 14,
+                "top51_100": 7
+              }
+            },
+            {
+              "source": "ga",
+              "country": "Gabon",
+              "keywords_count": 38,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 8,
+              "positions_up_count": 10,
+              "positions_down_count": 10,
+              "positions_lost_count": 13,
+              "positions_equal_count": 19,
+              "positions_tops": {
+                "top1_5": 3,
+                "top6_10": 3,
+                "top11_20": 9,
+                "top21_50": 13,
+                "top51_100": 19
+              }
+            },
+            {
+              "source": "gy",
+              "country": "Guyana",
+              "keywords_count": 35,
+              "traffic_sum": 12,
+              "price_sum": 0.02,
+              "positions_new_count": 6,
+              "positions_up_count": 20,
+              "positions_down_count": 7,
+              "positions_lost_count": 15,
+              "positions_equal_count": 12,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 6,
+                "top11_20": 6,
+                "top21_50": 17,
+                "top51_100": 12
+              }
+            },
+            {
+              "source": "sh",
+              "country": "Saint Helena",
+              "keywords_count": 33,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 9,
+              "positions_up_count": 10,
+              "positions_down_count": 11,
+              "positions_lost_count": 5,
+              "positions_equal_count": 6,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 2,
+                "top11_20": 5,
+                "top21_50": 12,
+                "top51_100": 16
+              }
+            },
+            {
+              "source": "nr",
+              "country": "Nauru",
+              "keywords_count": 31,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 9,
+              "positions_up_count": 16,
+              "positions_down_count": 8,
+              "positions_lost_count": 8,
+              "positions_equal_count": 7,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 8,
+                "top11_20": 7,
+                "top21_50": 12,
+                "top51_100": 9
+              }
+            },
+            {
+              "source": "pg",
+              "country": "Papua New Guinea",
+              "keywords_count": 31,
+              "traffic_sum": 6,
+              "price_sum": 0,
+              "positions_new_count": 3,
+              "positions_up_count": 9,
+              "positions_down_count": 9,
+              "positions_lost_count": 6,
+              "positions_equal_count": 14,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 2,
+                "top11_20": 7,
+                "top21_50": 16,
+                "top51_100": 9
+              }
+            },
+            {
+              "source": "cd",
+              "country": "Democratic Republic of the Congo",
+              "keywords_count": 31,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 8,
+              "positions_up_count": 4,
+              "positions_down_count": 6,
+              "positions_lost_count": 6,
+              "positions_equal_count": 17,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 4,
+                "top11_20": 4,
+                "top21_50": 15,
+                "top51_100": 11
+              }
+            },
+            {
+              "source": "gl",
+              "country": "Greenland",
+              "keywords_count": 30,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 7,
+              "positions_up_count": 17,
+              "positions_down_count": 9,
+              "positions_lost_count": 12,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_5": 3,
+                "top6_10": 4,
+                "top11_20": 7,
+                "top21_50": 16,
+                "top51_100": 6
+              }
+            },
+            {
+              "source": "fm",
+              "country": "Federated States of Micronesia",
+              "keywords_count": 30,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 10,
+              "positions_up_count": 14,
+              "positions_down_count": 11,
+              "positions_lost_count": 9,
+              "positions_equal_count": 5,
+              "positions_tops": {
+                "top1_5": 3,
+                "top6_10": 6,
+                "top11_20": 3,
+                "top21_50": 16,
+                "top51_100": 12
+              }
+            },
+            {
+              "source": "to",
+              "country": "Tonga",
+              "keywords_count": 28,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 8,
+              "positions_up_count": 18,
+              "positions_down_count": 5,
+              "positions_lost_count": 3,
+              "positions_equal_count": 6,
+              "positions_tops": {
+                "top1_5": 5,
+                "top6_10": 6,
+                "top11_20": 3,
+                "top21_50": 12,
+                "top51_100": 11
+              }
+            },
+            {
+              "source": "ht",
+              "country": "Haiti",
+              "keywords_count": 26,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 11,
+              "positions_up_count": 7,
+              "positions_down_count": 8,
+              "positions_lost_count": 6,
+              "positions_equal_count": 11,
+              "positions_tops": {
+                "top1_5": 5,
+                "top6_10": 2,
+                "top11_20": 7,
+                "top21_50": 14,
+                "top51_100": 9
+              }
+            },
+            {
+              "source": "sl",
+              "country": "Sierra Leone",
+              "keywords_count": 22,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 6,
+              "positions_up_count": 6,
+              "positions_down_count": 5,
+              "positions_lost_count": 3,
+              "positions_equal_count": 7,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 1,
+                "top11_20": 5,
+                "top21_50": 8,
+                "top51_100": 9
+              }
+            },
+            {
+              "source": "sc",
+              "country": "Seychelles",
+              "keywords_count": 22,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 9,
+              "positions_up_count": 8,
+              "positions_down_count": 7,
+              "positions_lost_count": 13,
+              "positions_equal_count": 5,
+              "positions_tops": {
+                "top1_5": 2,
+                "top6_10": 2,
+                "top11_20": 4,
+                "top21_50": 12,
+                "top51_100": 9
+              }
+            },
+            {
+              "source": "ai",
+              "country": "Anguilla",
+              "keywords_count": 18,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 14,
+              "positions_up_count": 6,
+              "positions_down_count": 3,
+              "positions_lost_count": 7,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 2,
+                "top11_20": 3,
+                "top21_50": 11,
+                "top51_100": 10
+              }
+            },
+            {
+              "source": "nf",
+              "country": "Norfolk Island",
+              "keywords_count": 15,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 6,
+              "positions_up_count": 7,
+              "positions_down_count": 4,
+              "positions_lost_count": 3,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_5": 4,
+                "top6_10": 2,
+                "top11_20": 2,
+                "top21_50": 7,
+                "top51_100": 5
+              }
+            },
+            {
+              "source": "cf",
+              "country": "Central African Republic",
+              "keywords_count": 14,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 7,
+              "positions_up_count": 5,
+              "positions_down_count": 3,
+              "positions_lost_count": 4,
+              "positions_equal_count": 2,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 2,
+                "top11_20": 1,
+                "top21_50": 8,
+                "top51_100": 5
+              }
+            },
+            {
+              "source": "ki",
+              "country": "Kiribati",
+              "keywords_count": 14,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 2,
+              "positions_up_count": 6,
+              "positions_down_count": 7,
+              "positions_lost_count": 6,
+              "positions_equal_count": 2,
+              "positions_tops": {
+                "top1_5": 2,
+                "top6_10": 0,
+                "top11_20": 3,
+                "top21_50": 5,
+                "top51_100": 7
+              }
+            },
+            {
+              "source": "st",
+              "country": "Sao Tome and Principe",
+              "keywords_count": 14,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 6,
+              "positions_up_count": 6,
+              "positions_down_count": 5,
+              "positions_lost_count": 1,
+              "positions_equal_count": 2,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 1,
+                "top11_20": 2,
+                "top21_50": 6,
+                "top51_100": 10
+              }
+            },
+            {
+              "source": "je",
+              "country": "Jersey",
+              "keywords_count": 13,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 1,
+              "positions_up_count": 3,
+              "positions_down_count": 3,
+              "positions_lost_count": 3,
+              "positions_equal_count": 7,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 0,
+                "top11_20": 2,
+                "top21_50": 3,
+                "top51_100": 9
+              }
+            },
+            {
+              "source": "ls",
+              "country": "Lesotho",
+              "keywords_count": 12,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 1,
+              "positions_up_count": 4,
+              "positions_down_count": 2,
+              "positions_lost_count": 1,
+              "positions_equal_count": 5,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 0,
+                "top11_20": 1,
+                "top21_50": 7,
+                "top51_100": 4
+              }
+            },
+            {
+              "source": "gp",
+              "country": "Guadeloupe",
+              "keywords_count": 12,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 2,
+              "positions_up_count": 4,
+              "positions_down_count": 6,
+              "positions_lost_count": 4,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 2,
+                "top11_20": 3,
+                "top21_50": 5,
+                "top51_100": 4
+              }
+            },
+            {
+              "source": "ml",
+              "country": "Mali",
+              "keywords_count": 12,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 1,
+              "positions_up_count": 1,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 10,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 2,
+                "top11_20": 0,
+                "top21_50": 3,
+                "top51_100": 6
+              }
+            },
+            {
+              "source": "ms",
+              "country": "Montserrat",
+              "keywords_count": 11,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 6,
+              "positions_up_count": 3,
+              "positions_down_count": 1,
+              "positions_lost_count": 2,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 0,
+                "top11_20": 3,
+                "top21_50": 3,
+                "top51_100": 7
+              }
+            },
+            {
+              "source": "vc",
+              "country": "Saint Vincent and the Grenadines",
+              "keywords_count": 9,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 2,
+              "positions_up_count": 4,
+              "positions_down_count": 3,
+              "positions_lost_count": 3,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_5": 1,
+                "top6_10": 0,
+                "top11_20": 3,
+                "top21_50": 7,
+                "top51_100": 2
+              }
+            },
+            {
+              "source": "gi",
+              "country": "Gibraltar",
+              "keywords_count": 8,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 4,
+              "positions_down_count": 1,
+              "positions_lost_count": 2,
+              "positions_equal_count": 5,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 1,
+                "top11_20": 2,
+                "top21_50": 4,
+                "top51_100": 3
+              }
+            },
+            {
+              "source": "tk",
+              "country": "Tokelau",
+              "keywords_count": 0,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 1,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_5": 0,
+                "top6_10": 0,
+                "top11_20": 0,
+                "top21_50": 0,
+                "top51_100": 0
+              }
+            }
+          ],
+          "adv": [
+            {
+              "source": "worldwide",
+              "country": "Worldwide",
+              "keywords_count": 3693,
+              "traffic_sum": 6416,
+              "price_sum": 8056.99,
+              "positions_new_count": 2505,
+              "positions_up_count": 33,
+              "positions_down_count": 35,
+              "positions_lost_count": 3025,
+              "positions_equal_count": 1304,
+              "positions_tops": {
+                "top1_2": 3118,
+                "top3_5": 710,
+                "top6_8": 49,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "nl",
+              "country": "Netherlands",
+              "keywords_count": 483,
+              "traffic_sum": 747,
+              "price_sum": 962.81,
+              "positions_new_count": 435,
+              "positions_up_count": 15,
+              "positions_down_count": 2,
+              "positions_lost_count": 489,
+              "positions_equal_count": 46,
+              "positions_tops": {
+                "top1_2": 399,
+                "top3_5": 92,
+                "top6_8": 7,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "pt",
+              "country": "Portugal",
+              "keywords_count": 348,
+              "traffic_sum": 437,
+              "price_sum": 96.03,
+              "positions_new_count": 135,
+              "positions_up_count": 0,
+              "positions_down_count": 6,
+              "positions_lost_count": 144,
+              "positions_equal_count": 208,
+              "positions_tops": {
+                "top1_2": 309,
+                "top3_5": 37,
+                "top6_8": 3,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "uk",
+              "country": "United Kingdom",
+              "keywords_count": 311,
+              "traffic_sum": 920,
+              "price_sum": 2221.46,
+              "positions_new_count": 258,
+              "positions_up_count": 4,
+              "positions_down_count": 5,
+              "positions_lost_count": 289,
+              "positions_equal_count": 63,
+              "positions_tops": {
+                "top1_2": 195,
+                "top3_5": 124,
+                "top6_8": 11,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "pl",
+              "country": "Poland",
+              "keywords_count": 290,
+              "traffic_sum": 387,
+              "price_sum": 259.34,
+              "positions_new_count": 45,
+              "positions_up_count": 0,
+              "positions_down_count": 3,
+              "positions_lost_count": 178,
+              "positions_equal_count": 243,
+              "positions_tops": {
+                "top1_2": 246,
+                "top3_5": 41,
+                "top6_8": 4,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "fr",
+              "country": "France",
+              "keywords_count": 265,
+              "traffic_sum": 826,
+              "price_sum": 978.63,
+              "positions_new_count": 160,
+              "positions_up_count": 8,
+              "positions_down_count": 9,
+              "positions_lost_count": 322,
+              "positions_equal_count": 99,
+              "positions_tops": {
+                "top1_2": 195,
+                "top3_5": 75,
+                "top6_8": 6,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "es",
+              "country": "Spain",
+              "keywords_count": 259,
+              "traffic_sum": 795,
+              "price_sum": 564.37,
+              "positions_new_count": 252,
+              "positions_up_count": 0,
+              "positions_down_count": 2,
+              "positions_lost_count": 182,
+              "positions_equal_count": 14,
+              "positions_tops": {
+                "top1_2": 244,
+                "top3_5": 24,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "au",
+              "country": "Australia",
+              "keywords_count": 187,
+              "traffic_sum": 209,
+              "price_sum": 547.9,
+              "positions_new_count": 179,
+              "positions_up_count": 1,
+              "positions_down_count": 2,
+              "positions_lost_count": 118,
+              "positions_equal_count": 10,
+              "positions_tops": {
+                "top1_2": 132,
+                "top3_5": 59,
+                "top6_8": 1,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "cz",
+              "country": "Czechia",
+              "keywords_count": 155,
+              "traffic_sum": 204,
+              "price_sum": 170.83,
+              "positions_new_count": 138,
+              "positions_up_count": 1,
+              "positions_down_count": 0,
+              "positions_lost_count": 42,
+              "positions_equal_count": 28,
+              "positions_tops": {
+                "top1_2": 131,
+                "top3_5": 35,
+                "top6_8": 1,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "se",
+              "country": "Sweden",
+              "keywords_count": 144,
+              "traffic_sum": 57,
+              "price_sum": 15.38,
+              "positions_new_count": 42,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 26,
+              "positions_equal_count": 108,
+              "positions_tops": {
+                "top1_2": 125,
+                "top3_5": 24,
+                "top6_8": 1,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "de",
+              "country": "Germany",
+              "keywords_count": 138,
+              "traffic_sum": 247,
+              "price_sum": 399.26,
+              "positions_new_count": 134,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 53,
+              "positions_equal_count": 9,
+              "positions_tops": {
+                "top1_2": 136,
+                "top3_5": 7,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "at",
+              "country": "Austria",
+              "keywords_count": 102,
+              "traffic_sum": 253,
+              "price_sum": 439.41,
+              "positions_new_count": 78,
+              "positions_up_count": 2,
+              "positions_down_count": 0,
+              "positions_lost_count": 167,
+              "positions_equal_count": 38,
+              "positions_tops": {
+                "top1_2": 94,
+                "top3_5": 24,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ie",
+              "country": "Ireland",
+              "keywords_count": 95,
+              "traffic_sum": 47,
+              "price_sum": 21.93,
+              "positions_new_count": 40,
+              "positions_up_count": 0,
+              "positions_down_count": 2,
+              "positions_lost_count": 117,
+              "positions_equal_count": 63,
+              "positions_tops": {
+                "top1_2": 61,
+                "top3_5": 39,
+                "top6_8": 5,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "it",
+              "country": "Italy",
+              "keywords_count": 81,
+              "traffic_sum": 68,
+              "price_sum": 39.07,
+              "positions_new_count": 72,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 41,
+              "positions_equal_count": 9,
+              "positions_tops": {
+                "top1_2": 69,
+                "top3_5": 12,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "fi",
+              "country": "Finland",
+              "keywords_count": 75,
+              "traffic_sum": 45,
+              "price_sum": 5.28,
+              "positions_new_count": 9,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 16,
+              "positions_equal_count": 70,
+              "positions_tops": {
+                "top1_2": 79,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ee",
+              "country": "Estonia",
+              "keywords_count": 73,
+              "traffic_sum": 81,
+              "price_sum": 12.64,
+              "positions_new_count": 73,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 37,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_2": 72,
+                "top3_5": 5,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "gr",
+              "country": "Greece",
+              "keywords_count": 70,
+              "traffic_sum": 25,
+              "price_sum": 3.17,
+              "positions_new_count": 4,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 77,
+              "positions_equal_count": 72,
+              "positions_tops": {
+                "top1_2": 70,
+                "top3_5": 6,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "si",
+              "country": "Slovenia",
+              "keywords_count": 65,
+              "traffic_sum": 57,
+              "price_sum": 11.18,
+              "positions_new_count": 44,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 5,
+              "positions_equal_count": 27,
+              "positions_tops": {
+                "top1_2": 66,
+                "top3_5": 5,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ca",
+              "country": "Canada",
+              "keywords_count": 58,
+              "traffic_sum": 180,
+              "price_sum": 304.22,
+              "positions_new_count": 52,
+              "positions_up_count": 0,
+              "positions_down_count": 1,
+              "positions_lost_count": 112,
+              "positions_equal_count": 11,
+              "positions_tops": {
+                "top1_2": 38,
+                "top3_5": 23,
+                "top6_8": 3,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ch",
+              "country": "Switzerland",
+              "keywords_count": 50,
+              "traffic_sum": 91,
+              "price_sum": 138.9,
+              "positions_new_count": 44,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 74,
+              "positions_equal_count": 10,
+              "positions_tops": {
+                "top1_2": 37,
+                "top3_5": 15,
+                "top6_8": 2,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "nz",
+              "country": "New Zealand",
+              "keywords_count": 38,
+              "traffic_sum": 34,
+              "price_sum": 44.4,
+              "positions_new_count": 35,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 21,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_2": 34,
+                "top3_5": 5,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ua",
+              "country": "Ukraine",
+              "keywords_count": 34,
+              "traffic_sum": 89,
+              "price_sum": 153.55,
+              "positions_new_count": 24,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 62,
+              "positions_equal_count": 12,
+              "positions_tops": {
+                "top1_2": 36,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "lv",
+              "country": "Latvia",
+              "keywords_count": 32,
+              "traffic_sum": 60,
+              "price_sum": 17.23,
+              "positions_new_count": 28,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 17,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_2": 29,
+                "top3_5": 3,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "no",
+              "country": "Norway",
+              "keywords_count": 30,
+              "traffic_sum": 18,
+              "price_sum": 0.85,
+              "positions_new_count": 1,
+              "positions_up_count": 1,
+              "positions_down_count": 0,
+              "positions_lost_count": 26,
+              "positions_equal_count": 32,
+              "positions_tops": {
+                "top1_2": 22,
+                "top3_5": 12,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "be",
+              "country": "Belgium",
+              "keywords_count": 27,
+              "traffic_sum": 17,
+              "price_sum": 15.58,
+              "positions_new_count": 19,
+              "positions_up_count": 0,
+              "positions_down_count": 1,
+              "positions_lost_count": 161,
+              "positions_equal_count": 8,
+              "positions_tops": {
+                "top1_2": 21,
+                "top3_5": 7,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ar",
+              "country": "Argentina",
+              "keywords_count": 25,
+              "traffic_sum": 15,
+              "price_sum": 0,
+              "positions_new_count": 22,
+              "positions_up_count": 0,
+              "positions_down_count": 1,
+              "positions_lost_count": 7,
+              "positions_equal_count": 16,
+              "positions_tops": {
+                "top1_2": 37,
+                "top3_5": 1,
+                "top6_8": 1,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "lt",
+              "country": "Lithuania",
+              "keywords_count": 24,
+              "traffic_sum": 20,
+              "price_sum": 9.15,
+              "positions_new_count": 26,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 6,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 23,
+                "top3_5": 4,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "is",
+              "country": "Iceland",
+              "keywords_count": 23,
+              "traffic_sum": 20,
+              "price_sum": 3.88,
+              "positions_new_count": 21,
+              "positions_up_count": 1,
+              "positions_down_count": 1,
+              "positions_lost_count": 9,
+              "positions_equal_count": 2,
+              "positions_tops": {
+                "top1_2": 23,
+                "top3_5": 2,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "dk",
+              "country": "Denmark",
+              "keywords_count": 22,
+              "traffic_sum": 42,
+              "price_sum": 90.68,
+              "positions_new_count": 10,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 72,
+              "positions_equal_count": 16,
+              "positions_tops": {
+                "top1_2": 15,
+                "top3_5": 10,
+                "top6_8": 1,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "br",
+              "country": "Brazil",
+              "keywords_count": 21,
+              "traffic_sum": 20,
+              "price_sum": 3.77,
+              "positions_new_count": 17,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 19,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_2": 21,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "jp",
+              "country": "Japan",
+              "keywords_count": 21,
+              "traffic_sum": 105,
+              "price_sum": 167.37,
+              "positions_new_count": 20,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 10,
+              "positions_tops": {
+                "top1_2": 20,
+                "top3_5": 8,
+                "top6_8": 2,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "mx",
+              "country": "Mexico",
+              "keywords_count": 19,
+              "traffic_sum": 22,
+              "price_sum": 6.72,
+              "positions_new_count": 3,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 3,
+              "positions_equal_count": 16,
+              "positions_tops": {
+                "top1_2": 19,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "us",
+              "country": "USA",
+              "keywords_count": 16,
+              "traffic_sum": 35,
+              "price_sum": 79.5,
+              "positions_new_count": 10,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 31,
+              "positions_equal_count": 6,
+              "positions_tops": {
+                "top1_2": 15,
+                "top3_5": 1,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ad",
+              "country": "Andorra",
+              "keywords_count": 16,
+              "traffic_sum": 8,
+              "price_sum": 0,
+              "positions_new_count": 13,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 12,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_2": 16,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "sk",
+              "country": "Slovakia",
+              "keywords_count": 16,
+              "traffic_sum": 22,
+              "price_sum": 18.09,
+              "positions_new_count": 17,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 2,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 16,
+                "top3_5": 2,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "il",
+              "country": "Israel",
+              "keywords_count": 15,
+              "traffic_sum": 52,
+              "price_sum": 229.15,
+              "positions_new_count": 5,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 37,
+              "positions_equal_count": 10,
+              "positions_tops": {
+                "top1_2": 12,
+                "top3_5": 3,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "lu",
+              "country": "Luxembourg",
+              "keywords_count": 13,
+              "traffic_sum": 44,
+              "price_sum": 0,
+              "positions_new_count": 15,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 29,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 12,
+                "top3_5": 2,
+                "top6_8": 1,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "pe",
+              "country": "Peru",
+              "keywords_count": 12,
+              "traffic_sum": 10,
+              "price_sum": 0,
+              "positions_new_count": 3,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 2,
+              "positions_equal_count": 9,
+              "positions_tops": {
+                "top1_2": 11,
+                "top3_5": 1,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "li",
+              "country": "Liechtenstein",
+              "keywords_count": 9,
+              "traffic_sum": 3,
+              "price_sum": 0,
+              "positions_new_count": 7,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 7,
+              "positions_equal_count": 2,
+              "positions_tops": {
+                "top1_2": 7,
+                "top3_5": 2,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "cl",
+              "country": "Chile",
+              "keywords_count": 5,
+              "traffic_sum": 33,
+              "price_sum": 13.74,
+              "positions_new_count": 1,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 4,
+              "positions_equal_count": 4,
+              "positions_tops": {
+                "top1_2": 5,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "eg",
+              "country": "Egypt",
+              "keywords_count": 5,
+              "traffic_sum": 30,
+              "price_sum": 1.5,
+              "positions_new_count": 2,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 3,
+              "positions_tops": {
+                "top1_2": 5,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "do",
+              "country": "Dominican Republic",
+              "keywords_count": 4,
+              "traffic_sum": 3,
+              "price_sum": 0.49,
+              "positions_new_count": 3,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 1,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 4,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "by",
+              "country": "Belarus",
+              "keywords_count": 4,
+              "traffic_sum": 6,
+              "price_sum": 0,
+              "positions_new_count": 3,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 4,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "ro",
+              "country": "Romania",
+              "keywords_count": 3,
+              "traffic_sum": 3,
+              "price_sum": 0,
+              "positions_new_count": 2,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 3,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "np",
+              "country": "Nepal",
+              "keywords_count": 2,
+              "traffic_sum": 2,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 3,
+              "positions_equal_count": 2,
+              "positions_tops": {
+                "top1_2": 2,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "za",
+              "country": "South Africa",
+              "keywords_count": 2,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 1,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 2,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "rs",
+              "country": "Serbia",
+              "keywords_count": 1,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 1,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "cr",
+              "country": "Costa Rica",
+              "keywords_count": 1,
+              "traffic_sum": 2,
+              "price_sum": 7.03,
+              "positions_new_count": 1,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 1,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "tr",
+              "country": "Turkey",
+              "keywords_count": 1,
+              "traffic_sum": 23,
+              "price_sum": 2.5,
+              "positions_new_count": 1,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 1,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "co",
+              "country": "Colombia",
+              "keywords_count": 1,
+              "traffic_sum": 1,
+              "price_sum": 0,
+              "positions_new_count": 1,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 1,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "al",
+              "country": "Albania",
+              "keywords_count": 1,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 1,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "bg",
+              "country": "Bulgaria",
+              "keywords_count": 1,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 0,
+              "positions_equal_count": 1,
+              "positions_tops": {
+                "top1_2": 1,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "th",
+              "country": "Thailand",
+              "keywords_count": 0,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 1,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 0,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "kr",
+              "country": "South Korea",
+              "keywords_count": 0,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 3,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 0,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            },
+            {
+              "source": "mg",
+              "country": "Madagascar",
+              "keywords_count": 0,
+              "traffic_sum": 0,
+              "price_sum": 0,
+              "positions_new_count": 0,
+              "positions_up_count": 0,
+              "positions_down_count": 0,
+              "positions_lost_count": 1,
+              "positions_equal_count": 0,
+              "positions_tops": {
+                "top1_2": 0,
+                "top3_5": 0,
+                "top6_8": 0,
+                "top9_11": 0
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get worldwide aggregate statistics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get regional database overview",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get domain keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get domain competitors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get regional database overview": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get worldwide aggregate statistics": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get domain keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get domain competitors": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "887a0d5d-841f-4e0a-9713-27121ca328f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
+  },
+  "id": "X8muqiV80soErtD2",
+  "tags": []
+}

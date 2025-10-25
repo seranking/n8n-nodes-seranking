@@ -305,282 +305,78 @@ Include History Trend: true
 
 ---
 
-## Usage Examples
+## 📚 Usage Examples
 
-### Example 1: Monitor AI Visibility Across Engines
-
-Track how often your brand appears in different LLM engines:
-
-```
-1. SE Ranking Node
-   Resource: AI Search
-   Operation: Get Overview
-   Domain: example.com
-   Engine: chatgpt
-   Source: us
-   Scope: base_domain
-
-2. SE Ranking Node (duplicate for other engines)
-   Engine: perplexity
-   
-3. SE Ranking Node (duplicate)
-   Engine: gemini
-
-4. Merge Node
-   Combine results from all engines
-
-5. Google Sheets Node
-   Append to: AI Visibility Tracker
-   Columns: Date, Engine, Total Prompts, Impressions
-```
-
-**Result**: Weekly dashboard tracking AI visibility trends across platforms.
+Ready-to-use workflows demonstrating real-world applications of the SE Ranking node. Each example includes importable n8n workflows, setup instructions, and expected outputs.
 
 ---
 
-### Example 2: Find High-Volume Prompts
+### 🤖 Example 1: AI Search Visibility Tracker
 
-Identify valuable AI search opportunities:
+**Track your brand's presence across ChatGPT, Perplexity, and Gemini**
 
-```
-1. SE Ranking Node
-   Resource: AI Search
-   Operation: Get Prompts by Target
-   Domain: example.com
-   Engine: chatgpt
-   Source: us
-   Limit: 1000
-   Sort: volume (desc)
+Monitor how often your brand appears in AI-powered search engines with automated historical tracking.
 
-2. Filter Node
-   Keep only: volume > 1000
+**What You'll Get:**
 
-3. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Export Metrics
-   Keywords: {{ $json.prompts.map(p => p.text) }}
+- Link presence count across multiple AI engines
+- Average position tracking in AI citations
+- AI opportunity traffic estimates
+- Period-over-period comparison metrics
 
-4. Sort Node
-   Sort by: difficulty (asc)
-   
-5. Limit Node
-   Keep first: 20
+**Best For:** Marketing teams tracking AI SEO performance, Brand managers monitoring AI visibility
 
-6. Send to Content Team
-```
-
-**Result**: List of high-volume, low-difficulty prompts for content optimization.
+📁 [View Full Guide & Download Workflow →](./Usage-Examples/AI-Search)
 
 ---
 
-### Example 3: Keyword Research Workflow
+### 📊 Example 2: Domain Analysis Data Processor
 
-Comprehensive keyword research from a seed keyword:
+**Transform SE Ranking API data into structured Google Sheets reports**
 
-```
-1. Manual Trigger
-   Input: seed_keyword = "seo tools"
+Automatically process and organize domain analysis data with intelligent type detection.
 
-2. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Get Similar Keywords
-   Keyword: {{ $json.seed_keyword }}
-   Source: us
-   Volume From: 500
-   Difficulty To: 60
-   Limit: 100
+**What You'll Get:**
 
-3. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Get Related Keywords
-   Keyword: {{ $json.seed_keyword }}
-   Volume From: 500
+- Regional performance across 200+ countries
+- Domain summary with organic vs. paid breakdown
+- Keywords analysis with positions and difficulty
+- Competitor insights and gap analysis
 
-4. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Get Question Keywords
-   Keyword: {{ $json.seed_keyword }}
-   Volume From: 100
+**Best For:** SEO agencies managing multiple clients, Enterprise teams tracking regional performance
 
-5. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Get Longtail Keywords
-   Keyword: {{ $json.seed_keyword }}
-   Limit: 100
-
-6. Merge Node
-   Combine all keyword lists
-   Remove duplicates
-
-7. Google Sheets Node
-   Create new sheet: SEO Tools Keywords
-   Include: keyword, volume, cpc, difficulty
-
-8. Sort by: volume (desc)
-```
-
-**Result**: Comprehensive keyword list with similar, related, questions, and longtail variations.
+📁 [View Full Guide & Download Workflow →](./Usage-Examples/Domain-Analysis)
 
 ---
 
-### Example 4: Competitor Keyword Gap Analysis
+### 🔍 Example 3: Keyword Research Automation
 
-Find keywords competitors rank for that you don't:
+**Automate comprehensive keyword research with trend analysis**
 
-```
-1. SE Ranking Node
-   Resource: Domain Analysis
-   Operation: Get Keywords
-   Domain: competitor.com
-   Source: us
-   Type: organic
-   Position From: 1
-   Position To: 20
-   Limit: 1000
+Build an automated keyword intelligence pipeline with historical tracking and SERP features.
 
-2. SE Ranking Node
-   Resource: Domain Analysis
-   Operation: Get Keywords
-   Domain: yourdomain.com
-   Source: us
-   Type: organic
-   Limit: 1000
+**What You'll Get:**
 
-3. Compare Lists Node (custom function)
-   Find keywords in competitor list but not in your list
+- Bulk keyword metrics with volume and CPC
+- Historical trend analysis (peaks, valleys, averages)
+- SERP features tracking (PAA, featured snippets, etc.)
+- Search intent mapping (informational, commercial, navigational)
 
-4. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Export Metrics
-   Keywords: {{ $json.gap_keywords }}
+**Best For:** Content strategists planning editorial calendars, SEO specialists doing competitor research
 
-5. Filter Node
-   Keep: difficulty < 50, volume > 500
-
-6. Sort Node
-   Sort by: volume (desc)
-
-7. Airtable Node
-   Create records in: Keyword Opportunities
-   Include: keyword, volume, difficulty, competitor_url
-```
-
-**Result**: Actionable list of keyword opportunities where competitors are winning.
+📁 [View Full Guide & Download Workflow →](./Usage-Examples/Keyword-Research)
 
 ---
 
-### Example 5: Track Competitor Rankings
+### 🚀 Quick Start
 
-Monitor competitor movement in search results:
+1. **Browse** the example that matches your use case
+2. **Download** the `workflow.json` file from the example folder
+3. **Import** into n8n (Workflows → Import from File)
+4. **Configure** your SE Ranking API credentials
+5. **Run** and customize to your needs
 
-```
-1. Schedule Trigger
-   Run: Every Monday at 9 AM
-
-2. SE Ranking Node
-   Resource: Domain Analysis
-   Operation: Get Competitors
-   Domain: yourdomain.com
-   Source: us
-   Type: organic
-   Limit: 10
-
-3. Loop Over Competitors
-
-4. SE Ranking Node (inside loop)
-   Resource: Domain Analysis
-   Operation: Get Regional Database Overview
-   Domain: {{ $json.competitor_domain }}
-   Source: us
-
-5. Store in Database
-   Table: Competitor_Tracking
-   Columns: date, competitor, keywords_count, 
-            organic_traffic, avg_position
-
-6. Compare with Last Week
-   Calculate: keyword changes, traffic changes
-
-7. Slack/Email Alert
-   If any competitor gained >100 keywords
-```
-
-**Result**: Weekly competitor monitoring with automated alerts.
-
----
-
-### Example 6: Regional Performance Analysis
-
-Compare domain performance across different countries:
-
-```
-1. SE Ranking Node
-   Resource: Domain Analysis
-   Operation: Get Regional Database Overview
-   Domain: example.com
-   Source: us
-
-2. SE Ranking Node (duplicate)
-   Source: uk
-
-3. SE Ranking Node (duplicate)
-   Source: de
-
-4. SE Ranking Node (duplicate)
-   Source: fr
-
-5. Merge Node
-   Combine all regional data
-
-6. Calculate Metrics
-   - Best performing region
-   - Total global keywords
-   - Traffic by region
-
-7. Google Data Studio API
-   Update dashboard: Global Performance Overview
-```
-
-**Result**: Multi-regional performance dashboard.
-
----
-
-### Example 7: Content Opportunity Finder
-
-Identify content gaps using AI Search and Keyword Research:
-
-```
-1. SE Ranking Node
-   Resource: AI Search
-   Operation: Get Prompts by Target
-   Domain: competitor.com
-   Engine: chatgpt
-   Source: us
-   Limit: 500
-
-2. Filter Node
-   Keep prompts where you're not mentioned
-
-3. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Export Metrics
-   Keywords: {{ $json.prompts }}
-
-4. SE Ranking Node
-   Resource: Keyword Research
-   Operation: Get Question Keywords
-   For each high-volume keyword
-
-5. Filter Node
-   Keep: volume > 1000, difficulty < 60
-
-6. Notion API Node
-   Create pages in: Content Ideas
-   Include: prompt, volume, difficulty, 
-            current_top_results, content_angle
-```
-
-**Result**: Content ideas based on competitor AI visibility and keyword data.
+**Need help?** Each example includes troubleshooting tips and configuration details.
 
 ---
 
@@ -857,23 +653,36 @@ npm run dev
 n8n-nodes-seranking/
 │
 ├── credentials/
-│   └── SeRankingApi.credentials.ts             # API credentials configuration
+│   └── SeRankingApi.credentials.ts                               # API credentials configuration
 │
 ├── nodes/
 │   └── SeRanking/
-│       ├── SeRanking.node.ts                   # Main node definition
+│       ├── SeRanking.node.ts                                     # Main node definition
 │       ├── dataApi/
 │       │   ├── operations/
-│       │   ├── AiSearchOperations.ts           # AI Search operations logic
-│       │   ├── DomainAnalysisOperations.ts     # Domain Analysis operations logic
-│       │   └── KeywordResearchOperations.ts    # Keyword Research operations logic
+│       │   ├── AiSearchOperations.ts                             # AI Search operations logic
+│       │   ├── DomainAnalysisOperations.ts                       # Domain Analysis operations logic
+│       │   └── KeywordResearchOperations.ts                      # Keyword Research operations logic
 │       │   └── descriptions/
-│       │   ├── AiSearchDescription.ts          # AI Search UI definitions
-│       │   ├── DomainAnalysisDescription.ts    # Domain Analysis UI definitions
-│       │   └── KeywordResearchDescription.ts   # Keyword Research UI definitions
+│       │   ├── AiSearchDescription.ts                            # AI Search UI definitions
+│       │   ├── DomainAnalysisDescription.ts                      # Domain Analysis UI definitions
+│       │   └── KeywordResearchDescription.ts                     # Keyword Research UI definitions
 │       └── utils/
-│           ├── validators.ts                   # Input validators
-│           └── apiRequest.ts                   # API request handler
+│           ├── validators.ts                                     # Input validators
+│           └── apiRequest.ts                                     # API request handler
+├── Usage Examples/
+│   └── AI Search/
+│       ├── AIVisibilityTracker.json                              # Example 1: Monitor AI Visibility Across Engines
+│       ├── AIVisibilityTrackerResults.xlsx                       # Example 1 Results
+│       ├── README.md
+│   └── Domain Analysis/
+│       ├── DomainAnalysisMulti-FormatProcessor.json              # Example 2: Domain Analysis Multi-Format Processor
+│       ├── DomainAnalysisMulti-FormatProcessor.xlsx              # Example 2 Results
+│       ├── README.md
+│   └── Keyword Research/
+│       ├── KeywordResearch→GoogleSheetsPipeline.json              # Example 3: Keyword Research → Google Sheets Pipeline
+│       ├── KeywordResearch→GoogleSheetsPipeline.xlsx              # Example 3 Results
+│       ├── README.md
 ├── package.json
 ├── package-lock.json
 ├── tsconfig.json

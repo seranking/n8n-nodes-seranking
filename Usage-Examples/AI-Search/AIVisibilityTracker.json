@@ -1,0 +1,313 @@
+{
+  "name": "AI Visibility Tracker - Multi-Engine Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6872b97e-c30a-4955-b6f9-e18014d2efc9",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        112
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a0b9602a-a291-4c49-ac72-a0b4f6a1388d",
+      "name": "Merge All Engines",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format data based on actual SE Ranking API response structure\nconst timestamp = new Date().toISOString().split('T')[0];\n\n// Get data from each SE Ranking node\nconst chatgptData = $('SE Ranking - ChatGPT').first();\nconst perplexityData = $('SE Ranking - Perplexity').first();\n\n\nconst results = [];\n\n// Process ChatGPT data\nif (chatgptData) {\n  const summary = chatgptData.json.summary || {};\n  results.push({\n    json: {\n      date: timestamp,\n      engine: 'chatgpt',\n      link_presence_current: summary.link_presence?.current || 0,\n      link_presence_previous: summary.link_presence?.previous || 0,\n      link_presence_change: summary.link_presence?.change_absolute || 0,\n      avg_position_current: summary.average_position?.current || 0,\n      avg_position_previous: summary.average_position?.previous || 0,\n      avg_position_change: summary.average_position?.change_absolute || 0,\n      ai_opportunity_traffic: summary.ai_opportunity_traffic?.current || 0\n    }\n  });\n}\n\n// Process Perplexity data\nif (perplexityData) {\n  const summary = perplexityData.json.summary || {};\n  results.push({\n    json: {\n      date: timestamp,\n      engine: 'perplexity',\n      link_presence_current: summary.link_presence?.current || 0,\n      link_presence_previous: summary.link_presence?.previous || 0,\n      link_presence_change: summary.link_presence?.change_absolute || 0,\n      avg_position_current: summary.average_position?.current || 0,\n      avg_position_previous: summary.average_position?.previous || 0,\n      avg_position_change: summary.average_position?.change_absolute || 0,\n      ai_opportunity_traffic: summary.ai_opportunity_traffic?.current || 0\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "453ec8f4-0861-4e70-8436-8f6940d45150",
+      "name": "Format for Sheets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Co3ELj1wORL6INz-a1T2dPHqipQ6qGURwoySuPQjvNA",
+          "mode": "list",
+          "cachedResultName": "AI Search - Get Overview Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Co3ELj1wORL6INz-a1T2dPHqipQ6qGURwoySuPQjvNA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1043704050,
+          "mode": "list",
+          "cachedResultName": "AI Search - Get Overview Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Co3ELj1wORL6INz-a1T2dPHqipQ6qGURwoySuPQjvNA/edit#gid=1043704050"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "engine",
+              "displayName": "engine",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link_presence_current",
+              "displayName": "link_presence_current",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link_presence_previous",
+              "displayName": "link_presence_previous",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link_presence_change",
+              "displayName": "link_presence_change",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_position_current",
+              "displayName": "avg_position_current",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_position_previous",
+              "displayName": "avg_position_previous",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_position_change",
+              "displayName": "avg_position_change",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_opportunity_traffic",
+              "displayName": "ai_opportunity_traffic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b93abaf0-1fc5-4d6d-bea0-391065b87a1b",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "K2iUXQtuUAF8v9IT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "aiSearch",
+        "domain": "seranking.com"
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "4092fe04-4f33-496a-8f1c-c821b40c52f8",
+      "name": "SE Ranking - ChatGPT",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "aiSearch",
+        "domain": "seranking.com",
+        "engine": "perplexity"
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        208
+      ],
+      "id": "f5d5f997-18c4-4104-9968-cedc76a8be88",
+      "name": "SE Ranking - Perplexity",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        208
+      ],
+      "id": "1861d18d-49d9-441b-bbaa-29172572589a",
+      "name": "Wait",
+      "webhookId": "730a7175-1976-425c-91c7-878a56ea7247"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge All Engines": {
+      "main": [
+        [
+          {
+            "node": "Format for Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for Sheets": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "SE Ranking - ChatGPT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SE Ranking - ChatGPT": {
+      "main": [
+        [
+          {
+            "node": "Merge All Engines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SE Ranking - Perplexity": {
+      "main": [
+        [
+          {
+            "node": "Merge All Engines",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "SE Ranking - Perplexity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ed8d2eb1-581d-4ca3-b900-2eeb3abc99a6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
+  },
+  "id": "BCYWyl471fSXRD0v",
+  "tags": []
+}
