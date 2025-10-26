@@ -305,7 +305,7 @@ Include History Trend: true
 
 ---
 
-## 📚 Usage Examples
+## Usage Examples
 
 Ready-to-use workflows demonstrating real-world applications of the SE Ranking node. Each example includes importable n8n workflows, setup instructions, and expected outputs.
 
