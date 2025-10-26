@@ -27,7 +27,7 @@ This workflow monitors your brand's presence across ChatGPT and Perplexity stori
 ✅ **Multi-Engine Comparison**: See performance across ChatGPT and Perplexity  
 ✅ **Rate Limit Safe**: Built-in wait times prevent API throttling  
 ✅ **Historical Data**: Track visibility changes over time in Google Sheets  
-✅ **Easy Expansion**: Add more engines (Gemini, Claude, etc.) by duplicating nodes
+✅ **Easy Expansion**: Add more engines by duplicating nodes
 
 ## Setup Instructions
 
