@@ -152,7 +152,7 @@ Duplicate entire workflow for different regions:
 
 ## Additional Resources
 
-- [SE Ranking AI Search Documentation](https://seranking.com/api-v3.html#tag/AI-Search)
+- [SE Ranking API Documentation - AI Search](https://seranking.com/api/data/ai-search)
 - [n8n Schedule Trigger Docs](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger/)
 - [Google Sheets Node Docs](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/)
 
