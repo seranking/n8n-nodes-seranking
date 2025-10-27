@@ -55,7 +55,7 @@ npm install n8n-nodes-seranking-1.0.7.tgz
 To use this node, you need:
 
 1. **SE Ranking Account** - Sign up at [seranking.com](https://seranking.com/)
-2. **API Token** - Generate from your [SE Ranking API Dashboard](https://api.seranking.com/)
+2. **API Token** - Generate from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html)
 
 ### Setting up credentials in n8n
 
