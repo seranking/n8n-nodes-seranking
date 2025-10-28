@@ -779,7 +779,7 @@ n8n-nodes-seranking/
 ## Acknowledgments
 
 - Built for the [n8n](https://n8n.io/) workflow automation platform
-- Powered by [SE Ranking API](https://seranking.com/api.html)
+- Powered by [SE Ranking API](https://seranking.com)
 
 ---
 
