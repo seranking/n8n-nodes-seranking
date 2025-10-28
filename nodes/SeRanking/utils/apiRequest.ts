@@ -9,23 +9,66 @@ export async function apiRequest(
 	itemIndex: number = 0
 ): Promise<any> {
 	const credentials = await this.getCredentials('seRankingApi');
-	const baseUrl = credentials.apiType === 'project'
-		? 'https://api4.seranking.com'
-		: 'https://api.seranking.com/v1';
-
+	
 	const options: any = {
 		method,
-		url: `${baseUrl}${endpoint}`,
-		headers: {
-			'Authorization': `Token ${credentials.apiToken}`,
-		},
 		timeout: 120000,
-		json: true,
 	};
+
+	// Check if this is a full URL download (for export download)
+	if (query._fullUrl) {
+		// Use the endpoint as the full URL
+		options.url = endpoint;
+		delete query._fullUrl;
+		
+		// Export download URLs are pre-authenticated, no token needed
+		// The URL itself contains authorization
+		// Don't add Authorization header for downloads
+		
+		// Downloads return binary data (gzipped CSV), not JSON
+		options.encoding = null; // Return binary buffer
+		options.json = false;
+	} else {
+		// Normal API request - build URL with base and add auth
+		const baseUrl = credentials.apiType === 'project'
+			? 'https://api4.seranking.com'
+			: 'https://api.seranking.com/v1';
+		options.url = `${baseUrl}${endpoint}`;
+		
+		// Add authorization header for regular API calls
+		options.headers = {
+			'Authorization': `Token ${credentials.apiToken}`,
+		};
+		
+		// Regular API calls expect JSON
+		options.json = true;
+	}
 
 	// Add query parameters
 	if (Object.keys(query).length > 0) {
-		options.qs = query;
+		// Handle special case for multiple targets (SE Ranking backlinks/metrics endpoint)
+		if (query._additionalTargets && Array.isArray(query._additionalTargets)) {
+			const additionalTargets = query._additionalTargets;
+			delete query._additionalTargets;
+			
+			// Build query string manually to support multiple 'target' parameters
+			const queryPairs: string[] = [];
+			
+			// Add regular params first
+			Object.keys(query).forEach(key => {
+				queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`);
+			});
+			
+			// Add additional targets as separate 'target' parameters
+			additionalTargets.forEach((target: string) => {
+				queryPairs.push(`target=${encodeURIComponent(target)}`);
+			});
+			
+			// Append to URL manually
+			options.url += '?' + queryPairs.join('&');
+		} else {
+			options.qs = query;
+		}
 	}
 
 	// Add body data
@@ -78,7 +121,7 @@ export async function apiRequest(
 			errorDescription = 'Your API key does not have permission for this operation';
 		} else if (statusCode === 404) {
 			errorMessage = 'Not Found - Invalid endpoint or domain';
-			errorDescription = 'Domain may not exist in SE Ranking database';
+			errorDescription = 'Domain may not exist in SE Ranking database or export file expired';
 		} else if (statusCode === 429) {
 			errorMessage = 'Rate Limit Exceeded';
 			errorDescription = 'Too many requests. Add delays between requests or reduce batch size';

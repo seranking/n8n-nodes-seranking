@@ -10,12 +10,14 @@ import {
 import { aiSearchOperations, aiSearchFields } from './dataApi/descriptions/AiSearchDescription';
 import { domainAnalysisOperations, domainAnalysisFields } from './dataApi/descriptions/DomainAnalysisDescription';
 import { keywordResearchOperations, keywordResearchFields } from './dataApi/descriptions/KeywordResearchDescription';
+import { backlinksOperations, backlinksFields } from './dataApi/descriptions/BacklinksDescription';
+
 
 // Import Data API operations
 import { AiSearchOperations } from './dataApi/operations/AiSearchOperations';
 import { DomainAnalysisOperations } from './dataApi/operations/DomainAnalysisOperations';
 import { KeywordResearchOperations } from './dataApi/operations/KeywordResearchOperations';
-
+import { BacklinksOperations } from './dataApi/operations/BacklinksOperations';
 
 
 
@@ -52,6 +54,11 @@ export class SeRanking implements INodeType {
 						value: 'aiSearch',
 						description: 'LLM visibility and AI search data',
 					},
+					{
+						name: 'Backlinks',
+						value: 'backlinks',
+						description: 'Backlink analysis and authority metrics',
+					},
                     {
 						name: 'Domain Analysis',
 						value: 'domainAnalysis',
@@ -68,6 +75,9 @@ export class SeRanking implements INodeType {
 			// AI Search
 			...aiSearchOperations,
 			...aiSearchFields,
+			// Backlinks
+			...backlinksOperations,
+			...backlinksFields,
 			// Domain Analysis
 			...domainAnalysisOperations,
 			...domainAnalysisFields,
@@ -88,6 +98,9 @@ export class SeRanking implements INodeType {
 				switch (resource) {
 					case 'aiSearch':
 						responseData = await AiSearchOperations.call(this, i);
+						break;
+					case 'backlinks':
+						responseData = await BacklinksOperations.call(this, i);
 						break;
 					case 'domainAnalysis':
 						responseData = await DomainAnalysisOperations.call(this, i);
