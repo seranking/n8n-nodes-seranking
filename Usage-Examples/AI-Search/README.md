@@ -27,7 +27,7 @@ This workflow monitors your brand's presence across ChatGPT and Perplexity stori
 ✅ **Multi-Engine Comparison**: See performance across ChatGPT and Perplexity  
 ✅ **Rate Limit Safe**: Built-in wait times prevent API throttling  
 ✅ **Historical Data**: Track visibility changes over time in Google Sheets  
-✅ **Easy Expansion**: Add more engines (Gemini, Claude, etc.) by duplicating nodes
+✅ **Easy Expansion**: Add more engines by duplicating nodes
 
 ## Setup Instructions
 
@@ -152,7 +152,7 @@ Duplicate entire workflow for different regions:
 
 ## Additional Resources
 
-- [SE Ranking AI Search Documentation](https://seranking.com/api-v3.html#tag/AI-Search)
+- [SE Ranking API Documentation - AI Search](https://seranking.com/api/data/ai-search)
 - [n8n Schedule Trigger Docs](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger/)
 - [Google Sheets Node Docs](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/)
 
