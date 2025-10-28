@@ -4,7 +4,7 @@ This is an n8n custom node that lets you use [SE Ranking](https://seranking.com/
 
 SE Ranking is a comprehensive SEO platform providing keyword research, competitor analysis, website audits, backlink monitoring, and AI search visibility tracking.
 
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
+[n8n](https://n8n.io/) is a workflow automation platform.
 
 ---
 
@@ -25,29 +25,114 @@ SE Ranking is a comprehensive SEO platform providing keyword research, competito
 
 ## Installation
 
-### Option 1: Install via npm
+⚠️ **This node is not yet available on npm or n8n Community Nodes.**
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- n8n 1.0.0 or higher
+- SE Ranking API Token ([Get it here](https://online.seranking.com/admin.api.dashboard.html))
+
+### Quick Install
+
+### Step 1: Install n8n
 
 ```bash
-npm install n8n-nodes-seranking
+npm install n8n -g
 ```
 
-### Option 2: Install from .tgz file
+### Step 2: Install SE Ranking Node
 
-If you have the packaged file:
+**Option A: From .tgz file (Recommended)**
 
 ```bash
+npm install -g n8n-nodes-seranking-1.0.7.tgz
+```
+
+**Option B: From GitHub**
+
+```bash
+npm install -g git+https://github.com/seranking/n8n-nodes-seranking.git
+```
+
+**Option C: From source (for developers)**
+
+```bash
+cd ~/.n8n/custom
+git clone https://github.com/seranking/n8n-nodes-seranking.git
+cd n8n-nodes-seranking
+npm install
+npm run build
+npm link
+```
+
+### Step 3: Start n8n
+
+```bash
+n8n start
+```
+
+Open `http://localhost:5678` and add the SE Ranking node to your workflow.
+
+### Step 4: Configure Credentials
+
+1. Add SE Ranking node
+2. Click "Create New Credential"
+3. Enter your API Token
+4. Select "Data API" as API Type
+5. Save
+
+### Docker Installation
+
+```bash
+# Create custom directory
+mkdir -p ~/.n8n/custom
+cd ~/.n8n/custom
+
+# Install node (choose one)
 npm install n8n-nodes-seranking-1.0.7.tgz
+# OR
+npm install git+https://github.com/seranking/n8n-nodes-seranking.git
+
+# Run n8n
+docker run -it --rm \
+  --name n8n \
+  -p 5678:5678 \
+  -v ~/.n8n:/home/node/.n8n \
+  docker.n8n.io/n8nio/n8n
 ```
 
-### Option 3: Manual Installation
+### Verify Installation
 
-1. Download or clone this repository
-2. Copy the node folder to your n8n custom nodes directory
-3. Run `npm install` in the node directory
-4. Restart n8n
+1. Open n8n at `http://localhost:5678`
+2. Search for "SE Ranking" node
+3. If it appears, installation successful ✓
 
-**After installation, restart n8n to load the node.**
+### Updating
 
+**From .tgz:**
+
+```bash
+npm uninstall -g n8n-nodes-seranking
+npm install -g n8n-nodes-seranking-NEW-VERSION.tgz
+```
+
+**From GitHub:**
+
+```bash
+npm update -g n8n-nodes-seranking
+```
+
+**From source:**
+
+```bash
+cd ~/.n8n/custom/n8n-nodes-seranking
+git pull
+npm install
+npm run build
+```
+
+Then restart n8n
 ---
 
 ## Credentials
@@ -55,7 +140,7 @@ npm install n8n-nodes-seranking-1.0.7.tgz
 To use this node, you need:
 
 1. **SE Ranking Account** - Sign up at [seranking.com](https://seranking.com/)
-2. **API Token** - Generate from your [SE Ranking API Dashboard](https://api.seranking.com/)
+2. **API Token** - Generate from your [SE Ranking API Dashboard](https://seranking.com/api.html)
 
 ### Setting up credentials in n8n
 
@@ -305,7 +390,7 @@ Include History Trend: true
 
 ---
 
-## 📚 Usage Examples
+## Usage Examples
 
 Ready-to-use workflows demonstrating real-world applications of the SE Ranking node. Each example includes importable n8n workflows, setup instructions, and expected outputs.
 
@@ -388,7 +473,7 @@ This node implements the following SE Ranking APIs:
 - [Domain Analysis API](https://seranking.com/api/data/domain-analysis/)
 - [Keyword Research API](https://seranking.com/api/data/keyword-research/)
 
-For detailed API specifications, visit [SE Ranking API Documentation](https://seranking.com/api-google-organic.html).
+For detailed API specifications, visit [SE Ranking API Documentation](https://seranking.com/api.html).
 
 ---
 
@@ -694,7 +779,7 @@ n8n-nodes-seranking/
 ## Acknowledgments
 
 - Built for the [n8n](https://n8n.io/) workflow automation platform
-- Powered by [SE Ranking API](https://seranking.com/)
+- Powered by [SE Ranking API](https://seranking.com/api.html)
 
 ---
 
