@@ -40,6 +40,18 @@ export async function DomainAnalysisOperations(
 			break;
 		}
 
+		case 'getOverviewHistory': {
+			const domain = this.getNodeParameter('domain', index) as string;
+			const source = this.getNodeParameter('source', index) as string;
+			const type = this.getNodeParameter('type', index, 'organic') as string;
+			
+			endpoint = '/domain/overview/history';
+			params.source = validateSource(source);
+			params.domain = validateDomain(domain);
+			params.type = type;
+			break;
+		}
+
 		case 'getKeywords': {
 			const domain = this.getNodeParameter('domain', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
@@ -70,6 +82,31 @@ export async function DomainAnalysisOperations(
 			break;
 		}
 
+		case 'getKeywordsComparison': {
+			const domain = this.getNodeParameter('domain', index) as string;
+			const compareDomain = this.getNodeParameter('compareDomain', index) as string;
+			const source = this.getNodeParameter('source', index) as string;
+			const type = this.getNodeParameter('type', index) as string;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+			
+			endpoint = '/domain/keywords/comparison';
+			params.source = validateSource(source);
+			params.domain = validateDomain(domain);
+			params.compare = validateDomain(compareDomain);  
+			params.type = type;
+			
+			if (additionalFields.limit) params.limit = additionalFields.limit;
+			if (additionalFields.offset) params.offset = additionalFields.offset;
+			if (additionalFields.cols) params.cols = additionalFields.cols.join(',');
+			if (additionalFields.orderField) params.order_field = additionalFields.orderField;
+			if (additionalFields.orderType) params.order_type = additionalFields.orderType;
+			
+			// Filters
+			if (additionalFields.volumeFrom) params['filter[volume][from]'] = additionalFields.volumeFrom;
+			if (additionalFields.volumeTo) params['filter[volume][to]'] = additionalFields.volumeTo;
+			break;
+		}
+
 		case 'getCompetitors': {
 			const domain = this.getNodeParameter('domain', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
@@ -88,6 +125,44 @@ export async function DomainAnalysisOperations(
 			if (additionalFields.excludeLeaders !== undefined) {
 				params.exclude_leaders = additionalFields.excludeLeaders ? 1 : 0;
 			}
+			break;
+		}
+
+		case 'getAdsForKeyword': {
+			const keyword = this.getNodeParameter('keyword', index) as string;
+			const source = this.getNodeParameter('source', index) as string;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+			
+			if (!keyword || keyword.trim() === '') {
+				throw new Error('Keyword cannot be empty');
+			}
+			
+			
+			endpoint = '/domain/ads';
+			params.source = validateSource(source);
+			params.keyword = keyword.trim();
+			
+			if (additionalFields.from) params.from = additionalFields.from;
+			if (additionalFields.to) params.to = additionalFields.to;
+			if (additionalFields.page) params.page = additionalFields.page;
+			if (additionalFields.limit) params.limit = additionalFields.limit;
+			break;
+		}
+
+		case 'getAdsForDomain': {
+			const domain = this.getNodeParameter('domain', index) as string;
+			const source = this.getNodeParameter('source', index) as string;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+			
+			
+			endpoint = '/domain/ads';
+			params.source = validateSource(source);
+			params.domain = validateDomain(domain);
+			
+			if (additionalFields.from) params.from = additionalFields.from;
+			if (additionalFields.to) params.to = additionalFields.to;
+			if (additionalFields.page) params.page = additionalFields.page;
+			if (additionalFields.limit) params.limit = additionalFields.limit;
 			break;
 		}
 

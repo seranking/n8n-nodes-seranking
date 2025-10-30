@@ -272,19 +272,19 @@ export const backlinksFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Domain (Root + Subdomains)',
+				name: 'Base Domain',
 				value: 'as_root',
-				description: 'Analyze entire domain and all subdomains (e.g., example.com + blog.example.com)',
+				description: 'Aggregate by registrable domain, includes all subdomains',
 			},
 			{
-				name: 'Host (Specific Subdomain)',
+				name: 'Domain',
 				value: 'as_subdomain',
-				description: 'Analyze specific subdomain only (e.g., only blog.example.com)',
+				description: 'Exact host only, no subdomain aggregation',
 			},
 			{
-				name: 'URL (Exact URL)',
+				name: 'URL',
 				value: 'one_unit',
-				description: 'Analyze exact URL only (e.g., https://example.com/page)',
+				description: 'Exact URL including path and query',
 			},
 		],
 		default: 'as_root',

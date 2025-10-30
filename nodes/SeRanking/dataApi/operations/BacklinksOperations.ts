@@ -48,9 +48,7 @@ export async function BacklinksOperations(
 			
 			endpoint = '/backlinks/metrics';
 			
-			// SE Ranking expects multiple target parameters, not a comma-separated string
-			// We'll pass the array and handle it specially in apiRequest
-			// For now, we'll just pass the first target in params and handle the rest in the URL
+
 			if (targetsList.length === 0) {
 				throw new Error('Please provide at least one target domain');
 			}

@@ -92,7 +92,7 @@ export async function KeywordResearchOperations(
 				params.history_trend = additionalFields.historyTrend;
 			}
 			
-			// Filters (same as similar)
+			// Filters 
 			if (additionalFields.volumeFrom) params['filter[volume][from]'] = additionalFields.volumeFrom;
 			if (additionalFields.volumeTo) params['filter[volume][to]'] = additionalFields.volumeTo;
 			if (additionalFields.difficultyFrom) params['filter[difficulty][from]'] = additionalFields.difficultyFrom;

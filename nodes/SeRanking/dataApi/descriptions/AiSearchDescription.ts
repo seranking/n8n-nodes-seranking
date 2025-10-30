@@ -144,19 +144,19 @@ export const aiSearchFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Base Domain (All Subdomains)',
+				name: 'Base Domain',
 				value: 'base_domain',
-				description: 'Analyze domain and all subdomains (e.g., example.com + blog.example.com)',
+				description: 'Aggregate by registrable domain, includes all subdomains',
 			},
 			{
-				name: 'Domain (Specific Host)',
+				name: 'Domain',
 				value: 'domain',
-				description: 'Analyze specific subdomain only (e.g., only blog.example.com)',
+				description: 'Exact host only, no subdomain aggregation',
 			},
 			{
-				name: 'URL (Exact URL)',
+				name: 'URL',
 				value: 'url',
-				description: 'Analyze exact URL only (e.g., https://example.com/page)',
+				description: 'Exact URL including path and query',
 			},
 		],
 		default: 'base_domain',

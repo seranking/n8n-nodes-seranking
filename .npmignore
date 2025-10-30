@@ -1,0 +1,42 @@
+﻿# Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+
+# Source files (we only ship compiled JS)
+*.ts
+!*.d.ts
+nodes/**/*.ts
+credentials/**/*.ts
+
+# Build configuration
+tsconfig.json
+tsconfig.*.json
+
+# Development files
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Documentation and examples (optional - remove if you want to include)
+Usage Examples/
+README.md
+*.md
+
+# Test files
+test/
+*.test.ts
+*.spec.ts
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Misc
+.env
+.env.*
+*.local

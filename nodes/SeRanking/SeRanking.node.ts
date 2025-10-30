@@ -11,6 +11,7 @@ import { aiSearchOperations, aiSearchFields } from './dataApi/descriptions/AiSea
 import { domainAnalysisOperations, domainAnalysisFields } from './dataApi/descriptions/DomainAnalysisDescription';
 import { keywordResearchOperations, keywordResearchFields } from './dataApi/descriptions/KeywordResearchDescription';
 import { backlinksOperations, backlinksFields } from './dataApi/descriptions/BacklinksDescription';
+import { websiteAuditOperations, websiteAuditFields } from './dataApi/descriptions/WebsiteAuditDescription';
 
 
 // Import Data API operations
@@ -18,6 +19,7 @@ import { AiSearchOperations } from './dataApi/operations/AiSearchOperations';
 import { DomainAnalysisOperations } from './dataApi/operations/DomainAnalysisOperations';
 import { KeywordResearchOperations } from './dataApi/operations/KeywordResearchOperations';
 import { BacklinksOperations } from './dataApi/operations/BacklinksOperations';
+import { WebsiteAuditOperations } from './dataApi/operations/WebsiteAuditOperations';
 
 
 
@@ -69,6 +71,11 @@ export class SeRanking implements INodeType {
 						value: 'keywordResearch',
 						description: 'Keyword metrics, volume, CPC, and related keywords',
 					},
+					{
+						name: 'Website Audit',
+						value: 'websiteAudit',
+						description: 'Site crawling, technical SEO, and on-page analysis',
+					},
 				],
 				default: 'domainAnalysis',
 			},
@@ -84,6 +91,9 @@ export class SeRanking implements INodeType {
 			// Keyword Research
 			...keywordResearchOperations,
 			...keywordResearchFields,
+			// Website Audit
+			...websiteAuditOperations,
+			...websiteAuditFields,
             ],
 	};
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -107,6 +117,9 @@ export class SeRanking implements INodeType {
 						break;
 					case 'keywordResearch':
 						responseData = await KeywordResearchOperations.call(this, i);
+						break;
+					case 'websiteAudit':
+						responseData = await WebsiteAuditOperations.call(this, i);
 						break;
                     default:
 						throw new NodeOperationError(

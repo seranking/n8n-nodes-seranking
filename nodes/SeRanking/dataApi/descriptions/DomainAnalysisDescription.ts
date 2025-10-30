@@ -25,10 +25,22 @@ export const domainAnalysisOperations: INodeProperties[] = [
 				action: 'Get worldwide aggregate statistics',
 			},
 			{
+				name: 'Get Overview History',
+				value: 'getOverviewHistory',
+				description: 'Get historical domain metrics over a date range',
+				action: 'Get overview history',
+			},
+			{
 				name: 'Get Keywords',
 				value: 'getKeywords',
 				description: 'Get keywords for which a domain ranks',
 				action: 'Get domain keywords',
+			},
+			{
+				name: 'Get Keywords Comparison',
+				value: 'getKeywordsComparison',
+				description: 'Compare keyword rankings between two domains',
+				action: 'Get keywords comparison',
 			},
 			{
 				name: 'Get Competitors',
@@ -36,13 +48,25 @@ export const domainAnalysisOperations: INodeProperties[] = [
 				description: 'Get competitor domains',
 				action: 'Get domain competitors',
 			},
+			{
+				name: 'Get Paid Ads for Keyword',
+				value: 'getAdsForKeyword',
+				description: 'Get domains advertising on a specific keyword',
+				action: 'Get paid ads for keyword',
+			},
+			{
+				name: 'Get Paid Ads for Domain',
+				value: 'getAdsForDomain',
+				description: 'Get keywords a domain is advertising on',
+				action: 'Get paid ads for domain',
+			},
 		],
 		default: 'getOverviewWorldwide',
 	},
 ];
 
 export const domainAnalysisFields: INodeProperties[] = [
-	// Domain field (for all operations)
+	// Domain field (for most operations)
 	{
 		displayName: 'Domain',
 		name: 'domain',
@@ -51,11 +75,52 @@ export const domainAnalysisFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['domainAnalysis'],
+				operation: [
+					'getOverviewDb',
+					'getOverviewWorldwide',
+					'getOverviewHistory',
+					'getKeywords',
+					'getKeywordsComparison',
+					'getCompetitors',
+					'getAdsForDomain',
+				],
 			},
 		},
 		default: '',
 		placeholder: 'example.com',
 		description: 'Target domain to analyze (without http:// or www)',
+	},
+	// Keyword field (for getAdsForKeyword)
+	{
+		displayName: 'Keyword',
+		name: 'keyword',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['domainAnalysis'],
+				operation: ['getAdsForKeyword'],
+			},
+		},
+		default: '',
+		placeholder: 'seo tools',
+		description: 'Keyword to analyze paid ads for',
+	},
+	// Compare domain field (for comparison)
+	{
+		displayName: 'Compare Domain',
+		name: 'compareDomain',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['domainAnalysis'],
+				operation: ['getKeywordsComparison'],
+			},
+		},
+		default: '',
+		placeholder: 'competitor.com',
+		description: 'Competitor domain to compare against',
 	},
 	// Source field (for regional operations)
 	{
@@ -66,14 +131,22 @@ export const domainAnalysisFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['domainAnalysis'],
-				operation: ['getOverviewDb', 'getKeywords', 'getCompetitors'],
+				operation: [
+					'getOverviewDb',
+					'getOverviewHistory',
+					'getKeywords',
+					'getKeywordsComparison',
+					'getCompetitors',
+					'getAdsForKeyword',
+					'getAdsForDomain',
+				],
 			},
 		},
 		default: 'us',
 		placeholder: 'us',
 		description: 'Alpha-2 country code for regional database (e.g., us, uk, de, fr, es, it, ca, au, pl)',
 	},
-	// Type field (for keywords and competitors)
+	// Type field (for keywords, competitors, and history)
 	{
 		displayName: 'Type',
 		name: 'type',
@@ -82,7 +155,7 @@ export const domainAnalysisFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['domainAnalysis'],
-				operation: ['getKeywords', 'getCompetitors'],
+				operation: ['getKeywords', 'getKeywordsComparison', 'getCompetitors', 'getOverviewHistory'],
 			},
 		},
 		options: [
@@ -99,6 +172,32 @@ export const domainAnalysisFields: INodeProperties[] = [
 		],
 		default: 'organic',
 		description: 'Type of search results to analyze',
+	},
+	// Diff field (for comparison)
+	{
+		displayName: 'Comparison Mode',
+		name: 'diff',
+		type: 'options',
+		displayOptions: {
+			show: {
+				resource: ['domainAnalysis'],
+				operation: ['getKeywordsComparison'],
+			},
+		},
+		options: [
+			{
+				name: 'Common Keywords (A âˆ© B)',
+				value: '0',
+				description: 'Keywords both domains rank for',
+			},
+			{
+				name: 'Keyword Gap (A - B)',
+				value: '1',
+				description: 'Keywords primary domain ranks for, but competitor does not',
+			},
+		],
+		default: '0',
+		description: 'What keywords to compare',
 	},
 	// Additional Fields for getOverviewDb
 	{
@@ -191,79 +290,75 @@ export const domainAnalysisFields: INodeProperties[] = [
 		},
 		options: [
 			{
+				displayName: 'Page',
+				name: 'page',
+				type: 'number',
+				default: 1,
+				description: 'Page number for pagination',
+				typeOptions: {
+					minValue: 1,
+				},
+			},
+			{
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
 				default: 100,
-				description: 'Maximum number of results to return',
+				description: 'Maximum number of results to return (1-1000)',
 				typeOptions: {
 					minValue: 1,
-					maxValue: 10000,
+					maxValue: 1000,
 				},
-			},
-			{
-				displayName: 'Offset',
-				name: 'offset',
-				type: 'number',
-				default: 0,
-				description: 'Number of results to skip for pagination',
-				typeOptions: {
-					minValue: 0,
-				},
-			},
-			{
-				displayName: 'Include Subdomains',
-				name: 'withSubdomains',
-				type: 'boolean',
-				default: true,
-				description: 'Whether to include subdomains in the analysis',
 			},
 			{
 				displayName: 'Columns',
 				name: 'cols',
-				type: 'multiOptions',
-				options: [
-					{ name: 'Keyword', value: 'keyword' },
-					{ name: 'Position', value: 'position' },
-					{ name: 'Previous Position', value: 'prev_pos' },
-					{ name: 'Volume', value: 'volume' },
-					{ name: 'CPC', value: 'cpc' },
-					{ name: 'Competition', value: 'competition' },
-					{ name: 'URL', value: 'url' },
-					{ name: 'KEI', value: 'kei' },
-					{ name: 'Total Sites', value: 'total_sites' },
-					{ name: 'Traffic', value: 'traffic' },
-					{ name: 'Traffic Percent', value: 'traffic_percent' },
-					{ name: 'Price', value: 'price' },
-				],
-				default: ['keyword', 'position', 'volume', 'cpc', 'url'],
-				description: 'Columns to return in the response',
+				type: 'string',
+				default: '',
+				placeholder: 'keyword,position,volume,cpc,url',
+				description: 'Comma-separated list of columns to return',
 			},
 			{
-				displayName: 'Order By',
+				displayName: 'Order Field',
 				name: 'orderField',
 				type: 'options',
 				options: [
-					{ name: 'Keyword', value: 'keyword' },
-					{ name: 'Position', value: 'position' },
-					{ name: 'Volume', value: 'volume' },
-					{ name: 'CPC', value: 'cpc' },
 					{ name: 'Traffic', value: 'traffic' },
-					{ name: 'Price', value: 'price' },
+					{ name: 'Volume', value: 'volume' },
+					{ name: 'Position', value: 'position' },
+					{ name: 'CPC', value: 'cpc' },
+					{ name: 'Competition', value: 'competition' },
+					{ name: 'KEI', value: 'kei' },
 				],
-				default: 'position',
+				default: 'traffic',
 				description: 'Field to sort results by',
 			},
 			{
-				displayName: 'Sort Order',
+				displayName: 'Order Type',
 				name: 'orderType',
 				type: 'options',
 				options: [
 					{ name: 'Ascending', value: 'asc' },
 					{ name: 'Descending', value: 'desc' },
 				],
-				default: 'asc',
+				default: 'desc',
 				description: 'Order of sorting',
+			},
+			{
+				displayName: 'Position Change',
+				name: 'posChange',
+				type: 'options',
+				options: [
+					{ name: 'All', value: '' },
+					{ name: 'Up', value: 'up' },
+					{ name: 'Down', value: 'down' },
+					{ name: 'New', value: 'new' },
+					{ name: 'Lost', value: 'lost' },
+					{ name: 'Changed', value: 'diff' },
+					{ name: 'Same', value: 'same' },
+				],
+				default: '',
+				description: 'Filter by position changes',
 			},
 			{
 				displayName: 'Volume From',
@@ -301,19 +396,78 @@ export const domainAnalysisFields: INodeProperties[] = [
 					maxValue: 100,
 				},
 			},
+		],
+	},
+	// Additional Fields for getKeywordsComparison
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['domainAnalysis'],
+				operation: ['getKeywordsComparison'],
+			},
+		},
+		options: [
 			{
-				displayName: 'CPC From',
-				name: 'cpcFrom',
+				displayName: 'Page',
+				name: 'page',
 				type: 'number',
-				default: 0,
-				description: 'Minimum CPC filter',
+				default: 1,
+				description: 'Page number for pagination',
+				typeOptions: {
+					minValue: 1,
+				},
 			},
 			{
-				displayName: 'CPC To',
-				name: 'cpcTo',
+				displayName: 'Limit',
+				name: 'limit',
 				type: 'number',
-				default: 0,
-				description: 'Maximum CPC filter (0 = no limit)',
+				default: 100,
+				description: 'Maximum number of results to return (1-1000)',
+				typeOptions: {
+					minValue: 1,
+					maxValue: 1000,
+				},
+			},
+			{
+				displayName: 'Columns',
+				name: 'cols',
+				type: 'string',
+				default: '',
+				placeholder: 'keyword,volume,position,compare_position',
+				description: 'Comma-separated list of columns to return',
+			},
+			{
+				displayName: 'Order Field',
+				name: 'orderField',
+				type: 'options',
+				options: [
+					{ name: 'Keyword', value: 'keyword' },
+					{ name: 'Volume', value: 'volume' },
+					{ name: 'CPC', value: 'cpc' },
+					{ name: 'Competition', value: 'competition' },
+					{ name: 'Difficulty', value: 'difficulty' },
+					{ name: 'Position', value: 'position' },
+					{ name: 'Price', value: 'price' },
+					{ name: 'Traffic', value: 'traffic' },
+				],
+				default: 'keyword',
+				description: 'Field to sort results by',
+			},
+			{
+				displayName: 'Order Type',
+				name: 'orderType',
+				type: 'options',
+				options: [
+					{ name: 'Ascending', value: 'asc' },
+					{ name: 'Descending', value: 'desc' },
+				],
+				default: 'asc',
+				description: 'Order of sorting',
 			},
 		],
 	},
@@ -332,17 +486,6 @@ export const domainAnalysisFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Limit',
-				name: 'limit',
-				type: 'number',
-				default: 100,
-				description: 'Maximum number of competitors to return (max 500)',
-				typeOptions: {
-					minValue: 1,
-					maxValue: 500,
-				},
-			},
-			{
 				displayName: 'Include Statistics',
 				name: 'stats',
 				type: 'boolean',
@@ -355,6 +498,112 @@ export const domainAnalysisFields: INodeProperties[] = [
 				type: 'boolean',
 				default: false,
 				description: 'Whether to exclude major industry leaders from results',
+			},
+		],
+	},
+	// Additional Fields for getAdsForKeyword
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['domainAnalysis'],
+				operation: ['getAdsForKeyword'],
+			},
+		},
+		options: [
+			{
+				displayName: 'From',
+				name: 'from',
+				type: 'string',
+				default: '',
+				placeholder: '2024-01',
+				description: 'Start date for data (YYYY-MM)',
+			},
+			{
+				displayName: 'To',
+				name: 'to',
+				type: 'string',
+				default: '',
+				placeholder: '2024-12',
+				description: 'End date for data (YYYY-MM)',
+			},
+			{
+				displayName: 'Page',
+				name: 'page',
+				type: 'number',
+				default: 1,
+				description: 'Page number for pagination',
+				typeOptions: {
+					minValue: 1,
+				},
+			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 100,
+				description: 'Maximum number of domains to return (1-100)',
+				typeOptions: {
+					minValue: 1,
+					maxValue: 100,
+				},
+			},
+		],
+	},
+	// Additional Fields for getAdsForDomain
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['domainAnalysis'],
+				operation: ['getAdsForDomain'],
+			},
+		},
+		options: [
+			{
+				displayName: 'From',
+				name: 'from',
+				type: 'string',
+				default: '',
+				placeholder: '2024-01',
+				description: 'Start date for data (YYYY-MM)',
+			},
+			{
+				displayName: 'To',
+				name: 'to',
+				type: 'string',
+				default: '',
+				placeholder: '2024-12',
+				description: 'End date for data (YYYY-MM)',
+			},
+			{
+				displayName: 'Page',
+				name: 'page',
+				type: 'number',
+				default: 1,
+				description: 'Page number for pagination',
+				typeOptions: {
+					minValue: 1,
+				},
+			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 100,
+				description: 'Maximum number of keywords to return (1-100)',
+				typeOptions: {
+					minValue: 1,
+					maxValue: 100,
+				},
 			},
 		],
 	},
