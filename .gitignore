@@ -55,10 +55,6 @@ temp/
 # Debug files
 debug.log
 
-# Package lock (if using npm)
-# Uncomment if you want to ignore it
-package-lock.json
-
 #Test files
 history_structure.json
 issue_pages_structure.json

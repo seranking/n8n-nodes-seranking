@@ -11,7 +11,7 @@ export async function WebsiteAuditOperations(
     let endpoint = '';
     const params: any = {};
     const body: any = {};
-    let method = 'GET';
+    let method: string = 'GET';  // Changed: explicitly typed as string
 
     switch (operation) {
         case 'createStandard': {

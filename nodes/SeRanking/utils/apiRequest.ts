@@ -1,4 +1,4 @@
-import { IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
+import { IExecuteFunctions, NodeOperationError, IHttpRequestOptions, IHttpRequestMethods } from 'n8n-workflow';
 
 export async function apiRequest(
     this: IExecuteFunctions,
@@ -10,9 +10,13 @@ export async function apiRequest(
 ): Promise<any> {
     const credentials = await this.getCredentials('seRankingApi');
     
-    const options: any = {
-        method,
+    // Cast method to IHttpRequestMethods early
+    const httpMethod = method.toUpperCase() as IHttpRequestMethods;
+    
+    const options: IHttpRequestOptions = {
+        method: httpMethod,
         timeout: 120000,
+        url: '',
     };
 
     // Check if this is a full URL download (for export download)
@@ -20,7 +24,8 @@ export async function apiRequest(
         options.url = endpoint;
         delete query._fullUrl;
         
-        options.encoding = null;
+        options.returnFullResponse = true;
+        options.encoding = 'arraybuffer';
         options.json = false;
     } else {
         let baseUrl;
@@ -68,18 +73,52 @@ export async function apiRequest(
     // Add body data
     if (Object.keys(body).length > 0 && method !== 'GET') {
         if (body.keywords && Array.isArray(body.keywords)) {
-            const FormData = require('form-data');
-            const formData = new FormData();
+            // n8n's httpRequest supports FormData-like structure
+            // Build multipart form data body as object with special structure
+            const formDataBody: Record<string, any> = {};
             
-            body.keywords.forEach((kw: string) => {
-                formData.append('keywords[]', `"${kw}"`);
+            // For arrays, n8n expects each value to be added separately
+            // The helper will automatically convert this to multipart/form-data
+            body.keywords.forEach((kw: string, index: number) => {
+                formDataBody[`keywords[${index}]`] = {
+                    value: `"${kw}"`,
+                    options: {
+                        contentType: 'text/plain',
+                    },
+                };
             });
             
-            if (body.cols) formData.append('cols', `"${body.cols}"`);
-            if (body.sort) formData.append('sort', `"${body.sort}"`);
-            if (body.sort_order) formData.append('sort_order', `"${body.sort_order}"`);
+            // Add other fields with proper structure
+            if (body.cols) {
+                formDataBody.cols = {
+                    value: `"${body.cols}"`,
+                    options: {
+                        contentType: 'text/plain',
+                    },
+                };
+            }
+            if (body.sort) {
+                formDataBody.sort = {
+                    value: `"${body.sort}"`,
+                    options: {
+                        contentType: 'text/plain',
+                    },
+                };
+            }
+            if (body.sort_order) {
+                formDataBody.sort_order = {
+                    value: `"${body.sort_order}"`,
+                    options: {
+                        contentType: 'text/plain',
+                    },
+                };
+            }
             
-            options.body = formData;
+            options.body = formDataBody;
+            options.headers = {
+                ...options.headers,
+                'Content-Type': 'multipart/form-data',
+            };
             options.json = false;
         } else {
             options.body = body;
@@ -87,48 +126,48 @@ export async function apiRequest(
     }
 
     try {
-		// Use n8n's httpRequest helper (handles FormData properly)
-		const response = await this.helpers.httpRequest(options);
-		return response;
-	} catch (error: any) {
-		// Enhanced error handling with detailed context
-		const errorData = error.response?.body || error.response?.data || {};
-		const statusCode = error.statusCode || error.response?.status || 'Unknown';
-		
-		// Determine specific error type and provide helpful message
-		let errorMessage = 'Unknown error occurred';
-		let errorDescription = '';
-		
-		if (statusCode === 400) {
-			errorMessage = 'Bad Request - Invalid parameters';
-			errorDescription = 'Check domain format (no http://, www), source code (us, uk, de), and parameter values';
-		} else if (statusCode === 401) {
-			errorMessage = 'Unauthorized - Invalid API credentials';
-			errorDescription = 'Check your API token in credentials. Get token from SE Ranking dashboard';
-		} else if (statusCode === 403) {
-			errorMessage = 'Forbidden - Access denied';
-			errorDescription = 'Your API key does not have permission for this operation';
-		} else if (statusCode === 404) {
-			errorMessage = 'Not Found - Invalid endpoint or domain';
-			errorDescription = 'Domain may not exist in SE Ranking database or export file expired';
-		} else if (statusCode === 429) {
-			errorMessage = 'Rate Limit Exceeded';
-			errorDescription = 'Too many requests. Add delays between requests or reduce batch size';
-		} else if (statusCode === 500 || statusCode === 502 || statusCode === 503) {
-			errorMessage = 'SE Ranking Server Error';
-			errorDescription = 'SE Ranking API is experiencing issues. Try again in a few minutes';
-		} else if (statusCode === 504) {
-			errorMessage = 'Gateway Timeout - Request took too long';
-			errorDescription = 'Use a faster endpoint (e.g., Get Worldwide Aggregate instead of Get Overview)';
-		} else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-			errorMessage = 'Connection Failed';
-			errorDescription = 'Cannot reach SE Ranking API. Check your internet connection';
-		} else if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
-			errorMessage = 'Request Timeout';
-			errorDescription = 'Request exceeded 120 seconds. Try with fewer items or use a faster operation';
-		} else {
-			errorMessage = errorData?.message || errorData?.error || error.message || 'Request failed';
-		}
+        // Use n8n's httpRequest helper (handles multipart/form-data automatically)
+        const response = await this.helpers.httpRequest(options);
+        return response;
+    } catch (error: any) {
+        // Enhanced error handling with detailed context
+        const errorData = error.response?.body || error.response?.data || {};
+        const statusCode = error.statusCode || error.response?.status || 'Unknown';
+        
+        // Determine specific error type and provide helpful message
+        let errorMessage = 'Unknown error occurred';
+        let errorDescription = '';
+        
+        if (statusCode === 400) {
+            errorMessage = 'Bad Request - Invalid parameters';
+            errorDescription = 'Check domain format (no http://, www), source code (us, uk, de), and parameter values';
+        } else if (statusCode === 401) {
+            errorMessage = 'Unauthorized - Invalid API credentials';
+            errorDescription = 'Check your API token in credentials. Get token from SE Ranking dashboard';
+        } else if (statusCode === 403) {
+            errorMessage = 'Forbidden - Access denied';
+            errorDescription = 'Your API key does not have permission for this operation';
+        } else if (statusCode === 404) {
+            errorMessage = 'Not Found - Invalid endpoint or domain';
+            errorDescription = 'Domain may not exist in SE Ranking database or export file expired';
+        } else if (statusCode === 429) {
+            errorMessage = 'Rate Limit Exceeded';
+            errorDescription = 'Too many requests. Add delays between requests or reduce batch size';
+        } else if (statusCode === 500 || statusCode === 502 || statusCode === 503) {
+            errorMessage = 'SE Ranking Server Error';
+            errorDescription = 'SE Ranking API is experiencing issues. Try again in a few minutes';
+        } else if (statusCode === 504) {
+            errorMessage = 'Gateway Timeout - Request took too long';
+            errorDescription = 'Use a faster endpoint (e.g., Get Worldwide Aggregate instead of Get Overview)';
+        } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+            errorMessage = 'Connection Failed';
+            errorDescription = 'Cannot reach SE Ranking API. Check your internet connection';
+        } else if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+            errorMessage = 'Request Timeout';
+            errorDescription = 'Request exceeded 120 seconds. Try with fewer items or use a faster operation';
+        } else {
+            errorMessage = errorData?.message || errorData?.error || error.message || 'Request failed';
+        }
         
         console.error('SE Ranking API Error:', {
             status: statusCode,

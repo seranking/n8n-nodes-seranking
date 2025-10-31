@@ -1,64 +1,61 @@
-﻿{
-    "name":  "n8n-nodes-seranking",
-    "version":  "1.1.8",
-    "description":  "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, and Website Audit",
-    "license":  "MIT",
-    "homepage":  "https://github.com/seranking/n8n-nodes-seranking",
-    "author":  {
-                   "name":  "SE Ranking",
-                   "email":  "support@seranking.com"
-               },
-    "repository":  {
-                       "type":  "git",
-                       "url":  "https://github.com/seranking/n8n-nodes-seranking.git"
-                   },
-    "main":  "dist/nodes/SeRanking/SeRanking.node.js",
-    "files":  [
-                  "dist"
-              ],
-    "keywords":  [
-                     "n8n",
-                     "n8n-community-node-package",
-                     "n8n-nodes-seranking",
-                     "seranking",
-                     "seo",
-                     "keyword-research",
-                     "backlinks",
-                     "domain-analysis",
-                     "ai-search",
-                     "website-audit"
-                 ],
-    "n8n":  {
-                "nodes":  [
-                              "dist/nodes/SeRanking/SeRanking.node.js"
-                          ],
-                "credentials":  [
-                                    "dist/credentials/SeRankingApi.credentials.js"
-                                ]
-            },
-    "scripts":  {
-                    "build":  "tsc \u0026\u0026 npm run copy-icons",
-                    "copy-icons":  "node scripts/copy-icons.js",
-                    "dev":  "tsc --watch",
-                    "prepack":  "npm run build",
-                    "lint":  "eslint nodes credentials --ext .ts",
-                    "format":  "prettier --write \"**/*.ts\"",
-                    "test":  "echo \"No tests specified\" \u0026\u0026 exit 0"
-                },
-    "devDependencies":  {
-                            "@types/node":  "^18.16.0",
-                            "@typescript-eslint/eslint-plugin":  "^5.59.0",
-                            "@typescript-eslint/parser":  "^5.59.0",
-                            "eslint":  "^8.40.0",
-                            "eslint-plugin-n8n-nodes-base":  "^1.12.0",
-                            "n8n-workflow":  "^1.0.0",
-                            "prettier":  "^2.8.8",
-                            "typescript":  "^5.0.4"
-                        },
-    "dependencies":  {
-                         "form-data":  "^4.0.0"
-                     },
-    "engines":  {
-                    "node":  "\u003e=18.0.0"
-                }
+{
+    "name": "n8n-nodes-seranking",
+    "version": "1.2.0",
+    "description": "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, and Website Audit",
+    "license": "MIT",
+    "homepage": "https://github.com/seranking/n8n-nodes-seranking",
+    "author": {
+        "name": "SE Ranking",
+        "email": "support@seranking.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/seranking/n8n-nodes-seranking.git"
+    },
+    "main": "dist/nodes/SeRanking/SeRanking.node.js",
+    "files": [
+        "dist"
+    ],
+    "keywords": [
+        "n8n",
+        "n8n-community-node-package",
+        "n8n-nodes-seranking",
+        "seranking",
+        "seo",
+        "keyword-research",
+        "backlinks",
+        "domain-analysis",
+        "ai-search",
+        "website-audit"
+    ],
+    "n8n": {
+        "nodes": [
+            "dist/nodes/SeRanking/SeRanking.node.js"
+        ],
+        "credentials": [
+            "dist/credentials/SeRankingApi.credentials.js"
+        ]
+    },
+    "scripts": {
+        "build": "tsc && npm run copy-icons",
+        "copy-icons": "node scripts/copy-icons.js",
+        "dev": "tsc --watch",
+        "prepack": "npm run build",
+        "lint": "eslint nodes credentials --ext .ts",
+        "format": "prettier --write \"**/*.ts\"",
+        "test": "echo \"No tests specified\" && exit 0"
+    },
+    "devDependencies": {
+        "@types/node": "^18.16.0",
+        "@typescript-eslint/eslint-plugin": "^5.59.0",
+        "@typescript-eslint/parser": "^5.59.0",
+        "eslint": "^8.40.0",
+        "eslint-plugin-n8n-nodes-base": "^1.12.0",
+        "n8n-workflow": "^1.17.0",
+        "prettier": "^2.8.8",
+        "typescript": "^5.0.4"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
 }
