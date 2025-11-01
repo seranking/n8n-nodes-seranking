@@ -1,0 +1,352 @@
+{
+  "name": "Backlinks Monitoring & Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        432
+      ],
+      "id": "d52b2b24-6975-447c-902d-d7394841d584",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "target": "seranking.com",
+        "additionalFields": {}
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        432
+      ],
+      "id": "ffa5e67a-2533-4f46-a669-4939c1a5a0d5",
+      "name": "Get backlinks summary",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getHistory",
+        "target": "seranking.com",
+        "dateFrom": "2025-10-01",
+        "dateTo": "2025-10-30",
+        "additionalFields": {
+          "mode": "as_root",
+          "limit": 100
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        336
+      ],
+      "id": "24797d58-f28d-46fb-b095-25ba62f48aba",
+      "name": "Get new backlinks",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getHistory",
+        "target": "seranking.com",
+        "dateFrom": "2025-10-01",
+        "dateTo": "2025-10-30",
+        "additionalFields": {
+          "mode": "as_root",
+          "limit": 100
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        528
+      ],
+      "id": "019e9af8-ccb9-4106-b78b-b3173714cd3b",
+      "name": "Get lost backlinks",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getRefDomains",
+        "target": "seranking.com",
+        "additionalFields": {
+          "mode": "as_root",
+          "limit": 100
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        176,
+        336
+      ],
+      "id": "f1352bee-545c-4bb2-ab70-02d5f3a24b2c",
+      "name": "Get referring domains",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getAnchors",
+        "target": "seranking.com",
+        "additionalFields": {
+          "mode": "as_root",
+          "limit": 50
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        176,
+        528
+      ],
+      "id": "045f853a-950d-4a8f-9dab-2c4d36259eca",
+      "name": "Get anchor texts",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getAuthority",
+        "target": "seranking.com"
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        400,
+        336
+      ],
+      "id": "2bd3e0a3-3641-42c9-b95c-f01286ff9319",
+      "name": "Get authority metrics",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getHistoryCount",
+        "target": "seranking.com",
+        "dateFrom": "2025-10-01",
+        "dateTo": "2025-10-30",
+        "additionalFields": {
+          "mode": "as_root"
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        400,
+        528
+      ],
+      "id": "09e18c12-7131-4843-a1fd-381c7aa79b5a",
+      "name": "Get daily backlinks count",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "backlinks",
+        "operation": "getCumulativeHistory",
+        "target": "seranking.com",
+        "dateFrom": "2025-09-01",
+        "dateTo": "2025-10-30",
+        "additionalFields": {
+          "mode": "as_root"
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        624,
+        432
+      ],
+      "id": "607e6e51-3ce2-413d-ab57-e484f347e0a2",
+      "name": "Get cumulative backlinks history",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Backlinks Monitoring Workflow\n\nThis workflow monitors your backlink profile:\n1. Summary statistics\n2. New & lost backlinks\n3. Referring domains analysis\n4. Anchor text distribution\n5. Authority metrics\n6. Historical trends",
+        "height": 280,
+        "width": 380
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        48
+      ],
+      "id": "d5afe50e-3cea-4ef6-b07a-889b434f7605",
+      "name": "Workflow Overview"
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Configure Your Domain\n\nUpdate these nodes with your domain:\n- Get backlinks summary\n- Get new/lost backlinks\n- Get referring domains\n- Get anchor texts\n- Get authority metrics\n\nChange 'seranking.com' to your domain",
+        "height": 264,
+        "width": 360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        16
+      ],
+      "id": "65171e0e-7656-411f-b0ba-52d10e85b14d",
+      "name": "Configuration Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get backlinks summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get backlinks summary": {
+      "main": [
+        [
+          {
+            "node": "Get new backlinks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get lost backlinks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get new backlinks": {
+      "main": [
+        [
+          {
+            "node": "Get referring domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get lost backlinks": {
+      "main": [
+        [
+          {
+            "node": "Get anchor texts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get referring domains": {
+      "main": [
+        [
+          {
+            "node": "Get authority metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get anchor texts": {
+      "main": [
+        [
+          {
+            "node": "Get daily backlinks count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get authority metrics": {
+      "main": [
+        [
+          {
+            "node": "Get cumulative backlinks history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get daily backlinks count": {
+      "main": [
+        [
+          {
+            "node": "Get cumulative backlinks history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "62cc3ea8-ea91-4903-bcfc-334132c05939",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
+  },
+  "id": "FJ5Nj02VOhPoV9f0",
+  "tags": []
+}

@@ -1,12 +1,12 @@
 {
-    "name": "n8n-nodes-seranking",
+    "name": "@seranking/n8n-nodes-seranking",
     "version": "1.2.0",
     "description": "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, and Website Audit",
     "license": "MIT",
     "homepage": "https://github.com/seranking/n8n-nodes-seranking",
     "author": {
         "name": "SE Ranking",
-        "email": "support@seranking.com"
+        "email": "api@seranking.com"
     },
     "repository": {
         "type": "git",

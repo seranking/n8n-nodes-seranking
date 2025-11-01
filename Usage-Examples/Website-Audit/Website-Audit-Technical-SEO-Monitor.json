@@ -1,0 +1,388 @@
+{
+  "name": "Website Audit - Technical SEO Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        296
+      ],
+      "id": "a0ddec58-7bb9-4eb2-a1a6-026e195cf011",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "websiteAudit",
+        "operation": "createStandard",
+        "domain": "seranking.com",
+        "additionalFields": {
+          "title": "Weekly Technical SEO Audit"
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        336,
+        296
+      ],
+      "id": "d73b843f-40f3-4fd6-8fd0-2729c03115db",
+      "name": "Create standard audit",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        296
+      ],
+      "id": "b158073f-b33b-471e-ba4a-20dc9fa300ae",
+      "name": "Wait for crawl (5 min)",
+      "webhookId": "28ddab60-29cd-4172-a7e8-d364147c3a8d"
+    },
+    {
+      "parameters": {
+        "resource": "websiteAudit",
+        "operation": "getStatus",
+        "auditId": "={{ $('Create standard audit').item.json.id }}"
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        784,
+        296
+      ],
+      "id": "ee63c6be-4a90-4b74-b8c4-97193fa4ce86",
+      "name": "Check audit status",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "status-condition",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "finished",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1008,
+        224
+      ],
+      "id": "448a9ad3-6f31-4d7e-ae32-d80bebc72dc0",
+      "name": "If audit complete"
+    },
+    {
+      "parameters": {
+        "resource": "websiteAudit",
+        "operation": "getReport",
+        "auditId": "={{ $('Create standard audit').item.json.id }}"
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        208
+      ],
+      "id": "41a440af-bcc5-4474-8260-fc49702cd4c6",
+      "name": "Get audit report",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        32
+      ],
+      "id": "8d030d72-18e9-4cd2-9a9d-48090d568986",
+      "name": "Wait and retry (2 min)",
+      "webhookId": "e42c2b2b-25f7-4dac-9be2-383af6c31b7a"
+    },
+    {
+      "parameters": {
+        "resource": "websiteAudit",
+        "operation": "getIssuesByType",
+        "auditId": "={{ $('Create standard audit').item.json.id }}",
+        "additionalFields": {
+          "limit": 100,
+          "offset": 0
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        80
+      ],
+      "id": "a60c66ff-2db7-4f56-bffd-35568d55158f",
+      "name": "Get pages with duplicate titles",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "websiteAudit",
+        "operation": "getIssuesByType",
+        "auditId": "={{ $('Create standard audit').item.json.id }}",
+        "issueCode": "http4xx",
+        "additionalFields": {
+          "limit": 100
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        384
+      ],
+      "id": "a58fabda-e6fe-4738-a22a-d6d3f25b489c",
+      "name": "Get pages with 4XX errors",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "websiteAudit",
+        "additionalFields": {
+          "limit": 10,
+          "search": "={{ $('Create standard audit').item.json.domain }}"
+        }
+      },
+      "type": "CUSTOM.seRanking",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        208
+      ],
+      "id": "1e023fe2-2826-47c2-95ea-c071b338b6d2",
+      "name": "List all audits for domain",
+      "credentials": {
+        "seRankingApi": {
+          "id": "wmJxGu1vHuZJIXCR",
+          "name": "SE Ranking account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Website Audit Workflow\n\nThis workflow:\n1. Creates a new audit\n2. Waits for crawl to complete\n3. Checks audit status\n4. Retrieves detailed report\n5. Gets specific issue lists\n6. Lists audit history\n\n⚠️ Note: Adjust wait times based on your site size",
+        "height": 460,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -208
+      ],
+      "id": "aa054ae1-1566-4d7e-af59-57b7f8c4c69a",
+      "name": "Workflow Overview"
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Configuration\n\n**Update these settings:**\n\n1. Domain: Change 'seranking.com'\n2. Max pages: Adjust for your site size\n3. Wait time: Increase for larger sites\n4. Issue codes: Add more issue types to monitor\n\n**Common Issue Codes:**\n- title_duplicate\n- description_duplicate  \n- http4xx\n- http5xx\n- broken_links\n- no_h1\n- img_no_alt\n- slow_page",
+        "height": 464,
+        "width": 316,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -192
+      ],
+      "id": "6c14b8b7-fcaf-4193-a341-3faf54371d54",
+      "name": "Configuration Guide"
+    },
+    {
+      "parameters": {
+        "content": "## ⏱️ Crawl Times\n\n- Small (100-500 pages): 2-5 min\n- Medium (500-2000): 5-15 min  \n- Large (2000-10000): 15-60 min\n\n💰 **Costs:**\nStandard: 2 credits/page\nAdvanced: 20 credits/page",
+        "height": 236,
+        "width": 304,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -176
+      ],
+      "id": "6823f131-ac69-4419-95a3-d3158f14beda",
+      "name": "Timing & Costs"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create standard audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create standard audit": {
+      "main": [
+        [
+          {
+            "node": "Wait for crawl (5 min)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for crawl (5 min)": {
+      "main": [
+        [
+          {
+            "node": "Check audit status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check audit status": {
+      "main": [
+        [
+          {
+            "node": "If audit complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If audit complete": {
+      "main": [
+        [
+          {
+            "node": "Get audit report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait and retry (2 min)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get audit report": {
+      "main": [
+        [
+          {
+            "node": "Get pages with duplicate titles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get pages with 4XX errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait and retry (2 min)": {
+      "main": [
+        [
+          {
+            "node": "Check audit status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pages with duplicate titles": {
+      "main": [
+        [
+          {
+            "node": "List all audits for domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pages with 4XX errors": {
+      "main": [
+        [
+          {
+            "node": "List all audits for domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6f3fb888-1332-4e93-b237-1f934c54ba20",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
+  },
+  "id": "2oJzgNTunpfhYxW2",
+  "tags": []
+}

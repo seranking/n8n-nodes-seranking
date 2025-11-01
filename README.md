@@ -13,10 +13,7 @@ SE Ranking is a comprehensive SEO platform providing keyword research, competito
 - [Installation](#installation)
 - [Credentials](#credentials)
 - [Compatibility](#compatibility)
-- [Resources](#resources)
-  - [AI Search](#ai-search)
-  - [Domain Analysis](#domain-analysis)
-  - [Keyword Research](#keyword-research)
+- [Operations](#operations)
 - [Usage Examples](#usage-examples)
 - [API Documentation](#api-documentation)
 - [Version History](#version-history)
@@ -25,7 +22,7 @@ SE Ranking is a comprehensive SEO platform providing keyword research, competito
 
 ## Installation
 
-⚠️ **This node is not yet available on npm or n8n Community Nodes.**
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
 ### Prerequisites
 
@@ -33,7 +30,22 @@ SE Ranking is a comprehensive SEO platform providing keyword research, competito
 - n8n 1.0.0 or higher
 - SE Ranking API Token ([Get it here](https://online.seranking.com/admin.api.dashboard.html))
 
-### Quick Install
+### npm (Recommended)
+
+```bash
+npm install @seranking/n8n-nodes-seranking
+```
+
+### Quick Installation
+
+1. Navigate to your n8n installation directory
+2. Install the package:
+   ```bash
+   npm install @seranking/n8n-nodes-seranking
+   ```
+3. Restart n8n
+
+### Manual Install
 
 ### Step 1: Install n8n
 
@@ -43,10 +55,10 @@ npm install n8n -g
 
 ### Step 2: Install SE Ranking Node
 
-**Option A: From .tgz file (Recommended)**
+**Option A: From .tgz file**
 
 ```bash
-npm install -g n8n-nodes-seranking-1.0.7.tgz
+npm install -g n8n-nodes-seranking-1.2.0.tgz
 ```
 
 **Option B: From GitHub**
@@ -89,8 +101,8 @@ Open `http://localhost:5678` and add the SE Ranking node to your workflow.
 mkdir -p ~/.n8n/custom
 cd ~/.n8n/custom
 
-# Install node (choose one)
-npm install n8n-nodes-seranking-1.0.7.tgz
+# Install node 
+npm install @seranking/n8n-nodes-seranking
 # OR
 npm install git+https://github.com/seranking/n8n-nodes-seranking.git
 
@@ -160,235 +172,81 @@ The node will automatically test your credentials by making a test request to th
 - **Node.js version**: 18.x or higher
 - **SE Ranking API**: v1 (Data API)
 
----
+## Operations
 
-## Resources
+This node provides access to 5 SE Ranking resources with 54 total operations:
 
-This node provides access to 3 major SE Ranking resources with a total of 13 operations:
+### AI Search (4 operations)
 
-### AI Search
+- Get Overview - LLM visibility metrics across ChatGPT, Perplexity, Gemini
+- Discover Brand - Identify brand name for domain
+- Get Prompts by Target - Find prompts mentioning your domain
+- Get Prompts by Brand - Track brand mentions in AI responses
 
-Track your visibility in AI-powered search engines and Large Language Models (LLMs).
+### Backlinks (25 operations)
 
-**Operations (4):**
+- Get Summary - Complete backlink portfolio overview
+- Get Metrics - Key metrics for multiple targets
+- Get All Backlinks - Detailed backlink list with filters
+- Get Raw Backlinks - Cursor-based bulk retrieval
+- Get Count - Total backlinks count
+- Export Backlinks - Bulk export functionality
+- Check Export Status - Monitor export progress
+- Download Export Data - Retrieve completed exports
+- Get History - New/lost backlinks by date range
+- Get History Count - Daily new/lost counts
+- Get Cumulative History - Historical growth tracking
+- Get Anchors - Anchor text analysis
+- Get Referring Domains - List of linking domains
+- Get Referring Domains Count - Unique domain count
+- Get Referring Domains History - Domain link changes
+- Get Referring Domains History Count - Domain change counts
+- Get Referring IPs - IP addresses of linking sites
+- Get Referring IPs Count - Unique IP count
+- Get Referring Subnets Count - /24 subnet diversity
+- Get Indexed Pages - Pages in backlink index
+- Get Authority - InLink Rank metrics
+- Get Domain Authority - Domain-level authority
+- Get Domain Authority Distribution - Authority score distribution
+- Get Page Authority - Page-level authority
+- Get Page Authority History - Historical authority tracking
 
-- **Get Overview** - Get LLM visibility metrics for a domain
-- **Discover Brand** - Identify brand name for a domain
-- **Get Prompts by Target** - Get prompts mentioning target domain
-- **Get Prompts by Brand** - Get prompts mentioning brand name
+### Domain Analysis (8 operations)
 
-**Supported Engines:**
+- Get Regional Database Overview - Regional performance data
+- Get Worldwide Aggregate - Global domain statistics
+- Get Overview History - Historical metrics tracking
+- Get Keywords - Ranking keywords with filters
+- Get Keywords Comparison - Domain vs competitor analysis
+- Get Competitors - Identify competing domains
+- Get Paid Ads for Keyword - Advertisers on keywords
+- Get Paid Ads for Domain - Domain's advertising keywords
 
-- ChatGPT (OpenAI)
-- Google AI Overview
-- Perplexity AI
-- Google Gemini
-- AI Mode
+### Keyword Research (5 operations)
 
-**Key Features:**
+- Export Metrics - Bulk keyword metrics (up to 700 keywords)
+- Get Similar Keywords - Semantically similar suggestions
+- Get Related Keywords - Topically related keywords
+- Get Question Keywords - Question-based variations
+- Get Longtail Keywords - Long-tail opportunities
 
-- Track brand mentions in LLM responses
-- Monitor AI visibility across different engines
-- Identify high-volume prompts where your domain appears
-- Compare visibility against competitors
-- Filter by scope (base_domain, domain, or exact URL)
+### Website Audit (14 operations)
 
-**Use Cases:**
+- Create Standard Audit - HTML site audit
+- Create Advanced Audit - JS-rendered audit for SPAs
+- List Audits - All audits with status
+- Get Audit Status - Check audit progress
+- Get Audit Report - Full audit results
+- Get Crawled Pages - List of crawled URLs
+- Get Issues by Type - Pages with specific issues
+- Get Issues by URL - All issues for one URL
+- Get Links - Internal/external links found
+- Get Audit History - Historical audit snapshots
+- Update Audit - Modify audit details
+- Delete Audit - Remove audit
+- Recheck Standard Audit - Re-run HTML audit
+- Recheck Advanced Audit - Re-run JS audit
 
-- Monitor brand mentions in LLM responses
-- Track AI visibility across different engines
-- Identify prompts where competitors appear
-- Optimize content for AI-generated answers
-- Measure LLM visibility ROI
-
-**Example:**
-
-```
-Resource: AI Search
-Operation: Get Overview
-Domain: example.com
-Engine: chatgpt
-Source: us
-Scope: base_domain
-```
-
-**Response includes:**
-
-- Total prompts where domain appears
-- Appearance types (Link, Brand mention, Citation)
-- Total impressions/volume
-- Breakdown by position and type
-
----
-
-### Domain Analysis
-
-Competitive domain research and keyword ranking analysis.
-
-**Operations (4):**
-
-- **Get Regional Database Overview** - Detailed statistics for a specific regional database (FAST)
-- **Get Worldwide Aggregate** - Worldwide aggregate statistics for a domain (RECOMMENDED)
-- **Get Keywords** - Keywords for which a domain ranks
-- **Get Competitors** - Competitor domains
-
-**Key Features:**
-
-- Fast regional database queries (1-3 seconds)
-- Worldwide aggregate data across all databases
-- Organic and paid keyword rankings
-- Advanced filtering (volume, position, CPC)
-- Competitor identification with statistics
-- Subdomain analysis support
-
-**Use Cases:**
-
-- Competitive analysis
-- Market research
-- Keyword gap analysis
-- Traffic estimation
-- Competitor identification
-- Regional performance tracking
-
-**Example - Get Regional Overview:**
-
-```
-Resource: Domain Analysis
-Operation: Get Regional Database Overview
-Domain: example.com
-Source: us
-Include Subdomains: true
-```
-
-**Response includes:**
-
-- Total keywords ranking
-- Organic/paid traffic estimates
-- Average position
-- Visibility score
-- Top keywords
-
-**Example - Get Keywords:**
-
-```
-Resource: Domain Analysis
-Operation: Get Keywords
-Domain: example.com
-Source: us
-Type: organic
-Position From: 1
-Position To: 20
-Volume From: 100
-Limit: 1000
-Sort: position (asc)
-```
-
-**Response includes:**
-
-- Keyword text
-- Current position
-- Previous position (change tracking)
-- Search volume
-- CPC value
-- Competition score
-- Ranking URL
-- Traffic estimates
-
----
-
-### Keyword Research
-
-Keyword metrics, suggestions, and difficulty analysis.
-
-**Operations (5):**
-
-- **Export Metrics** - Volume, CPC, competition, difficulty for multiple keywords
-- **Get Similar Keywords** - Semantically similar keywords
-- **Get Related Keywords** - Topically related keywords with overlapping URLs
-- **Get Question Keywords** - Question-based keywords
-- **Get Longtail Keywords** - Long-tail keyword variations
-
-**Metrics Available:**
-
-- **Search Volume** - Monthly search volume
-- **Cost Per Click (CPC)** - Average CPC for ads
-- **Competition Score** - Advertising competition (0.0-1.0)
-- **Keyword Difficulty** - SEO difficulty score (0-100)
-- **Historical Trend** - 12 months of search volume data (optional)
-
-**Key Features:**
-
-- Bulk keyword metrics (up to 700 keywords per request)
-- Advanced filtering by volume, CPC, difficulty, competition
-- Historical trend data for seasonality analysis
-- Pagination for large result sets
-- Multiple suggestion types for comprehensive research
-
-**Use Cases:**
-
-- Content planning and strategy
-- PPC campaign research
-- SEO keyword targeting
-- Topic clustering and content gaps
-- Long-tail keyword discovery
-- Seasonal trend analysis
-
-**Example - Export Metrics:**
-
-```
-Resource: Keyword Research
-Operation: Export Metrics
-Source: us
-Keywords: 
-  seo tools
-  keyword research
-  backlink checker
-Columns: keyword, volume, cpc, competition, difficulty
-Sort: volume (desc)
-```
-
-**Response includes:**
-
-```json
-[
-  {
-    "keyword": "seo tools",
-    "volume": 74000,
-    "cpc": 15.32,
-    "competition": 0.87,
-    "difficulty": 68
-  },
-  {
-    "keyword": "keyword research",
-    "volume": 22000,
-    "cpc": 12.45,
-    "competition": 0.73,
-    "difficulty": 55
-  }
-]
-```
-
-**Example - Get Similar Keywords:**
-
-```
-Resource: Keyword Research
-Operation: Get Similar Keywords
-Source: us
-Keyword: seo tools
-Volume From: 500
-Difficulty To: 50
-Limit: 100
-Include History Trend: true
-```
-
-**Response includes:**
-
-- Similar keyword suggestions
-- Full metrics for each keyword
-- Optional 12-month trend data
-- Sorted by relevance and volume
-
----
 
 ## Usage Examples
 
@@ -415,7 +273,27 @@ Monitor how often your brand appears in AI-powered search engines with automated
 
 ---
 
-### 📊 Example 2: Domain Analysis Data Processor
+### 🔗 Example 2: Backlinks Monitoring & Analysis
+
+**Track new/lost backlinks, monitor domain authority, and analyze anchor text distribution**
+
+Automatically monitor backlink portfolio health with daily tracking and alerts for significant changes.
+
+**What You'll Get:**
+
+- Daily new/lost backlink reports
+- Domain authority trend tracking
+- Anchor text distribution analysis
+- Referring domain diversity metrics
+- Export-ready CSV/Excel reports
+
+**Best For:** SEO agencies managing client backlink portfolios, In-house SEO teams tracking link-building campaigns
+
+📁 [View Full Guide & Download Workflow →](./Usage-Examples/Backlinks)
+
+---
+
+### 📊 Example 3: Domain Analysis Data Processor
 
 **Transform SE Ranking API data into structured Google Sheets reports**
 
@@ -431,6 +309,44 @@ Automatically process and organize domain analysis data with intelligent type de
 **Best For:** SEO agencies managing multiple clients, Enterprise teams tracking regional performance
 
 📁 [View Full Guide & Download Workflow →](./Usage-Examples/Domain-Analysis)
+
+---
+
+### 🔍 Example 4: Keyword Research Automation
+
+**Automate comprehensive keyword research with trend analysis**
+
+Build an automated keyword intelligence pipeline with historical tracking and SERP features.
+
+**What You'll Get:**
+
+- Bulk keyword metrics with volume and CPC
+- Historical trend analysis (peaks, valleys, averages)
+- SERP features tracking (PAA, featured snippets, etc.)
+- Search intent mapping (informational, commercial, navigational)
+
+**Best For:** Content strategists planning editorial calendars, SEO specialists doing competitor research
+
+📁 [View Full Guide & Download Workflow →](./Usage-Examples/Keyword-Research)
+
+---
+
+### 🔧 Example 5: Website Audit Automation
+
+**Automatically crawl sites, detect issues, and generate reports**
+
+Schedule regular technical SEO audits and get alerts when critical issues are detected.
+
+**What You'll Get:**
+
+- Automated monthly/weekly site audits
+- Issue detection across 25+ SEO factors
+- Historical issue tracking and resolution monitoring
+- Exportable reports for clients/stakeholders
+
+**Best For:** Development teams doing pre-launch checks, SEO consultants managing multiple client sites
+
+📁 [View Full Guide & Download Workflow →](./Usage-Examples/Website-Audit)
 
 ---
 
@@ -470,8 +386,10 @@ Build an automated keyword intelligence pipeline with historical tracking and SE
 This node implements the following SE Ranking APIs:
 
 - [AI Search API](https://seranking.com/api/data/ai-search/)
+- [Backlinks API](https://seranking.com/api/data/backlinks/)
 - [Domain Analysis API](https://seranking.com/api/data/domain-analysis/)
 - [Keyword Research API](https://seranking.com/api/data/keyword-research/)
+- [Website Audit API](https://seranking.com/api/data/website-audit/)
 
 For detailed API specifications, visit [SE Ranking API Documentation](https://seranking.com/api.html).
 
@@ -479,7 +397,24 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Version History
 
-### v1.0.7 (Current)
+### v1.2.0 (Current)
+
+- ✅ Complete AI Search resource (4 operations)
+- ✅ **NEW: Complete Backlinks resource (25 operations)**
+- ✅ Enhanced Domain Analysis resource (8 operations - added History, Comparison, Paid Ads)
+- ✅ Complete Keyword Research resource (5 operations)
+- ✅ **NEW: Complete Website Audit resource (14 operations)**
+- ✅ **Total: 54 operations across 5 resources**
+- ✅ Comprehensive error handling with detailed messages
+- ✅ Full TypeScript support
+- ✅ Input validation (domains, sources, dates)
+- ✅ Pagination support (offset/limit)
+- ✅ Advanced filtering options
+- ✅ Multi-keyword support (up to 700 keywords)
+- ✅ **NEW: Backlink export and bulk operations**
+- ✅ **NEW: Website audit creation and management**
+
+### v1.0.7
 
 - ✅ Complete AI Search resource (4 operations)
 - ✅ Complete Domain Analysis resource (4 operations)
@@ -496,15 +431,17 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Features
 
-✅ **13 Operations** - Comprehensive coverage across 3 major resources
-✅ **Type Safety** - Full TypeScript implementation with strict typing
-✅ **Error Handling** - Detailed error messages with troubleshooting hints
-✅ **Pagination** - Efficient handling of large datasets
-✅ **Advanced Filtering** - Volume, position, CPC, difficulty filters
-✅ **Validation** - Input validation for domains, country codes, and parameters
-✅ **Authentication** - Automatic credential management and testing
-✅ **Rate Limiting** - Built-in rate limit handling with retry logic
-✅ **Batch Operations** - Support for multiple keywords/domains
+✅ **54 Operations** - Comprehensive coverage across 5 major resources  
+✅ **Type Safety** - Full TypeScript implementation with strict typing  
+✅ **Error Handling** - Detailed error messages with troubleshooting hints  
+✅ **Pagination** - Efficient handling of large datasets  
+✅ **Advanced Filtering** - Volume, position, CPC, difficulty filters  
+✅ **Validation** - Input validation for domains, country codes, and parameters  
+✅ **Authentication** - Automatic credential management and testing  
+✅ **Rate Limiting** - Built-in rate limit handling with retry logic  
+✅ **Batch Operations** - Support for multiple keywords/domains  
+✅ **Backlink Monitoring** - Complete backlink analysis and tracking  
+✅ **Website Auditing** - Technical SEO audits with issue detection
 
 ---
 
@@ -657,7 +594,23 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 - Ignore difficulty scores (targeting too-hard keywords wastes effort)
 - Forget to check search intent and relevance
 
-### 3. Competitor Analysis
+### 3. Backlink Monitoring
+
+✅ **DO:**
+
+- Schedule daily checks for new/lost backlinks
+- Use "Get Summary" for quick health checks
+- Export full data monthly for archival
+- Track Domain InLink Rank trends over time
+- Monitor anchor text distribution for natural link profile
+
+❌ **DON'T:**
+
+- Poll "Get All Backlinks" every hour (use history endpoints)
+- Download exports without checking status first
+- Ignore referring domain diversity (IP distribution)
+
+### 4. Competitor Analysis
 
 ✅ **DO:**
 
@@ -672,7 +625,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 - Track too many competitors (focus on top 5-10)
 - Ignore competitor's content strategy and backlink profile
 
-### 4. AI Search Optimization
+### 5. AI Search Optimization
 
 ✅ **DO:**
 
@@ -687,7 +640,23 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 - Ignore prompt context and user intent
 - Forget to optimize content based on insights
 
-### 5. Error Handling
+### 6. Website Auditing
+
+✅ **DO:**
+
+- Use Advanced Audit for JavaScript-heavy sites (React, Vue, Angular)
+- Set realistic max_pages based on site size
+- Schedule monthly audits for ongoing monitoring
+- Compare historical audits to track improvements
+- Export issues to spreadsheet for team collaboration
+
+❌ **DON'T:**
+
+- Set max_pages too high (start with 1000-5000)
+- Ignore robots.txt unless intentionally testing blocked areas
+- Run audits too frequently (daily audits waste credits)
+
+### 7. Error Handling
 
 ✅ **DO:**
 
@@ -701,15 +670,6 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 - Ignore error messages (they contain helpful hints)
 - Retry immediately after rate limit (wait 60s)
 - Skip input validation
-
----
-
-## Support & Resources
-
-- **Issues**: Report bugs and request features via GitHub Issues
-- **n8n Community**: [n8n Community Forum](https://community.n8n.io/)
-- **SE Ranking Support**: [SE Ranking Help Center](https://help.seranking.com/)
-- **API Documentation**: [SE Ranking API Docs](https://seranking.com/api.html)
 
 ---
 
@@ -760,13 +720,19 @@ n8n-nodes-seranking/
 │       ├── AIVisibilityTracker.json                              # Example 1: Monitor AI Visibility Across Engines
 │       ├── AIVisibilityTrackerResults.xlsx                       # Example 1 Results
 │       ├── README.md
+│   └── Backlinks/
+│       ├── Backlinks-Monitoring&Analysis.json                    # Example 2: Backlinks - Monitoring & Analysis
+│       ├── README.md
 │   └── Domain Analysis/
-│       ├── DomainAnalysisMulti-FormatProcessor.json              # Example 2: Domain Analysis Multi-Format Processor
-│       ├── DomainAnalysisMulti-FormatProcessor.xlsx              # Example 2 Results
+│       ├── DomainAnalysisMulti-FormatProcessor.json              # Example 3: Domain Analysis Multi-Format Processor
+│       ├── DomainAnalysisMulti-FormatProcessor.xlsx              # Example 3 Results
 │       ├── README.md
 │   └── Keyword Research/
-│       ├── KeywordResearch→GoogleSheetsPipeline.json              # Example 3: Keyword Research → Google Sheets Pipeline
-│       ├── KeywordResearch→GoogleSheetsPipeline.xlsx              # Example 3 Results
+│       ├── KeywordResearch→GoogleSheetsPipeline.json              # Example 4: Keyword Research → Google Sheets Pipeline
+│       ├── KeywordResearch→GoogleSheetsPipeline.xlsx              # Example 4 Results
+│       ├── README.md
+│   └── Website=Audit/
+│       ├── Website=Audit-Technical-SEO-Monitor.json              # Example 5: Website Audit - Technical SEO Monitor
 │       ├── README.md
 ├── package.json
 ├── package-lock.json
