@@ -350,25 +350,6 @@ Schedule regular technical SEO audits and get alerts when critical issues are de
 
 ---
 
-### 🔍 Example 3: Keyword Research Automation
-
-**Automate comprehensive keyword research with trend analysis**
-
-Build an automated keyword intelligence pipeline with historical tracking and SERP features.
-
-**What You'll Get:**
-
-- Bulk keyword metrics with volume and CPC
-- Historical trend analysis (peaks, valleys, averages)
-- SERP features tracking (PAA, featured snippets, etc.)
-- Search intent mapping (informational, commercial, navigational)
-
-**Best For:** Content strategists planning editorial calendars, SEO specialists doing competitor research
-
-📁 [View Full Guide & Download Workflow →](./Usage-Examples/Keyword-Research)
-
----
-
 ### 🚀 Quick Start
 
 1. **Browse** the example that matches your use case
