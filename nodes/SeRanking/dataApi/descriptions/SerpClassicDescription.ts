@@ -148,6 +148,23 @@ export const serpClassicFields: INodeProperties[] = [
 		placeholder: 'campaign-1',
 		description: 'Optional: tag to group tasks.',
 	},
+	// Pingback (webhook)
+	{
+		displayName: 'Pingback URL',
+		name: 'pingbackUrl',
+		type: 'string',
+		required: false,
+		displayOptions: {
+			show: {
+				resource: ['serpClassic'],
+				operation: ['addTasks'],
+			},
+		},
+		default: '',
+		placeholder: 'https://your-n8n.com/webhook/serp-callback?id=$id&tag=$tag',
+		description:
+			'Optional: URL to receive GET notification when task completes. Use $id and $tag as placeholders. System substitutes actual values upon completion.',
+	},
 
 	// Get Results (standard)
 	{

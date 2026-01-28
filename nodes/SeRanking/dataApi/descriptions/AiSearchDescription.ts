@@ -36,6 +36,12 @@ export const aiSearchOperations: INodeProperties[] = [
 				description: 'Get prompts mentioning brand name',
 				action: 'Get prompts by brand',
 			},
+			{
+				name: 'Get Leaderboard',
+				value: 'getLeaderboard',
+				description: 'Compare domain performance against competitors across LLMs',
+				action: 'Get AI search leaderboard',
+			},
 		],
 		default: 'getOverview',
 	},
@@ -240,6 +246,141 @@ export const aiSearchFields: INodeProperties[] = [
 					minValue: 0,
 				},
 			},
+
 		],
+	},
+	// ========== LEADERBOARD FIELDS ==========
+	{
+		displayName: 'Primary Target',
+		name: 'primaryTarget',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['aiSearch'],
+				operation: ['getLeaderboard'],
+			},
+		},
+		default: '',
+		placeholder: 'seranking.com',
+		description: 'Your domain to analyze',
+	},
+	{
+		displayName: 'Primary Brand',
+		name: 'primaryBrand',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['aiSearch'],
+				operation: ['getLeaderboard'],
+			},
+		},
+		default: '',
+		placeholder: 'SE Ranking',
+		description: 'Brand name for your primary target',
+	},
+	{
+		displayName: 'Competitors',
+		name: 'competitors',
+		type: 'fixedCollection',
+		typeOptions: {
+			multipleValues: true,
+		},
+		default: {},
+		placeholder: 'Add Competitor',
+		displayOptions: {
+			show: {
+				resource: ['aiSearch'],
+				operation: ['getLeaderboard'],
+			},
+		},
+		options: [
+			{
+				name: 'competitorValues',
+				displayName: 'Competitor',
+				values: [
+					{
+						displayName: 'Target Domain',
+						name: 'target',
+						type: 'string',
+						default: '',
+						placeholder: 'semrush.com',
+						description: 'Competitor domain',
+					},
+					{
+						displayName: 'Brand Name',
+						name: 'brand',
+						type: 'string',
+						default: '',
+						placeholder: 'Semrush',
+						description: 'Competitor brand name',
+					},
+				],
+			},
+		],
+		description: 'Add competitor domains and brands to compare against',
+	},
+	{
+		displayName: 'Scope',
+		name: 'leaderboardScope',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['aiSearch'],
+				operation: ['getLeaderboard'],
+			},
+		},
+		options: [
+			{
+				name: 'Base Domain',
+				value: 'base_domain',
+				description: 'Aggregate by registrable domain',
+			},
+			{
+				name: 'Exact URL',
+				value: 'exact_url',
+				description: 'Exact URL matching',
+			},
+		],
+		default: 'base_domain',
+		description: 'Scope of analysis',
+	},
+	{
+		displayName: 'AI Engines',
+		name: 'engines',
+		type: 'multiOptions',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['aiSearch'],
+				operation: ['getLeaderboard'],
+			},
+		},
+		options: [
+			{
+				name: 'AI Overview (Google)',
+				value: 'ai-overview',
+			},
+			{
+				name: 'ChatGPT',
+				value: 'chatgpt',
+			},
+			{
+				name: 'Perplexity',
+				value: 'perplexity',
+			},
+			{
+				name: 'Gemini',
+				value: 'gemini',
+			},
+			{
+				name: 'AI Mode',
+				value: 'ai-mode',
+			},
+		],
+		default: ['ai-overview', 'chatgpt', 'perplexity'],
+		description: 'LLM engines to compare across',
 	},
 ];

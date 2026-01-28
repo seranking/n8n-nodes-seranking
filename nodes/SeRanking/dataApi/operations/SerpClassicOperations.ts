@@ -54,6 +54,7 @@ export async function SerpClassicOperations(this: IExecuteFunctions, index: numb
 			const locationId = this.getNodeParameter('locationId', index) as number;
 			const keywordsInput = this.getNodeParameter('keywords', index) as string;
 			const tag = this.getNodeParameter('tag', index, '') as string;
+			const pingbackUrl = this.getNodeParameter('pingbackUrl', index, '') as string;  // Pingback (webhook)
 
 			const keywords = parseKeywords(keywordsInput);
 
@@ -70,6 +71,7 @@ export async function SerpClassicOperations(this: IExecuteFunctions, index: numb
 			body.query = keywords;
 
 			if (tag && tag.trim() !== '') body.tag = tag;
+			if (pingbackUrl && pingbackUrl.trim() !== '') body.pingback_url = pingbackUrl;  // Pingback (webhook)
 
 			// Send request
 			const response = await apiRequest.call(this, method, endpoint, body, params, index);

@@ -80,6 +80,50 @@ export async function AiSearchOperations(
 			break;
 		}
 
+		case 'getLeaderboard': {
+			const primaryTarget = this.getNodeParameter('primaryTarget', index) as string;
+			const primaryBrand = this.getNodeParameter('primaryBrand', index) as string;
+			const competitorsData = this.getNodeParameter('competitors', index, {}) as any;
+			const scope = this.getNodeParameter('leaderboardScope', index) as string;
+			const source = this.getNodeParameter('source', index) as string;
+			const engines = this.getNodeParameter('engines', index) as string[];
+
+			if (!primaryTarget || primaryTarget.trim() === '') {
+				throw new Error('Primary target domain is required');
+			}
+			if (!primaryBrand || primaryBrand.trim() === '') {
+				throw new Error('Primary brand name is required');
+			}
+
+			// Build competitors array from fixedCollection
+			const competitors: Array<{ target: string; brand: string }> = [];
+			if (competitorsData.competitorValues && Array.isArray(competitorsData.competitorValues)) {
+				for (const comp of competitorsData.competitorValues) {
+					if (comp.target && comp.brand) {
+						competitors.push({
+							target: validateDomain(comp.target),
+							brand: comp.brand.trim(),
+						});
+					}
+				}
+			}
+
+			// Build request body per API docs
+			const body = {
+				primary: {
+					target: validateDomain(primaryTarget),
+					brand: primaryBrand.trim(),
+				},
+				competitors,
+				scope,
+				source: validateSource(source),
+				engines,
+			};
+
+			// This is a POST request
+			return await apiRequest.call(this, 'POST', '/ai-search/overview/leaderboard', body, {}, index);
+		}
+
 		default:
 			throw new Error(`Unknown AI Search operation: ${operation}`);
 	}

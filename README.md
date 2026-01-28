@@ -182,12 +182,14 @@ The node will automatically test your credentials by making a test request to th
 
 This node provides access to 6 SE Ranking resources with 62 total operations:
 
-### AI Search (4 operations)
+### AI Search (5 operations)
 
 - Get Overview - LLM visibility metrics across ChatGPT, Perplexity, Gemini
 - Discover Brand - Identify brand name for domain
 - Get Prompts by Target - Find prompts mentioning your domain
 - Get Prompts by Brand - Track brand mentions in AI responses
+- Get Leaderboard - Compare domain performance against competitors across LLMs
+
 
 ### Backlinks (25 operations)
 
@@ -258,7 +260,7 @@ This node provides access to 6 SE Ranking resources with 62 total operations:
 
 ### SERP Classic (5 operations)
 
-- Add Tasks - Create SERP tasks for keywords (up to 1,000 per request)
+- Add Tasks - Create SERP tasks for keywords (up to 1,000 per request, supports Pingback URL)
 - Get Results - Get standard SERP results for a task
 - List Tasks - List recent SERP tasks (last 24 hours)
 - Get Advanced Results - Retrieve detailed SERP results with all features
@@ -398,6 +400,132 @@ Monitor keyword positions, SERP features, and competitor visibility with automat
 📂 [View Full Guide & Download Workflow →](./Usage-Examples/SERP-Classic)
 
 ---
+### 🔔 Example 7: SERP Pingback Webhooks
+
+**Get notified instantly when SERP results are ready — no polling required!**
+
+Instead of checking task status repeatedly, SE Ranking calls your webhook when done.
+
+#### Simple Workflow (3 nodes)
+
+```
+[Webhook] → [SE Ranking: Get Results] → [Google Sheets]
+   ↑
+   └── SE Ranking calls this when task completes
+```
+
+#### Step-by-Step Setup
+
+**Step 1: Create Webhook to Receive Notifications**
+
+Add a **Webhook** node:
+| Setting | Value |
+|---------|-------|
+| HTTP Method | `GET` |
+| Path | `serp-callback` |
+| Response Mode | `Immediately` |
+
+Click **"Listen for test event"** and copy the URL.
+
+**Step 2: Create SERP Task with Pingback**
+
+In another workflow, add **SE Ranking** node:
+| Setting | Value |
+|---------|-------|
+| Resource | `SERP Classic` |
+| Operation | `Add Tasks` |
+| Search Engine | `google` |
+| Device | `desktop` |
+| Language Code | `en` |
+| Location ID | `2840` (USA) |
+| Keywords | `seo tools` |
+| Tag | `my-test` |
+| **Pingback URL** | `https://your-n8n.com/webhook/serp-callback?id=$id&tag=$tag` |
+
+> ⚠️ Use `$id` and `$tag` exactly as shown — SE Ranking replaces them with real values.
+
+**Step 3: Fetch Results When Webhook Fires**
+
+Back in your webhook workflow, add **SE Ranking** node after the Webhook:
+| Setting | Value |
+|---------|-------|
+| Resource | `SERP Classic` |
+| Operation | `Get Results` |
+| Task ID | `{{ $json.query.id }}` |
+
+**That's it!** When SE Ranking finishes, it calls your webhook, which fetches the results automatically.
+
+#### Using in Advanced Workflows
+
+Add pingback to any existing SERP workflow:
+
+```
+[Schedule] → [SE Ranking: Add Tasks] ──(async)──→ [Webhook] → [Get Results] → [Process]
+                    │
+                    └── pingback_url triggers webhook when done
+```
+
+---
+
+### 🏆 Example 8: AI Search Leaderboard
+
+**Compare your AI visibility against competitors in one request.**
+
+See how your brand performs vs competitors across ChatGPT, Perplexity, Gemini, and Google AI Overview.
+
+#### Simple Workflow (2 nodes)
+
+```
+[Manual Trigger] → [SE Ranking: Get Leaderboard] → [View Results]
+```
+
+#### Step-by-Step Setup
+
+**Step 1: Add SE Ranking Node**
+
+| Setting | Value |
+|---------|-------|
+| Resource | `AI Search` |
+| Operation | `Get Leaderboard` |
+| Primary Target | `yoursite.com` |
+| Primary Brand | `Your Brand` |
+| Source | `us` |
+| AI Engines | Select: `chatgpt`, `perplexity`, `ai-overview` |
+
+**Step 2: Add Competitors**
+
+Click **"Add Competitor"** and enter:
+| Target Domain | Brand Name |
+|---------------|------------|
+| `competitor1.com` | `Competitor 1` |
+| `competitor2.com` | `Competitor 2` |
+
+**Step 3: Run and View Results**
+
+Execute the workflow. Response includes:
+- Link presence count (how often you appear)
+- Average position in AI citations
+- Change vs previous period
+- Breakdown by AI engine
+
+#### Using in Advanced Workflows
+
+Combine with scheduling and reporting:
+
+```
+[Schedule: Weekly] → [Get Leaderboard] → [Code: Calculate Gaps] → [Google Sheets] → [Slack Alert]
+```
+
+**Example: Find where competitors beat you**
+```javascript
+// In Code node after Get Leaderboard
+const dominated = $input.all().filter(item => 
+  item.json.competitor_presence > item.json.primary_presence
+);
+return dominated;
+```
+
+---
 
 ### 🚀 Quick Start
 
@@ -428,9 +556,15 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Version History
 
-## Version History
+### v1.3.5 (Current)
 
-### v1.3.3 (Current)
+* ✅ **NEW: SERP Pingback URL** - Webhook notifications when SERP tasks complete
+* ✅ **NEW: AI Search Leaderboard** - Compare visibility against competitors across LLMs
+* ✅ **Total: 65 operations across 6 resources**
+* ✅ Event-driven SERP workflow support
+* ✅ Multi-competitor AI visibility comparison
+
+### v1.3.3 
 
 - ✅ **NEW: Get Worldwide Aggregate for URL** - URL-level global performance metrics
 - ✅ **NEW: Get Domain Pages** - Page-level keyword and traffic analysis with intent breakdown
@@ -493,7 +627,11 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Features
 
-✅ **62 Operations** - Comprehensive coverage across 6 major resources  
+✅ **65 Operations** - Comprehensive coverage across 6 major resources  
+
+✅ **Pingback Webhooks** - Event-driven notifications for SERP task completion
+
+✅ **AI Competitive Analysis** - Leaderboard comparison across LLM engines
 
 ✅ **Type Safety** - Full TypeScript implementation with strict typing  
 
@@ -530,6 +668,27 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 ---
 
 ## Troubleshooting
+
+### Pingback Not Received
+
+**Problem**: SERP task completes but webhook never fires
+
+**Solution**:
+1. Use production webhook URL (not `webhook-test`)
+2. Ensure URL is publicly accessible (not localhost)
+3. Use HTTPS
+4. Respond within 5 seconds with HTTP 200
+5. Use literal `$id` and `$tag` placeholders
+
+**Valid URL format:**
+```
+✅ https://your-domain.com/webhook/serp-callback?id=$id&tag=$tag
+❌ https://localhost:5678/webhook/...
+❌ https://your-domain.com/webhook-test/...
+```
+```
+
+---
 
 ### Authentication Errors
 

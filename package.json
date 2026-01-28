@@ -1,6 +1,6 @@
 {
     "name": "@seranking/n8n-nodes-seranking",
-    "version": "1.3.4",
+    "version": "1.3.5",
     "description": "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, and Website Audit",
     "license": "MIT",
     "homepage": "https://github.com/seranking/n8n-nodes-seranking",
