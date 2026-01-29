@@ -1,326 +1,326 @@
 {
-  "name": "Domain Traffic & Competitor Analysis",
-  "nodes": [
-    {
-      "parameters": {},
-      "id": "324aa1f1-8e48-44be-a6b4-05b39b810089",
-      "name": "Manual Trigger",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -880,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Define domains to analyze\nconst domains = [\"seranking.com\", \"semrush.com\"];\nconst source = \"us\";\n\n// Return array of items, one per domain\nreturn domains.map(domain => ({\n  json: {\n    domain: domain,\n    source: source\n  }\n}));"
-      },
-      "id": "a774492b-f208-42c8-afcb-c1b5751991f4",
-      "name": "Configuration",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -656,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "domain": "={{ $json.domain }}",
-        "additionalFields": {
-          "currency": "USD",
-          "fields": [
-            "price",
-            "traffic",
-            "keywords"
-          ],
-          "showZonesList": true
-        }
-      },
-      "id": "e33ee999-43d5-4cf3-bbdc-a71575ddc42f",
-      "name": "Get Worldwide Traffic",
-      "type": "CUSTOM.seRanking",
-      "typeVersion": 1,
-      "position": [
-        -448,
-        16
-      ],
-      "credentials": {
-        "seRankingApi": {
-          "id": "wmJxGu1vHuZJIXCR",
-          "name": "SE Ranking account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "getOverviewDb",
-        "domain": "={{ $json.domain }}",
-        "source": "={{ $json.source }}",
-        "additionalFields": {
-          "withSubdomains": true
-        }
-      },
-      "id": "714a8c3b-992c-4dcc-be1e-e05b454be3e8",
-      "name": "Get Regional Traffic",
-      "type": "CUSTOM.seRanking",
-      "typeVersion": 1,
-      "position": [
-        -448,
-        272
-      ],
-      "credentials": {
-        "seRankingApi": {
-          "id": "wmJxGu1vHuZJIXCR",
-          "name": "SE Ranking account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "id": "12105d26-a08a-4997-843d-ae11d53771c8",
-      "name": "Merge",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [
-        -240,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Get the input data\nconst inputData = $input.all();\n\n// Array to store all rows\nconst allRows = [];\n\n// Create a map to group by domain and source\nconst dataMap = new Map();\n\ninputData.forEach(item => {\n  const domainData = item.json;\n  const domain = domainData._domain;\n  \n  // Process organic data\n  if (domainData.organic && Array.isArray(domainData.organic)) {\n    domainData.organic.forEach(row => {\n      const key = `${domain}_${row.source}`;\n      if (!dataMap.has(key)) {\n        dataMap.set(key, {\n          domain: domain,\n          source: row.source,\n          country: row.country,\n          organic_keywords_count: 0,\n          organic_traffic_sum: 0,\n          organic_price_sum: 0,\n          adv_keywords_count: 0,\n          adv_traffic_sum: 0,\n          adv_price_sum: 0\n        });\n      }\n      const data = dataMap.get(key);\n      data.organic_keywords_count = row.keywords_count;\n      data.organic_traffic_sum = row.traffic_sum;\n      data.organic_price_sum = row.price_sum;\n    });\n  }\n  \n  // Process advertising data\n  if (domainData.adv && Array.isArray(domainData.adv)) {\n    domainData.adv.forEach(row => {\n      const key = `${domain}_${row.source}`;\n      if (!dataMap.has(key)) {\n        dataMap.set(key, {\n          domain: domain,\n          source: row.source,\n          country: row.country,\n          organic_keywords_count: 0,\n          organic_traffic_sum: 0,\n          organic_price_sum: 0,\n          adv_keywords_count: 0,\n          adv_traffic_sum: 0,\n          adv_price_sum: 0\n        });\n      }\n      const data = dataMap.get(key);\n      data.adv_keywords_count = row.keywords_count;\n      data.adv_traffic_sum = row.traffic_sum;\n      data.adv_price_sum = row.price_sum;\n    });\n  }\n});\n\n// Convert map to array\nallRows.push(...dataMap.values());\n\n// Return the formatted data\nreturn allRows.map(row => ({ json: row }));"
-      },
-      "id": "e4e965a6-ec27-4a4c-973f-394bd325ffd8",
-      "name": "Format Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -32,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "appendOrUpdate",
-        "documentId": {
-          "__rl": true,
-          "value": "1k0UHxBtbQkp5Wd9OEOHmt92AN5WZo-S2bNv4Wg2cQ44",
-          "mode": "list",
-          "cachedResultName": "Domain Traffic & Competitor Analysis",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k0UHxBtbQkp5Wd9OEOHmt92AN5WZo-S2bNv4Wg2cQ44/edit?usp=drivesdk"
+    "name": "Domain Traffic & Competitor Analysis",
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "324aa1f1-8e48-44be-a6b4-05b39b810089",
+            "name": "Manual Trigger",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                -880,
+                160
+            ]
         },
-        "sheetName": {
-          "__rl": true,
-          "value": 1210829173,
-          "mode": "list",
-          "cachedResultName": "Sheet4",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k0UHxBtbQkp5Wd9OEOHmt92AN5WZo-S2bNv4Wg2cQ44/edit#gid=1210829173"
+        {
+            "parameters": {
+                "jsCode": "// Define domains to analyze\nconst domains = [\"example.com\", \"competitor.com\"];\nconst source = \"us\";\n\n// Return array of items, one per domain\nreturn domains.map(domain => ({\n  json: {\n    domain: domain,\n    source: source\n  }\n}));"
+            },
+            "id": "a774492b-f208-42c8-afcb-c1b5751991f4",
+            "name": "Configuration",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -656,
+                160
+            ]
         },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "domain",
-              "displayName": "domain",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+        {
+            "parameters": {
+                "domain": "={{ $json.domain }}",
+                "additionalFields": {
+                    "currency": "USD",
+                    "fields": [
+                        "price",
+                        "traffic",
+                        "keywords"
+                    ],
+                    "showZonesList": true
+                }
             },
-            {
-              "id": "source",
-              "displayName": "source",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "country",
-              "displayName": "country",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "organic_keywords_count",
-              "displayName": "organic_keywords_count",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "organic_traffic_sum",
-              "displayName": "organic_traffic_sum",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "organic_price_sum",
-              "displayName": "organic_price_sum",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "adv_keywords_count",
-              "displayName": "adv_keywords_count",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "adv_traffic_sum",
-              "displayName": "adv_traffic_sum",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "adv_price_sum",
-              "displayName": "adv_price_sum",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+            "id": "e33ee999-43d5-4cf3-bbdc-a71575ddc42f",
+            "name": "Get Worldwide Traffic",
+            "type": "@seranking/n8n-nodes-seranking.seRanking",
+            "typeVersion": 1,
+            "position": [
+                -448,
+                16
+            ],
+            "credentials": {
+                "seRankingApi": {
+                    "id": "",
+                    "name": "SE Ranking account"
+                }
             }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
         },
-        "options": {}
-      },
-      "id": "bde80746-307f-45e6-b341-0f7b90ad3498",
-      "name": "Google Sheets",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.4,
-      "position": [
-        176,
-        160
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "K2iUXQtuUAF8v9IT",
-          "name": "Google Sheets account 2"
+        {
+            "parameters": {
+                "operation": "getOverviewDb",
+                "domain": "={{ $json.domain }}",
+                "source": "={{ $json.source }}",
+                "additionalFields": {
+                    "withSubdomains": true
+                }
+            },
+            "id": "714a8c3b-992c-4dcc-be1e-e05b454be3e8",
+            "name": "Get Regional Traffic",
+            "type": "@seranking/n8n-nodes-seranking.seRanking",
+            "typeVersion": 1,
+            "position": [
+                -448,
+                272
+            ],
+            "credentials": {
+                "seRankingApi": {
+                    "id": "",
+                    "name": "SE Ranking account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "mode": "combine",
+                "combineBy": "combineAll",
+                "options": {}
+            },
+            "id": "12105d26-a08a-4997-843d-ae11d53771c8",
+            "name": "Merge",
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3,
+            "position": [
+                -240,
+                160
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Get the input data\nconst inputData = $input.all();\n\n// Array to store all rows\nconst allRows = [];\n\n// Create a map to group by domain and source\nconst dataMap = new Map();\n\ninputData.forEach(item => {\n  const domainData = item.json;\n  const domain = domainData._domain;\n  \n  // Process organic data\n  if (domainData.organic && Array.isArray(domainData.organic)) {\n    domainData.organic.forEach(row => {\n      const key = `${domain}_${row.source}`;\n      if (!dataMap.has(key)) {\n        dataMap.set(key, {\n          domain: domain,\n          source: row.source,\n          country: row.country,\n          organic_keywords_count: 0,\n          organic_traffic_sum: 0,\n          organic_price_sum: 0,\n          adv_keywords_count: 0,\n          adv_traffic_sum: 0,\n          adv_price_sum: 0\n        });\n      }\n      const data = dataMap.get(key);\n      data.organic_keywords_count = row.keywords_count;\n      data.organic_traffic_sum = row.traffic_sum;\n      data.organic_price_sum = row.price_sum;\n    });\n  }\n  \n  // Process advertising data\n  if (domainData.adv && Array.isArray(domainData.adv)) {\n    domainData.adv.forEach(row => {\n      const key = `${domain}_${row.source}`;\n      if (!dataMap.has(key)) {\n        dataMap.set(key, {\n          domain: domain,\n          source: row.source,\n          country: row.country,\n          organic_keywords_count: 0,\n          organic_traffic_sum: 0,\n          organic_price_sum: 0,\n          adv_keywords_count: 0,\n          adv_traffic_sum: 0,\n          adv_price_sum: 0\n        });\n      }\n      const data = dataMap.get(key);\n      data.adv_keywords_count = row.keywords_count;\n      data.adv_traffic_sum = row.traffic_sum;\n      data.adv_price_sum = row.price_sum;\n    });\n  }\n});\n\n// Convert map to array\nallRows.push(...dataMap.values());\n\n// Return the formatted data\nreturn allRows.map(row => ({ json: row }));"
+            },
+            "id": "e4e965a6-ec27-4a4c-973f-394bd325ffd8",
+            "name": "Format Data",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -32,
+                160
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "appendOrUpdate",
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_GOOGLE_SHEET_ID",
+                    "mode": "list",
+                    "cachedResultName": "Your Sheet Name",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 0,
+                    "mode": "list",
+                    "cachedResultName": "Sheet1",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=1210829173"
+                },
+                "columns": {
+                    "mappingMode": "autoMapInputData",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [
+                        {
+                            "id": "domain",
+                            "displayName": "domain",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "source",
+                            "displayName": "source",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "country",
+                            "displayName": "country",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "organic_keywords_count",
+                            "displayName": "organic_keywords_count",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "organic_traffic_sum",
+                            "displayName": "organic_traffic_sum",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "organic_price_sum",
+                            "displayName": "organic_price_sum",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "adv_keywords_count",
+                            "displayName": "adv_keywords_count",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "adv_traffic_sum",
+                            "displayName": "adv_traffic_sum",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "adv_price_sum",
+                            "displayName": "adv_price_sum",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "id": "bde80746-307f-45e6-b341-0f7b90ad3498",
+            "name": "Google Sheets",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.4,
+            "position": [
+                176,
+                160
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "",
+                    "name": "Google Sheets account"
+                }
+            }
         }
-      }
-    }
-  ],
-  "pinData": {},
-  "connections": {
-    "Manual Trigger": {
-      "main": [
-        [
-          {
-            "node": "Configuration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    ],
+    "pinData": {},
+    "connections": {
+        "Manual Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Configuration",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Configuration": {
+            "main": [
+                [
+                    {
+                        "node": "Get Worldwide Traffic",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Get Regional Traffic",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Worldwide Traffic": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Regional Traffic": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Merge": {
+            "main": [
+                [
+                    {
+                        "node": "Format Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Data": {
+            "main": [
+                [
+                    {
+                        "node": "Google Sheets",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
     },
-    "Configuration": {
-      "main": [
-        [
-          {
-            "node": "Get Worldwide Traffic",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get Regional Traffic",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
     },
-    "Get Worldwide Traffic": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "versionId": "9fb7e107-1544-4672-b5f3-e067af6ab553",
+    "meta": {
+        "instanceId": ""
     },
-    "Get Regional Traffic": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Format Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Data": {
-      "main": [
-        [
-          {
-            "node": "Google Sheets",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "9fb7e107-1544-4672-b5f3-e067af6ab553",
-  "meta": {
-    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
-  },
-  "id": "CQYNazWsWJLnRu1z",
-  "tags": []
+    "id": "CQYNazWsWJLnRu1z",
+    "tags": []
 }

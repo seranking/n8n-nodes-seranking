@@ -1,501 +1,501 @@
 {
-  "name": "DomainAnalysisMulti-FormatProcessor",
-  "nodes": [
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -448,
-        288
-      ],
-      "id": "68e12a49-3f05-4477-926f-a8b70c6420ab",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
-      "parameters": {
-        "domain": "seranking.com",
-        "additionalFields": {
-          "currency": "USD",
-          "fields": [
-            "price",
-            "traffic",
-            "keywords",
-            "positions_diff",
-            "positions_tops"
-          ],
-          "showZonesList": true
-        }
-      },
-      "type": "CUSTOM.seRanking",
-      "typeVersion": 1,
-      "position": [
-        0,
-        0
-      ],
-      "id": "dcc18d49-be45-4766-8315-d53943e81a3d",
-      "name": "Get worldwide aggregate statistics",
-      "credentials": {
-        "seRankingApi": {
-          "id": "wmJxGu1vHuZJIXCR",
-          "name": "SE Ranking account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "getOverviewDb",
-        "domain": "seranking.com",
-        "additionalFields": {
-          "withSubdomains": true
-        }
-      },
-      "type": "CUSTOM.seRanking",
-      "typeVersion": 1,
-      "position": [
-        48,
-        208
-      ],
-      "id": "992889d1-3b52-4eb8-90e3-af3457ba4cb4",
-      "name": "Get regional database overview",
-      "credentials": {
-        "seRankingApi": {
-          "id": "wmJxGu1vHuZJIXCR",
-          "name": "SE Ranking account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "getKeywords",
-        "domain": "seranking.com",
-        "type": "adv",
-        "additionalFields": {
-          "orderType": "asc"
-        }
-      },
-      "type": "CUSTOM.seRanking",
-      "typeVersion": 1,
-      "position": [
-        48,
-        432
-      ],
-      "id": "f23e2a22-82c8-4d8d-99b6-d0f0cb0896bf",
-      "name": "Get domain keywords",
-      "credentials": {
-        "seRankingApi": {
-          "id": "wmJxGu1vHuZJIXCR",
-          "name": "SE Ranking account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "getCompetitors",
-        "domain": "seranking.com",
-        "type": "adv",
-        "additionalFields": {
-          "stats": true
-        }
-      },
-      "type": "CUSTOM.seRanking",
-      "typeVersion": 1,
-      "position": [
-        -32,
-        640
-      ],
-      "id": "9d8560ff-999c-471b-8ff9-ef7bf649bbc9",
-      "name": "Get domain competitors",
-      "credentials": {
-        "seRankingApi": {
-          "id": "wmJxGu1vHuZJIXCR",
-          "name": "SE Ranking account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "numberInputs": 4
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        368,
-        240
-      ],
-      "id": "95dd7956-b5b2-4576-89fb-c2cdc112fa24",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Universal SE Ranking Data Formatter - FINAL FIX\nconst allInput = $input.all();\nconst timestamp = new Date().toISOString().split('T')[0];\n\n// Get the actual data\nlet data;\nif (allInput.length > 0) {\n  data = allInput[0].json;\n} else {\n  data = $input.first().json;\n}\n\nlet output = [];\n\nif (!data) {\n  output = [{ json: { date: timestamp, error: 'No data' } }];\n} \n// Check if it's the top-level object with organic/adv\nelse if (data.organic && data.adv) {\n  const organic = data.organic;\n  const adv = data.adv;\n  \n  // Check if organic is an array (multi-region) or object (single region)\n  if (Array.isArray(organic)) {\n    // MULTI-REGION: organic and adv are arrays\n    organic.forEach(region => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'regional_organic',\n          source: region.source,\n          country: region.country,\n          keywords_count: region.keywords_count || 0,\n          traffic_sum: region.traffic_sum || 0,\n          price_sum: region.price_sum || 0,\n          positions_new: region.positions_new_count || 0,\n          positions_up: region.positions_up_count || 0,\n          positions_down: region.positions_down_count || 0,\n          positions_lost: region.positions_lost_count || 0,\n          positions_equal: region.positions_equal_count || 0,\n          top_1_5: region.positions_tops?.top1_5 || 0,\n          top_6_10: region.positions_tops?.top6_10 || 0,\n          top_11_20: region.positions_tops?.top11_20 || 0,\n          top_21_50: region.positions_tops?.top21_50 || 0,\n          top_51_100: region.positions_tops?.top51_100 || 0\n        }\n      });\n    });\n    \n    adv.forEach(region => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'regional_paid',\n          source: region.source,\n          country: region.country,\n          keywords_count: region.keywords_count || 0,\n          traffic_sum: region.traffic_sum || 0,\n          price_sum: region.price_sum || 0,\n          positions_new: region.positions_new_count || 0,\n          top_1_2: region.positions_tops?.top1_2 || 0,\n          top_3_5: region.positions_tops?.top3_5 || 0,\n          top_6_8: region.positions_tops?.top6_8 || 0,\n          top_9_11: region.positions_tops?.top9_11 || 0\n        }\n      });\n    });\n  } else {\n    // SINGLE REGION: organic and adv are objects\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'domain_summary',\n        domain: organic.base_domain || adv.base_domain || '',\n        year: organic.year || 0,\n        month: organic.month || 0,\n        // Organic\n        organic_keywords: organic.keywords_count || 0,\n        organic_traffic: organic.traffic_sum || 0,\n        organic_value: organic.price_sum || 0,\n        organic_new: organic.keywords_new_count || 0,\n        organic_up: organic.keywords_up_count || 0,\n        organic_down: organic.keywords_down_count || 0,\n        organic_lost: organic.keywords_lost_count || 0,\n        organic_equal: organic.keywords_equal_count || 0,\n        organic_top_1_5: organic.top1_5 || 0,\n        organic_top_6_10: organic.top6_10 || 0,\n        organic_top_11_20: organic.top11_20 || 0,\n        organic_top_21_50: organic.top21_50 || 0,\n        organic_top_51_100: organic.top51_100 || 0,\n        // Paid\n        paid_keywords: adv.keywords_count || 0,\n        paid_traffic: adv.traffic_sum || 0,\n        paid_value: adv.price_sum || 0,\n        paid_new: adv.keywords_new_count || 0,\n        paid_top_1_2: adv.top1_2 || 0,\n        paid_top_3_5: adv.top3_5 || 0,\n        paid_top_6_8: adv.top6_8 || 0,\n        // Totals\n        total_keywords: (organic.keywords_count || 0) + (adv.keywords_count || 0),\n        total_traffic: (organic.traffic_sum || 0) + (adv.traffic_sum || 0),\n        total_value: (organic.price_sum || 0) + (adv.price_sum || 0)\n      }\n    });\n  }\n}\n// Check if it's an array (keywords or competitors)\nelse if (Array.isArray(data)) {\n  if (data.length === 0) {\n    output = [{ json: { date: timestamp, message: 'Empty array' } }];\n  } else {\n    const first = data[0];\n    \n    // Keywords\n    if (first.keyword && first.position !== undefined) {\n      output = data.map(kw => ({\n        json: {\n          date: timestamp,\n          data_type: 'keyword',\n          keyword: kw.keyword,\n          position: kw.position || 0,\n          prev_position: kw.prev_pos || 0,\n          volume: kw.volume || 0,\n          cpc: kw.cpc || 0,\n          difficulty: kw.difficulty || 0,\n          url: kw.url || '',\n          traffic: kw.traffic || 0,\n          block: kw.block || ''\n        }\n      }));\n    }\n    // Competitors\n    else if (first.domain && first.common_keywords !== undefined) {\n      output = data.map(comp => ({\n        json: {\n          date: timestamp,\n          data_type: 'competitor',\n          domain: comp.domain,\n          common_keywords: comp.common_keywords || 0,\n          total_keywords: comp.total_keywords || 0,\n          missing_keywords: comp.missing_keywords || 0,\n          traffic_sum: comp.traffic_sum || 0,\n          price_sum: comp.price_sum || 0\n        }\n      }));\n    } else {\n      output = [{\n        json: {\n          date: timestamp,\n          error: 'Unknown array type',\n          first_keys: Object.keys(first).join(', ')\n        }\n      }];\n    }\n  }\n} else {\n  output = [{\n    json: {\n      date: timestamp,\n      error: 'Unknown structure',\n      keys: Object.keys(data).join(', ')\n    }\n  }];\n}\n\nreturn output;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        560,
-        272
-      ],
-      "id": "8719d5b2-15cd-4b62-8fb5-7244416e658d",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "operation": "appendOrUpdate",
-        "documentId": {
-          "__rl": true,
-          "value": "1ADinONNjNp_05eaiSgiRfKwezjeg36kkPuPnQXe9lqE",
-          "mode": "list",
-          "cachedResultName": "Domain Analysis",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ADinONNjNp_05eaiSgiRfKwezjeg36kkPuPnQXe9lqE/edit?usp=drivesdk"
+    "name": "DomainAnalysisMulti-FormatProcessor",
+    "nodes": [
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                -448,
+                288
+            ],
+            "id": "68e12a49-3f05-4477-926f-a8b70c6420ab",
+            "name": "When clicking \u2018Execute workflow\u2019"
         },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Domain Analysis",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ADinONNjNp_05eaiSgiRfKwezjeg36kkPuPnQXe9lqE/edit#gid=0"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "date",
-              "displayName": "date",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+        {
+            "parameters": {
+                "domain": "example.com",
+                "additionalFields": {
+                    "currency": "USD",
+                    "fields": [
+                        "price",
+                        "traffic",
+                        "keywords",
+                        "positions_diff",
+                        "positions_tops"
+                    ],
+                    "showZonesList": true
+                }
             },
-            {
-              "id": "data_type",
-              "displayName": "data_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "source",
-              "displayName": "source",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "country",
-              "displayName": "country",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "keywords_count",
-              "displayName": "keywords_count",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "traffic_sum",
-              "displayName": "traffic_sum",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "price_sum",
-              "displayName": "price_sum",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "positions_new",
-              "displayName": "positions_new",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "positions_up",
-              "displayName": "positions_up",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "positions_down",
-              "displayName": "positions_down",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "positions_lost",
-              "displayName": "positions_lost",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "positions_equal",
-              "displayName": "positions_equal",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_1_5",
-              "displayName": "top_1_5",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_6_10",
-              "displayName": "top_6_10",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_11_20",
-              "displayName": "top_11_20",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_21_50",
-              "displayName": "top_21_50",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_51_100",
-              "displayName": "top_51_100",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_1_2",
-              "displayName": "top_1_2",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_3_5",
-              "displayName": "top_3_5",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_6_8",
-              "displayName": "top_6_8",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "top_9_11",
-              "displayName": "top_9_11",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+            "type": "@seranking/n8n-nodes-seranking.seRanking",
+            "typeVersion": 1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "dcc18d49-be45-4766-8315-d53943e81a3d",
+            "name": "Get worldwide aggregate statistics",
+            "credentials": {
+                "seRankingApi": {
+                    "id": "",
+                    "name": "SE Ranking account"
+                }
             }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
         },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        768,
-        272
-      ],
-      "id": "43bf24e3-df13-471b-bb18-ba3598327a41",
-      "name": "Append or update row in sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "K2iUXQtuUAF8v9IT",
-          "name": "Google Sheets account 2"
+        {
+            "parameters": {
+                "operation": "getOverviewDb",
+                "domain": "example.com",
+                "additionalFields": {
+                    "withSubdomains": true
+                }
+            },
+            "type": "@seranking/n8n-nodes-seranking.seRanking",
+            "typeVersion": 1,
+            "position": [
+                48,
+                208
+            ],
+            "id": "992889d1-3b52-4eb8-90e3-af3457ba4cb4",
+            "name": "Get regional database overview",
+            "credentials": {
+                "seRankingApi": {
+                    "id": "",
+                    "name": "SE Ranking account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "getKeywords",
+                "domain": "example.com",
+                "type": "adv",
+                "additionalFields": {
+                    "orderType": "asc"
+                }
+            },
+            "type": "@seranking/n8n-nodes-seranking.seRanking",
+            "typeVersion": 1,
+            "position": [
+                48,
+                432
+            ],
+            "id": "f23e2a22-82c8-4d8d-99b6-d0f0cb0896bf",
+            "name": "Get domain keywords",
+            "credentials": {
+                "seRankingApi": {
+                    "id": "",
+                    "name": "SE Ranking account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "getCompetitors",
+                "domain": "example.com",
+                "type": "adv",
+                "additionalFields": {
+                    "stats": true
+                }
+            },
+            "type": "@seranking/n8n-nodes-seranking.seRanking",
+            "typeVersion": 1,
+            "position": [
+                -32,
+                640
+            ],
+            "id": "9d8560ff-999c-471b-8ff9-ef7bf649bbc9",
+            "name": "Get domain competitors",
+            "credentials": {
+                "seRankingApi": {
+                    "id": "",
+                    "name": "SE Ranking account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "numberInputs": 4
+            },
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3.2,
+            "position": [
+                368,
+                240
+            ],
+            "id": "95dd7956-b5b2-4576-89fb-c2cdc112fa24",
+            "name": "Merge"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Universal SE Ranking Data Formatter - FINAL FIX\nconst allInput = $input.all();\nconst timestamp = new Date().toISOString().split('T')[0];\n\n// Get the actual data\nlet data;\nif (allInput.length > 0) {\n  data = allInput[0].json;\n} else {\n  data = $input.first().json;\n}\n\nlet output = [];\n\nif (!data) {\n  output = [{ json: { date: timestamp, error: 'No data' } }];\n} \n// Check if it's the top-level object with organic/adv\nelse if (data.organic && data.adv) {\n  const organic = data.organic;\n  const adv = data.adv;\n  \n  // Check if organic is an array (multi-region) or object (single region)\n  if (Array.isArray(organic)) {\n    // MULTI-REGION: organic and adv are arrays\n    organic.forEach(region => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'regional_organic',\n          source: region.source,\n          country: region.country,\n          keywords_count: region.keywords_count || 0,\n          traffic_sum: region.traffic_sum || 0,\n          price_sum: region.price_sum || 0,\n          positions_new: region.positions_new_count || 0,\n          positions_up: region.positions_up_count || 0,\n          positions_down: region.positions_down_count || 0,\n          positions_lost: region.positions_lost_count || 0,\n          positions_equal: region.positions_equal_count || 0,\n          top_1_5: region.positions_tops?.top1_5 || 0,\n          top_6_10: region.positions_tops?.top6_10 || 0,\n          top_11_20: region.positions_tops?.top11_20 || 0,\n          top_21_50: region.positions_tops?.top21_50 || 0,\n          top_51_100: region.positions_tops?.top51_100 || 0\n        }\n      });\n    });\n    \n    adv.forEach(region => {\n      output.push({\n        json: {\n          date: timestamp,\n          data_type: 'regional_paid',\n          source: region.source,\n          country: region.country,\n          keywords_count: region.keywords_count || 0,\n          traffic_sum: region.traffic_sum || 0,\n          price_sum: region.price_sum || 0,\n          positions_new: region.positions_new_count || 0,\n          top_1_2: region.positions_tops?.top1_2 || 0,\n          top_3_5: region.positions_tops?.top3_5 || 0,\n          top_6_8: region.positions_tops?.top6_8 || 0,\n          top_9_11: region.positions_tops?.top9_11 || 0\n        }\n      });\n    });\n  } else {\n    // SINGLE REGION: organic and adv are objects\n    output.push({\n      json: {\n        date: timestamp,\n        data_type: 'domain_summary',\n        domain: organic.base_domain || adv.base_domain || '',\n        year: organic.year || 0,\n        month: organic.month || 0,\n        // Organic\n        organic_keywords: organic.keywords_count || 0,\n        organic_traffic: organic.traffic_sum || 0,\n        organic_value: organic.price_sum || 0,\n        organic_new: organic.keywords_new_count || 0,\n        organic_up: organic.keywords_up_count || 0,\n        organic_down: organic.keywords_down_count || 0,\n        organic_lost: organic.keywords_lost_count || 0,\n        organic_equal: organic.keywords_equal_count || 0,\n        organic_top_1_5: organic.top1_5 || 0,\n        organic_top_6_10: organic.top6_10 || 0,\n        organic_top_11_20: organic.top11_20 || 0,\n        organic_top_21_50: organic.top21_50 || 0,\n        organic_top_51_100: organic.top51_100 || 0,\n        // Paid\n        paid_keywords: adv.keywords_count || 0,\n        paid_traffic: adv.traffic_sum || 0,\n        paid_value: adv.price_sum || 0,\n        paid_new: adv.keywords_new_count || 0,\n        paid_top_1_2: adv.top1_2 || 0,\n        paid_top_3_5: adv.top3_5 || 0,\n        paid_top_6_8: adv.top6_8 || 0,\n        // Totals\n        total_keywords: (organic.keywords_count || 0) + (adv.keywords_count || 0),\n        total_traffic: (organic.traffic_sum || 0) + (adv.traffic_sum || 0),\n        total_value: (organic.price_sum || 0) + (adv.price_sum || 0)\n      }\n    });\n  }\n}\n// Check if it's an array (keywords or competitors)\nelse if (Array.isArray(data)) {\n  if (data.length === 0) {\n    output = [{ json: { date: timestamp, message: 'Empty array' } }];\n  } else {\n    const first = data[0];\n    \n    // Keywords\n    if (first.keyword && first.position !== undefined) {\n      output = data.map(kw => ({\n        json: {\n          date: timestamp,\n          data_type: 'keyword',\n          keyword: kw.keyword,\n          position: kw.position || 0,\n          prev_position: kw.prev_pos || 0,\n          volume: kw.volume || 0,\n          cpc: kw.cpc || 0,\n          difficulty: kw.difficulty || 0,\n          url: kw.url || '',\n          traffic: kw.traffic || 0,\n          block: kw.block || ''\n        }\n      }));\n    }\n    // Competitors\n    else if (first.domain && first.common_keywords !== undefined) {\n      output = data.map(comp => ({\n        json: {\n          date: timestamp,\n          data_type: 'competitor',\n          domain: comp.domain,\n          common_keywords: comp.common_keywords || 0,\n          total_keywords: comp.total_keywords || 0,\n          missing_keywords: comp.missing_keywords || 0,\n          traffic_sum: comp.traffic_sum || 0,\n          price_sum: comp.price_sum || 0\n        }\n      }));\n    } else {\n      output = [{\n        json: {\n          date: timestamp,\n          error: 'Unknown array type',\n          first_keys: Object.keys(first).join(', ')\n        }\n      }];\n    }\n  }\n} else {\n  output = [{\n    json: {\n      date: timestamp,\n      error: 'Unknown structure',\n      keys: Object.keys(data).join(', ')\n    }\n  }];\n}\n\nreturn output;"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                560,
+                272
+            ],
+            "id": "8719d5b2-15cd-4b62-8fb5-7244416e658d",
+            "name": "Code in JavaScript"
+        },
+        {
+            "parameters": {
+                "operation": "appendOrUpdate",
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_GOOGLE_SHEET_ID",
+                    "mode": "list",
+                    "cachedResultName": "Your Sheet Name",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Your Sheet Name",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+                },
+                "columns": {
+                    "mappingMode": "autoMapInputData",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [
+                        {
+                            "id": "date",
+                            "displayName": "date",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "data_type",
+                            "displayName": "data_type",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "source",
+                            "displayName": "source",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "country",
+                            "displayName": "country",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "keywords_count",
+                            "displayName": "keywords_count",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "traffic_sum",
+                            "displayName": "traffic_sum",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "price_sum",
+                            "displayName": "price_sum",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "positions_new",
+                            "displayName": "positions_new",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "positions_up",
+                            "displayName": "positions_up",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "positions_down",
+                            "displayName": "positions_down",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "positions_lost",
+                            "displayName": "positions_lost",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "positions_equal",
+                            "displayName": "positions_equal",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_1_5",
+                            "displayName": "top_1_5",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_6_10",
+                            "displayName": "top_6_10",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_11_20",
+                            "displayName": "top_11_20",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_21_50",
+                            "displayName": "top_21_50",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_51_100",
+                            "displayName": "top_51_100",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_1_2",
+                            "displayName": "top_1_2",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_3_5",
+                            "displayName": "top_3_5",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_6_8",
+                            "displayName": "top_6_8",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "top_9_11",
+                            "displayName": "top_9_11",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                768,
+                272
+            ],
+            "id": "43bf24e3-df13-471b-bb18-ba3598327a41",
+            "name": "Append or update row in sheet",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "",
+                    "name": "Google Sheets account"
+                }
+            }
         }
-      }
-    }
-  ],
-  "pinData": {},
-  "connections": {
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Get worldwide aggregate statistics",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get regional database overview",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get domain keywords",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get domain competitors",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    ],
+    "pinData": {},
+    "connections": {
+        "When clicking \u2018Execute workflow\u2019": {
+            "main": [
+                [
+                    {
+                        "node": "Get worldwide aggregate statistics",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Get regional database overview",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Get domain keywords",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Get domain competitors",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get regional database overview": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Get worldwide aggregate statistics": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get domain keywords": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 2
+                    }
+                ]
+            ]
+        },
+        "Get domain competitors": {
+            "main": [
+                [
+                    {
+                        "node": "Merge",
+                        "type": "main",
+                        "index": 3
+                    }
+                ]
+            ]
+        },
+        "Merge": {
+            "main": [
+                [
+                    {
+                        "node": "Code in JavaScript",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code in JavaScript": {
+            "main": [
+                [
+                    {
+                        "node": "Append or update row in sheet",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
     },
-    "Get regional database overview": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
     },
-    "Get worldwide aggregate statistics": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "versionId": "e5ce7c10-9175-452b-ab1a-ecaa1af17632",
+    "meta": {
+        "instanceId": ""
     },
-    "Get domain keywords": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "Get domain competitors": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 3
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Append or update row in sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "e5ce7c10-9175-452b-ab1a-ecaa1af17632",
-  "meta": {
-    "instanceId": "1183d366d4439b0dc8255366e7a99e14405a4b582a61d278891dceb1aebf30da"
-  },
-  "id": "0p9zYTVQ9L1bBxWI",
-  "tags": []
+    "id": "0p9zYTVQ9L1bBxWI",
+    "tags": []
 }
