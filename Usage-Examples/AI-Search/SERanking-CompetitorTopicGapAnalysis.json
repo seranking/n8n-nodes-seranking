@@ -54,7 +54,7 @@
       },
       "id": "afce535c-00fa-4bf8-b675-966e70ba4f42",
       "name": "Your Domain - ChatGPT",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         96,
@@ -77,7 +77,7 @@
       },
       "id": "8b978bef-36af-4372-bab2-b6d11f43c191",
       "name": "Your Domain - Perplexity",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         96,
@@ -100,7 +100,7 @@
       },
       "id": "52ae0303-94e9-425d-8192-a945b73e999e",
       "name": "Your Domain - Gemini",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         96,
@@ -136,7 +136,7 @@
       },
       "id": "88d5ca47-9401-4410-97fa-3caf0ed966a4",
       "name": "Competitor - ChatGPT",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         336,
@@ -159,7 +159,7 @@
       },
       "id": "f8200f85-4234-4dd8-9803-56530c127bb7",
       "name": "Competitor - Perplexity",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         336,
@@ -182,7 +182,7 @@
       },
       "id": "90b82482-8855-41ea-a07d-2b4c7f409a49",
       "name": "Competitor - Gemini",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         528,
@@ -238,7 +238,7 @@
       },
       "id": "419860e9-cca9-4ee4-a6ba-4f00651749e8",
       "name": "Competitor Top Prompts",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1264,
@@ -267,7 +267,7 @@
       },
       "id": "15c2a241-cc91-4488-8dd4-2cd94f395c8c",
       "name": "Competitor Top Keywords",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1424,
@@ -290,7 +290,7 @@
       },
       "id": "a940ef18-5896-4245-8252-8dc700e2fa44",
       "name": "Competitor Backlink Authority",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1376,
@@ -348,7 +348,7 @@
       },
       "id": "2890f24e-30f7-4f88-bbda-1acf076963fd",
       "name": "Gap Keywords - Full Metrics",
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         2160,

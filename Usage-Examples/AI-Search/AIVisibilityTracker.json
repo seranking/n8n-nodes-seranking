@@ -174,7 +174,7 @@
         "resource": "aiSearch",
         "domain": "seranking.com"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         -16,
@@ -195,7 +195,7 @@
         "domain": "seranking.com",
         "engine": "perplexity"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         -16,

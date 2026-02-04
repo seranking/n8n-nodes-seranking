@@ -27,7 +27,7 @@
           ]
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         0,
@@ -49,7 +49,7 @@
         "keyword": "seo",
         "additionalFields": {}
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         0,
@@ -74,7 +74,7 @@
           "historyTrend": true
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         0,
@@ -99,7 +99,7 @@
           "historyTrend": true
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         0,
@@ -123,7 +123,7 @@
           "limit": 10
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         0,

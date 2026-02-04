@@ -21,7 +21,7 @@
           "title": "Weekly Technical SEO Audit"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         336,
@@ -56,7 +56,7 @@
         "operation": "getStatus",
         "auditId": "={{ $('Create standard audit').item.json.id }}"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         784,
@@ -109,7 +109,7 @@
         "operation": "getReport",
         "auditId": "={{ $('Create standard audit').item.json.id }}"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1248,
@@ -149,7 +149,7 @@
           "offset": 0
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1472,
@@ -174,7 +174,7 @@
           "limit": 100
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1472,
@@ -197,7 +197,7 @@
           "search": "={{ $('Create standard audit').item.json.domain }}"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         1696,

@@ -17,7 +17,7 @@
           "mode": "domain"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [480, 460],
       "id": "get-backlinks-summary",
@@ -36,7 +36,7 @@
           "limit": 100
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [700, 360],
       "id": "get-new-backlinks",
@@ -55,7 +55,7 @@
           "limit": 100
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [700, 560],
       "id": "get-lost-backlinks",
@@ -72,7 +72,7 @@
           "order_by": "domain_inlink_rank"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [920, 360],
       "id": "get-referring-domains",
@@ -89,7 +89,7 @@
           "order_by": "backlinks"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [920, 560],
       "id": "get-anchor-texts",
@@ -101,7 +101,7 @@
         "operation": "getAuthority",
         "target": "seranking.com"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [1140, 360],
       "id": "get-authority-metrics",
@@ -118,7 +118,7 @@
           "mode": "domain"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [1140, 560],
       "id": "get-daily-history",
@@ -135,7 +135,7 @@
           "mode": "domain"
         }
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [1360, 460],
       "id": "get-cumulative-history",

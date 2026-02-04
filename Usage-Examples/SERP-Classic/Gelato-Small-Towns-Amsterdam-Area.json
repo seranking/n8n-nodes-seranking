@@ -18,7 +18,7 @@
         "operation": "getResults",
         "taskId": "={{ $('Add SERP tasks').item.json.task_id }}"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         -96,
@@ -40,7 +40,7 @@
         "countryCode": "NL",
         "q": "Edam"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         -528,
@@ -62,7 +62,7 @@
         "locationId": 26786,
         "keywords": "best gelato"
       },
-      "type": "CUSTOM.seRanking",
+      "type": "@seranking/n8n-nodes-seranking.seRanking",
       "typeVersion": 1,
       "position": [
         -320,
