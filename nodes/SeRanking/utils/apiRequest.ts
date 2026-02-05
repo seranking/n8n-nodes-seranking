@@ -1,4 +1,4 @@
-import { IExecuteFunctions, NodeOperationError, IHttpRequestOptions, IHttpRequestMethods } from 'n8n-workflow';
+import { IExecuteFunctions, NodeOperationError, IHttpRequestOptions, IHttpRequestMethods, sleep } from 'n8n-workflow';
 
 // Rate limiting variables
 let lastRequestTime = 0;
@@ -17,12 +17,12 @@ export async function apiRequest(
     const timeSinceLastRequest = now - lastRequestTime;
     if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
         const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await sleep(waitTime);
     }
     lastRequestTime = Date.now();
     
     const credentials = await this.getCredentials('seRankingApi');
-    
+        
     // Cast method to IHttpRequestMethods early
     const httpMethod = method.toUpperCase() as IHttpRequestMethods;
     
