@@ -556,7 +556,11 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Version History
 
-### v1.3.5 (Current)
+### v1.3.6 (Current)
+
+* 🔧 **FIX: Rate limiting compatibility** - Replaced setTimeout with n8n-workflow sleep function for n8n verified node compliance
+
+### v1.3.5 
 
 * ✅ **NEW: SERP Pingback URL** - Webhook notifications when SERP tasks complete
 * ✅ **NEW: AI Search Leaderboard** - Compare visibility against competitors across LLMs
@@ -666,7 +670,18 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 - **API Credits**: Some operations consume API credits (check your plan)
 
 ---
+## Rate Limiting
 
+This node includes built-in rate limiting (300ms delay between requests) to help prevent hitting SE Ranking API limits.
+
+If you still encounter "429 Too Many Requests" errors when processing large amounts of data, you can use n8n's built-in solutions:
+
+1. **Retry On Fail**: Open node Settings → enable "Retry On Fail" → set "Wait Between Tries" to 1000ms or more
+2. **Split In Batches + Wait**: Use the "Loop Over Items" node to process items in smaller batches with a "Wait" node between requests
+
+For more details, see [n8n's rate limiting documentation](https://docs.n8n.io/integrations/builtin/rate-limits/).
+
+---
 ## Troubleshooting
 
 ### Pingback Not Received
