@@ -236,9 +236,9 @@ This node provides access to 6 SE Ranking resources with 62 total operations:
 ### Keyword Research (5 operations)
 
 - Export Metrics - Bulk keyword metrics (up to 700 keywords)
-- Get Similar Keywords - Semantically similar suggestions
-- Get Related Keywords - Topically related keywords
-- Get Question Keywords - Question-based variations
+- Get Similar Keywords - Semantically similar suggestions with full filter support (traffic, difficulty, intents, SERP features, word count, and more)
+- Get Related Keywords - Topically related keywords with full filter support (traffic, difficulty, intents, SERP features, word count, and more)
+- Get Question Keywords - Question-based variations with full filter support (traffic, difficulty, intents, SERP features, word count, and more)
 - Get Longtail Keywords - Long-tail opportunities
 
 ### Website Audit (14 operations)
@@ -658,6 +658,8 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 ✅ **Website Auditing** - Technical SEO audits with issue detection
 
 ✅ **SERP Tracking** - Keyword ranking and SERP features analysis
+
+✅ **Advanced Filtering** - Volume, position, CPC, difficulty, traffic, search intent, SERP features, keyword word count, and include/exclude keyword pattern filters
 
 ---
 
