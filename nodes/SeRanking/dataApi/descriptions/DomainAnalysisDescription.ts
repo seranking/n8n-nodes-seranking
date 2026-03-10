@@ -988,6 +988,42 @@ export const domainAnalysisFields: INodeProperties[] = [
 				default: [],
 				description: 'Filter keywords by search intent',
 			},
+			// ── serpFeatures2Mode/Value multiKeywordIncluded/Excluded ──
+			{
+				displayName: 'Include Keywords Containing',
+				name: 'multiKeywordIncluded',
+				type: 'string',
+				default: '',
+				placeholder: 'best, top, review',
+				description: 'Comma-separated words that must appear in results',
+			},
+			{
+				displayName: 'Exclude Keywords Containing',
+				name: 'multiKeywordExcluded',
+				type: 'string',
+				default: '',
+				placeholder: 'free, cheap',
+				description: 'Comma-separated words that must NOT appear in results',
+			},
+			{
+				displayName: 'SERP Feature Link Mode',
+				name: 'serpFeatures2Mode',
+				type: 'options',
+				options: [
+					{ name: 'With Link', value: 'with_link' },
+					{ name: 'Without Link', value: 'without_link' },
+				],
+				default: 'with_link',
+				description: 'Filter by whether the analyzed domain is linked inside a SERP feature. Must be used together with SERP Feature Link Value.',
+			},
+			{
+				displayName: 'SERP Feature Link Value',
+				name: 'serpFeatures2Value',
+				type: 'string',
+				default: '',
+				placeholder: 'sge,reviews',
+				description: 'Comma-separated SERP feature codes to check domain linkage for. Must be used together with SERP Feature Link Mode.',
+			},
 		],
 	},
 

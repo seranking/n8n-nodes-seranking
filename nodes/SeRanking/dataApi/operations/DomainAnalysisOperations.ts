@@ -2,6 +2,15 @@ import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 import { validateDomain, validateSource } from '../../utils/validators';
 
+// ── MultiKeywordFilter Helper ──
+function buildMultiKeywordFilter(csv: string): Array<Array<{ type: string; value: string }>> {
+	return csv
+		.split(',')
+		.map((w) => w.trim())
+		.filter(Boolean)
+		.map((word) => [{ type: 'contains', value: word }]);
+}
+
 export async function DomainAnalysisOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -269,6 +278,24 @@ export async function DomainAnalysisOperations(
 			// ── Search intents ────────────────────────────────────────────────
 			if (additionalFields.intents && additionalFields.intents.length > 0) {
 				params['filter[intents]'] = additionalFields.intents.join(',');
+			}
+			// ── multiKeywordIncluded/Excluded  ──
+			if (additionalFields.multiKeywordIncluded) {
+				params['filter[multi_keyword_included]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordIncluded));
+			}
+			if (additionalFields.multiKeywordExcluded) {
+				params['filter[multi_keyword_excluded]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordExcluded));
+			}
+			// ── serpFeatures2Mode/Value  ──
+			if (additionalFields.serpFeatures2Mode && additionalFields.serpFeatures2Value) {
+				params['filter[serp_features_2][mode]'] = additionalFields.serpFeatures2Mode;
+				additionalFields.serpFeatures2Value
+					.split(',')
+					.map((v: string) => v.trim())
+					.filter(Boolean)
+					.forEach((val: string, i: number) => {
+						params[`filter[serp_features_2][value][${i}]`] = val;
+					});
 			}
 			break;
 		}

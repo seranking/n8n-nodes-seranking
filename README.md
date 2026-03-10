@@ -574,7 +574,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 - ✅ **NEW: Get Domain Pages** - Page-level keyword and traffic analysis with intent breakdown
 - ✅ **NEW: Get Domain Subdomains** - Subdomain traffic and keyword metrics
 - ✅ **Total: 62 operations across 6 resources**
-- ✅ Advanced filtering for pages/subdomains (traffic %, keywords count, traffic sum)
+- ✅ Advanced filtering for pages/subdomains (traffic %, keywords count, traffic sum,)
 - ✅ Search intent breakdown (Informational, Navigational, Transactional, Commercial, Local)
 
 ### v1.3.0 
@@ -659,7 +659,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ✅ **SERP Tracking** - Keyword ranking and SERP features analysis
 
-✅ **Advanced Filtering** - Volume, position, CPC, difficulty, traffic, search intent, SERP features, keyword word count, and include/exclude keyword pattern filters
+✅ **Advanced Filtering** - Volume, position, CPC, difficulty, traffic, search intent, SERP features, keyword word count, and include/exclude keyword pattern filters, and the new SERP Feature Link filter (filter[serp_features_2]) — which lets you filter keywords where your domain is specifically linked within a SERP feature (e.g. AI Overviews, Reviews), distinct from the existing serpFeatures filter which only checks for feature presence on the SERP.
 
 ---
 
