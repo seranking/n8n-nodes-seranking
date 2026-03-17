@@ -2,12 +2,21 @@ import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 import { validateDomain, validateSource } from '../../utils/validators';
 
+// NEW: helper for multi_keyword filters
+function buildMultiKeywordFilter(csv: string): Array<Array<{ type: string; value: string }>> {
+	return csv
+		.split(',')
+		.map((w) => w.trim())
+		.filter(Boolean)
+		.map((word) => [{ type: 'contains', value: word }]);
+}
+
 export async function AiSearchOperations(
 	this: IExecuteFunctions,
 	index: number
 ): Promise<any> {
 	const operation = this.getNodeParameter('operation', index) as string;
-	
+
 	let endpoint = '';
 	const params: any = {};
 
@@ -17,12 +26,14 @@ export async function AiSearchOperations(
 			const engine = this.getNodeParameter('engine', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
 			const scope = this.getNodeParameter('scope', index, 'base_domain') as string;
-			
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any; 
+
 			endpoint = '/ai-search/overview/by-engine/time-series';
 			params.target = validateDomain(domain);
 			params.engine = engine;
 			params.source = validateSource(source);
 			params.scope = scope;
+			if (additionalFields.brand) params.brand = additionalFields.brand; 
 			break;
 		}
 
@@ -30,7 +41,7 @@ export async function AiSearchOperations(
 			const domain = this.getNodeParameter('domain', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
 			const scope = this.getNodeParameter('scope', index, 'base_domain') as string;
-			
+
 			endpoint = '/ai-search/discover-brand';
 			params.target = validateDomain(domain);
 			params.source = validateSource(source);
@@ -44,17 +55,30 @@ export async function AiSearchOperations(
 			const source = this.getNodeParameter('source', index) as string;
 			const scope = this.getNodeParameter('scope', index, 'base_domain') as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
-			
+
 			endpoint = '/ai-search/prompts-by-target';
 			params.target = validateDomain(domain);
 			params.engine = engine;
 			params.source = validateSource(source);
 			params.scope = scope;
-			
+
 			if (additionalFields.sort) params.sort = additionalFields.sort;
 			if (additionalFields.sortOrder) params.sort_order = additionalFields.sortOrder;
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
+			// NEW: filter params
+			if (additionalFields.volumeFrom) params['filter[volume][from]'] = additionalFields.volumeFrom;
+			if (additionalFields.volumeTo) params['filter[volume][to]'] = additionalFields.volumeTo;
+			if (additionalFields.keywordCountFrom) params['filter[keyword_count][from]'] = additionalFields.keywordCountFrom;
+			if (additionalFields.keywordCountTo) params['filter[keyword_count][to]'] = additionalFields.keywordCountTo;
+			if (additionalFields.charactersCountFrom) params['filter[characters_count][from]'] = additionalFields.charactersCountFrom;
+			if (additionalFields.charactersCountTo) params['filter[characters_count][to]'] = additionalFields.charactersCountTo;
+			if (additionalFields.multiKeywordIncluded) {
+				params['filter[multi_keyword_included]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordIncluded));
+			}
+			if (additionalFields.multiKeywordExcluded) {
+				params['filter[multi_keyword_excluded]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordExcluded));
+			}
 			break;
 		}
 
@@ -63,20 +87,33 @@ export async function AiSearchOperations(
 			const engine = this.getNodeParameter('engine', index) as string;
 			const source = this.getNodeParameter('source', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
-			
+
 			if (!brandName || brandName.trim() === '') {
 				throw new Error('Brand name cannot be empty');
 			}
-			
+
 			endpoint = '/ai-search/prompts-by-brand';
 			params.brand = brandName.trim();
 			params.engine = engine;
 			params.source = validateSource(source);
-			
+
 			if (additionalFields.sort) params.sort = additionalFields.sort;
 			if (additionalFields.sortOrder) params.sort_order = additionalFields.sortOrder;
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
+			// NEW: filter params
+			if (additionalFields.volumeFrom) params['filter[volume][from]'] = additionalFields.volumeFrom;
+			if (additionalFields.volumeTo) params['filter[volume][to]'] = additionalFields.volumeTo;
+			if (additionalFields.keywordCountFrom) params['filter[keyword_count][from]'] = additionalFields.keywordCountFrom;
+			if (additionalFields.keywordCountTo) params['filter[keyword_count][to]'] = additionalFields.keywordCountTo;
+			if (additionalFields.charactersCountFrom) params['filter[characters_count][from]'] = additionalFields.charactersCountFrom;
+			if (additionalFields.charactersCountTo) params['filter[characters_count][to]'] = additionalFields.charactersCountTo;
+			if (additionalFields.multiKeywordIncluded) {
+				params['filter[multi_keyword_included]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordIncluded));
+			}
+			if (additionalFields.multiKeywordExcluded) {
+				params['filter[multi_keyword_excluded]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordExcluded));
+			}
 			break;
 		}
 
@@ -91,36 +128,31 @@ export async function AiSearchOperations(
 			if (!primaryTarget || primaryTarget.trim() === '') {
 				throw new Error('Primary target domain is required');
 			}
-			if (!primaryBrand || primaryBrand.trim() === '') {
-				throw new Error('Primary brand name is required');
-			}
 
-			// Build competitors array from fixedCollection
-			const competitors: Array<{ target: string; brand: string }> = [];
+			const competitors: Array<{ target: string; brand?: string }> = []; // NEW: brand optional
 			if (competitorsData.competitorValues && Array.isArray(competitorsData.competitorValues)) {
 				for (const comp of competitorsData.competitorValues) {
-					if (comp.target && comp.brand) {
-						competitors.push({
+					if (comp.target) {
+						const entry: { target: string; brand?: string } = {
 							target: validateDomain(comp.target),
-							brand: comp.brand.trim(),
-						});
+						};
+						if (comp.brand) entry.brand = comp.brand.trim(); // NEW: only add brand if provided
+						competitors.push(entry);
 					}
 				}
 			}
 
-			// Build request body per API docs
-			const body = {
+			const body: any = {
 				primary: {
 					target: validateDomain(primaryTarget),
-					brand: primaryBrand.trim(),
 				},
 				competitors,
 				scope,
 				source: validateSource(source),
 				engines,
 			};
+			if (primaryBrand) body.primary.brand = primaryBrand.trim(); // NEW: only add brand if provided
 
-			// This is a POST request
 			return await apiRequest.call(this, 'POST', '/ai-search/overview/leaderboard', body, {}, index);
 		}
 

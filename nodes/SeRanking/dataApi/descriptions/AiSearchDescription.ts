@@ -48,7 +48,6 @@ export const aiSearchOperations: INodeProperties[] = [
 ];
 
 export const aiSearchFields: INodeProperties[] = [
-	// Domain field (for target-based operations)
 	{
 		displayName: 'Domain',
 		name: 'domain',
@@ -64,7 +63,6 @@ export const aiSearchFields: INodeProperties[] = [
 		placeholder: 'example.com',
 		description: 'Target domain to analyze (without http:// or www)',
 	},
-	// Brand name field
 	{
 		displayName: 'Brand Name',
 		name: 'brandName',
@@ -80,7 +78,6 @@ export const aiSearchFields: INodeProperties[] = [
 		placeholder: 'Brand Name',
 		description: 'Brand name to search for in LLM results',
 	},
-	// Engine field (required for overview and prompts operations)
 	{
 		displayName: 'Engine',
 		name: 'engine',
@@ -93,36 +90,15 @@ export const aiSearchFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				name: 'AI Overview',
-				value: 'ai-overview',
-				description: 'Google AI Overview results',
-			},
-			{
-				name: 'ChatGPT',
-				value: 'chatgpt',
-				description: 'OpenAI ChatGPT results',
-			},
-			{
-				name: 'Perplexity',
-				value: 'perplexity',
-				description: 'Perplexity AI results',
-			},
-			{
-				name: 'Gemini',
-				value: 'gemini',
-				description: 'Google Gemini results',
-			},
-			{
-				name: 'AI Mode',
-				value: 'ai-mode',
-				description: 'AI Mode results',
-			},
+			{ name: 'AI Overview', value: 'ai-overview', description: 'Google AI Overview results' },
+			{ name: 'ChatGPT', value: 'chatgpt', description: 'OpenAI ChatGPT results' },
+			{ name: 'Perplexity', value: 'perplexity', description: 'Perplexity AI results' },
+			{ name: 'Gemini', value: 'gemini', description: 'Google Gemini results' },
+			{ name: 'AI Mode', value: 'ai-mode', description: 'AI Mode results' },
 		],
 		default: 'chatgpt',
 		description: 'The LLM engine to query',
 	},
-	// Source field (country code - required for all operations)
 	{
 		displayName: 'Source',
 		name: 'source',
@@ -137,7 +113,6 @@ export const aiSearchFields: INodeProperties[] = [
 		placeholder: 'us',
 		description: 'Alpha-2 country code for regional prompt database (e.g., us, uk, de, fr, es, it, ca, au, pl)',
 	},
-	// Scope field (optional but recommended)
 	{
 		displayName: 'Scope',
 		name: 'scope',
@@ -149,26 +124,37 @@ export const aiSearchFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				name: 'Base Domain',
-				value: 'base_domain',
-				description: 'Aggregate by registrable domain, includes all subdomains',
-			},
-			{
-				name: 'Domain',
-				value: 'domain',
-				description: 'Exact host only, no subdomain aggregation',
-			},
-			{
-				name: 'URL',
-				value: 'url',
-				description: 'Exact URL including path and query',
-			},
+			{ name: 'Base Domain', value: 'base_domain', description: 'Aggregate by registrable domain, includes all subdomains' },
+			{ name: 'Domain', value: 'domain', description: 'Exact host only, no subdomain aggregation' },
+			{ name: 'URL', value: 'url', description: 'Exact URL including path and query' },
 		],
 		default: 'base_domain',
 		description: 'Scope of analysis - base_domain is recommended for most use cases',
 	},
-	// Additional options for prompts operations
+	// NEW: additionalFields for getOverview — brand filter
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['aiSearch'],
+				operation: ['getOverview'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Brand',
+				name: 'brand',
+				type: 'string',
+				default: '',
+				placeholder: 'SE Ranking',
+				description: 'Brand name to filter the brand presence analysis',
+			},
+		],
+	},
 	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
@@ -187,21 +173,9 @@ export const aiSearchFields: INodeProperties[] = [
 				name: 'sort',
 				type: 'options',
 				options: [
-					{
-						name: 'Volume',
-						value: 'volume',
-						description: 'Sort by search volume',
-					},
-					{
-						name: 'Type',
-						value: 'type',
-						description: 'Sort by appearance type (Link, Brand, etc.)',
-					},
-					{
-						name: 'Snippet Length',
-						value: 'snippet_length',
-						description: 'Sort by length of the LLM snippet',
-					},
+					{ name: 'Volume', value: 'volume', description: 'Sort by search volume' },
+					{ name: 'Type', value: 'type', description: 'Sort by appearance type (Link, Brand, etc.)' },
+					{ name: 'Snippet Length', value: 'snippet_length', description: 'Sort by length of the LLM snippet' },
 				],
 				default: 'volume',
 				description: 'Field to sort results by',
@@ -211,16 +185,8 @@ export const aiSearchFields: INodeProperties[] = [
 				name: 'sortOrder',
 				type: 'options',
 				options: [
-					{
-						name: 'Descending',
-						value: 'desc',
-						description: 'Highest to lowest',
-					},
-					{
-						name: 'Ascending',
-						value: 'asc',
-						description: 'Lowest to highest',
-					},
+					{ name: 'Descending', value: 'desc', description: 'Highest to lowest' },
+					{ name: 'Ascending', value: 'asc', description: 'Lowest to highest' },
 				],
 				default: 'desc',
 				description: 'Order of sorting',
@@ -231,10 +197,7 @@ export const aiSearchFields: INodeProperties[] = [
 				type: 'number',
 				default: 100,
 				description: 'Maximum number of results to return per page (max 1000)',
-				typeOptions: {
-					minValue: 1,
-					maxValue: 1000,
-				},
+				typeOptions: { minValue: 1, maxValue: 1000 },
 			},
 			{
 				displayName: 'Offset',
@@ -242,14 +205,71 @@ export const aiSearchFields: INodeProperties[] = [
 				type: 'number',
 				default: 0,
 				description: 'Number of results to skip for pagination',
-				typeOptions: {
-					minValue: 0,
-				},
+				typeOptions: { minValue: 0 },
 			},
-
+			// NEW: range and text filters
+			{
+				displayName: 'Volume From',
+				name: 'volumeFrom',
+				type: 'number',
+				default: 0,
+				description: 'Minimum monthly search volume for prompts',
+			},
+			{
+				displayName: 'Volume To',
+				name: 'volumeTo',
+				type: 'number',
+				default: 0,
+				description: 'Maximum monthly search volume (0 = no limit)',
+			},
+			{
+				displayName: 'Keyword Word Count From',
+				name: 'keywordCountFrom',
+				type: 'number',
+				default: 0,
+				description: 'Minimum number of words in a prompt',
+				typeOptions: { minValue: 1 },
+			},
+			{
+				displayName: 'Keyword Word Count To',
+				name: 'keywordCountTo',
+				type: 'number',
+				default: 0,
+				description: 'Maximum number of words in a prompt (0 = no limit)',
+			},
+			{
+				displayName: 'Characters Count From',
+				name: 'charactersCountFrom',
+				type: 'number',
+				default: 0,
+				description: 'Minimum character length of a prompt',
+				typeOptions: { minValue: 1 },
+			},
+			{
+				displayName: 'Characters Count To',
+				name: 'charactersCountTo',
+				type: 'number',
+				default: 0,
+				description: 'Maximum character length of a prompt (0 = no limit)',
+			},
+			{
+				displayName: 'Include Keywords Containing',
+				name: 'multiKeywordIncluded',
+				type: 'string',
+				default: '',
+				placeholder: 'best, top, review',
+				description: 'Comma-separated words that must appear in the prompt text',
+			},
+			{
+				displayName: 'Exclude Keywords Containing',
+				name: 'multiKeywordExcluded',
+				type: 'string',
+				default: '',
+				placeholder: 'free, cheap',
+				description: 'Comma-separated words that must NOT appear in the prompt text',
+			},
 		],
 	},
-	// ========== LEADERBOARD FIELDS ==========
 	{
 		displayName: 'Primary Target',
 		name: 'primaryTarget',
@@ -269,7 +289,7 @@ export const aiSearchFields: INodeProperties[] = [
 		displayName: 'Primary Brand',
 		name: 'primaryBrand',
 		type: 'string',
-		required: true,
+		required: false, 
 		displayOptions: {
 			show: {
 				resource: ['aiSearch'],
@@ -314,7 +334,7 @@ export const aiSearchFields: INodeProperties[] = [
 						type: 'string',
 						default: '',
 						placeholder: 'Semrush',
-						description: 'Competitor brand name',
+						description: 'Competitor brand name (optional)', 
 					},
 				],
 			},
@@ -333,16 +353,9 @@ export const aiSearchFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				name: 'Base Domain',
-				value: 'base_domain',
-				description: 'Aggregate by registrable domain',
-			},
-			{
-				name: 'Exact URL',
-				value: 'exact_url',
-				description: 'Exact URL matching',
-			},
+			{ name: 'Base Domain', value: 'base_domain', description: 'Aggregate by registrable domain, includes all subdomains' },
+			{ name: 'Domain', value: 'domain', description: 'Exact host only, no subdomain aggregation' }, 
+			{ name: 'URL', value: 'url', description: 'Exact URL including path and query' }, 
 		],
 		default: 'base_domain',
 		description: 'Scope of analysis',
@@ -359,26 +372,11 @@ export const aiSearchFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				name: 'AI Overview (Google)',
-				value: 'ai-overview',
-			},
-			{
-				name: 'ChatGPT',
-				value: 'chatgpt',
-			},
-			{
-				name: 'Perplexity',
-				value: 'perplexity',
-			},
-			{
-				name: 'Gemini',
-				value: 'gemini',
-			},
-			{
-				name: 'AI Mode',
-				value: 'ai-mode',
-			},
+			{ name: 'AI Overview (Google)', value: 'ai-overview' },
+			{ name: 'ChatGPT', value: 'chatgpt' },
+			{ name: 'Perplexity', value: 'perplexity' },
+			{ name: 'Gemini', value: 'gemini' },
+			{ name: 'AI Mode', value: 'ai-mode' },
 		],
 		default: ['ai-overview', 'chatgpt', 'perplexity'],
 		description: 'LLM engines to compare across',
