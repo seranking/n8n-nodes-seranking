@@ -61,17 +61,32 @@ export async function apiRequest(
         if (query._additionalTargets && Array.isArray(query._additionalTargets)) {
             const additionalTargets = query._additionalTargets;
             delete query._additionalTargets;
-            
+
             const queryPairs: string[] = [];
-            
+
             Object.keys(query).forEach(key => {
                 queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`);
             });
-            
+
             additionalTargets.forEach((target: string) => {
                 queryPairs.push(`target=${encodeURIComponent(target)}`);
             });
-            
+
+            options.url += '?' + queryPairs.join('&');
+        } else if (query._keywordArray && Array.isArray(query._keywordArray)) {
+            const keywords = query._keywordArray;
+            delete query._keywordArray;
+
+            const queryPairs: string[] = [];
+
+            Object.keys(query).forEach(key => {
+                queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`);
+            });
+
+            keywords.forEach((kw: string) => {
+                queryPairs.push(`keyword[]=${encodeURIComponent(kw)}`);
+            });
+
             options.url += '?' + queryPairs.join('&');
         } else {
             options.qs = query;
@@ -79,7 +94,7 @@ export async function apiRequest(
     }
 
     // Add body data
-    if (Object.keys(body).length > 0 && method !== 'GET') {
+    if (method !== 'GET' && body != null && (Array.isArray(body) || Object.keys(body).length > 0)) {
         if (body.keywords && Array.isArray(body.keywords)) {
             // Build proper multipart/form-data for n8n
             // n8n's httpRequest helper expects simple key-value pairs
@@ -131,7 +146,7 @@ export async function apiRequest(
         
         if (statusCode === 400) {
             errorMessage = 'Bad Request - Invalid parameters';
-            errorDescription = 'Check domain format (no http://, www), source code (us, uk, de), and parameter values';
+            errorDescription = `Check parameter values and required fields. API response: ${JSON.stringify(errorData)}`;
         } else if (statusCode === 401) {
             errorMessage = 'Unauthorized - Invalid API credentials';
             errorDescription = 'Check your API token in credentials. Get token from SE Ranking dashboard';

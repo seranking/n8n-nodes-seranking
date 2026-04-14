@@ -1,0 +1,396 @@
+import { INodeProperties } from 'n8n-workflow';
+
+export const websiteAuditOperations: INodeProperties[] = [
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+			},
+		},
+		options: [
+			{
+				name: 'Create Audit',
+				value: 'createAudit',
+				description: 'Launch a website audit',
+				action: 'Create audit',
+			},
+			{
+				name: 'Delete Audit',
+				value: 'deleteAudit',
+				description: 'Delete an audit',
+				action: 'Delete audit',
+			},
+			{
+				name: 'Get All Issues for URL',
+				value: 'getIssues',
+				description: 'Get all issues found for a specific URL',
+				action: 'Get all issues for URL',
+			},
+			{
+				name: 'Get All Links',
+				value: 'getLinks',
+				description: 'Get all links found during the audit',
+				action: 'Get all links',
+			},
+			{
+				name: 'Get Audit History',
+				value: 'getHistory',
+				description: 'Get historical audit data for a specific date',
+				action: 'Get audit history',
+			},
+			{
+				name: 'Get Audit Pages by Issue',
+				value: 'getPagesByIssue',
+				description: 'Get pages affected by a specific issue',
+				action: 'Get audit pages by issue',
+			},
+			{
+				name: 'Get Audit Report',
+				value: 'getReport',
+				description: 'Get the full audit report',
+				action: 'Get audit report',
+			},
+			{
+				name: 'Get Audit Status',
+				value: 'getStatus',
+				description: 'Get the current status of an audit',
+				action: 'Get audit status',
+			},
+			{
+				name: 'Get Crawled Pages',
+				value: 'getPages',
+				description: 'Get all crawled pages from an audit',
+				action: 'Get crawled pages',
+			},
+			{
+				name: 'List Audits',
+				value: 'listAudits',
+				description: 'Get a list of all audits',
+				action: 'List audits',
+			},
+			{
+				name: 'Recheck Audit',
+				value: 'recheckAudit',
+				description: 'Recheck an existing audit',
+				action: 'Recheck audit',
+			},
+			{
+				name: 'Update Audit Title',
+				value: 'updateTitle',
+				description: 'Update the title of an audit',
+				action: 'Update audit title',
+			},
+		],
+		default: 'listAudits',
+	},
+];
+
+export const websiteAuditFields: INodeProperties[] = [
+	// ─── Audit ID (most operations) ─────────────────────────────────────────
+	{
+		displayName: 'Audit ID',
+		name: 'auditId',
+		type: 'number',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getStatus', 'getReport', 'getPages', 'getPagesByIssue', 'getIssues', 'getLinks', 'getHistory', 'updateTitle', 'deleteAudit', 'recheckAudit'],
+			},
+		},
+		default: 0,
+		description: 'Unique audit ID',
+	},
+
+	// ─── Create Audit fields ────────────────────────────────────────────────
+	{
+		displayName: 'Domain',
+		name: 'domain',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['createAudit'],
+			},
+		},
+		default: '',
+		placeholder: 'example.com',
+		description: 'Domain to be audited',
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['createAudit'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Title',
+				name: 'title',
+				type: 'string',
+				default: '',
+				description: 'Custom title of the audit report (max 300 characters)',
+			},
+			{
+				displayName: 'Settings (JSON)',
+				name: 'settingsJson',
+				type: 'json',
+				default: '{}',
+				description: 'Audit settings as JSON object (source_site, source_sitemap, check_robots, max_pages, csr, etc.)',
+			},
+		],
+	},
+
+	// ─── List Audits additional fields ──────────────────────────────────────
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['listAudits'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 100,
+				description: 'Number of audits to return',
+			},
+			{
+				displayName: 'Offset',
+				name: 'offset',
+				type: 'number',
+				default: 0,
+				description: 'Number of audits to skip',
+			},
+			{
+				displayName: 'Search',
+				name: 'search',
+				type: 'string',
+				default: '',
+				description: 'Filter audits by matching title or URL',
+			},
+			{
+				displayName: 'Date Start',
+				name: 'dateStart',
+				type: 'string',
+				default: '',
+				placeholder: 'YYYY-MM-DD',
+				description: 'Start date for filtering audits',
+			},
+			{
+				displayName: 'Date End',
+				name: 'dateEnd',
+				type: 'string',
+				default: '',
+				placeholder: 'YYYY-MM-DD',
+				description: 'End date for filtering audits',
+			},
+		],
+	},
+
+	// ─── Get Pages additional fields ────────────────────────────────────────
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getPages'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 100,
+				description: 'Number of pages to return',
+			},
+			{
+				displayName: 'Offset',
+				name: 'offset',
+				type: 'number',
+				default: 0,
+				description: 'Number of pages to skip',
+			},
+		],
+	},
+
+	// ─── Get Pages by Issue fields ──────────────────────────────────────────
+	{
+		displayName: 'Issue Code',
+		name: 'issueCode',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getPagesByIssue'],
+			},
+		},
+		default: '',
+		placeholder: 'title_duplicate',
+		description: 'Unique issue code',
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getPagesByIssue'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 100,
+				description: 'Number of URLs to return',
+			},
+			{
+				displayName: 'Offset',
+				name: 'offset',
+				type: 'number',
+				default: 0,
+				description: 'Number of URLs to skip',
+			},
+		],
+	},
+
+	// ─── Get Issues for URL fields ─────────────────────────────────────────
+	{
+		displayName: 'URL ID',
+		name: 'urlId',
+		type: 'number',
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getIssues'],
+			},
+		},
+		default: 0,
+		description: 'Unique page ID. Either URL ID or URL must be provided.',
+	},
+	{
+		displayName: 'URL',
+		name: 'pageUrl',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getIssues'],
+			},
+		},
+		default: '',
+		description: 'Full page URL. Either URL ID or URL must be provided.',
+	},
+
+	// ─── Get Links additional fields ────────────────────────────────────────
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getLinks'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Page Type',
+				name: 'pageType',
+				type: 'options',
+				options: [
+					{ name: 'All', value: 'all' },
+					{ name: 'Internal', value: 'internal' },
+					{ name: 'External', value: 'external' },
+				],
+				default: 'all',
+				description: 'Filter links by type',
+			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 100,
+				description: 'Number of links to return',
+			},
+			{
+				displayName: 'Offset',
+				name: 'offset',
+				type: 'number',
+				default: 0,
+				description: 'Number of links to skip',
+			},
+			{
+				displayName: 'Filter (JSON)',
+				name: 'filterJson',
+				type: 'json',
+				default: '[]',
+				description: 'Array of filter objects, e.g. [{"param":"status","value":"broken"}]',
+			},
+		],
+	},
+
+	// ─── Get History fields ─────────────────────────────────────────────────
+	{
+		displayName: 'Date',
+		name: 'historyDate',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['getHistory'],
+			},
+		},
+		default: '',
+		placeholder: 'YYYY-MM-DD',
+		description: 'The specific date of the historical audit to retrieve',
+	},
+
+	// ─── Update Title fields ────────────────────────────────────────────────
+	{
+		displayName: 'New Title',
+		name: 'newTitle',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['updateTitle'],
+			},
+		},
+		default: '',
+		description: 'New title for the audit report (max 300 characters)',
+	},
+];

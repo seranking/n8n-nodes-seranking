@@ -1,0 +1,65 @@
+import { IExecuteFunctions } from 'n8n-workflow';
+import { apiRequest } from '../../utils/apiRequest';
+
+export async function KeywordGroupsOperations(
+	this: IExecuteFunctions,
+	index: number
+): Promise<any> {
+	const operation = this.getNodeParameter('operation', index) as string;
+
+	switch (operation) {
+		case 'listGroups': {
+			const siteId = this.getNodeParameter('siteId', index) as number;
+			return await apiRequest.call(this, 'GET', `/keyword-groups/${siteId}`, {}, {}, index);
+		}
+
+		case 'addGroup': {
+			const siteId = this.getNodeParameter('siteId', index) as number;
+			const name = this.getNodeParameter('groupName', index) as string;
+
+			if (!name || name.trim() === '') {
+				throw new Error('Group name cannot be empty');
+			}
+
+			return await apiRequest.call(this, 'POST', '/keyword-groups', {
+				name: name.trim(),
+				site_id: siteId,
+			}, {}, index);
+		}
+
+		case 'moveKeywords': {
+			const groupId = this.getNodeParameter('groupId', index) as number;
+			const keywordIdsStr = this.getNodeParameter('keywordIds', index) as string;
+			const keywordIds = keywordIdsStr.split(',').map((id) => parseInt(id.trim(), 10));
+
+			await apiRequest.call(this, 'POST', `/keyword-groups/${groupId}/keywords`, {
+				keyword_ids: keywordIds,
+			}, {}, index);
+			return { success: true, group_id: groupId, moved_keywords: keywordIds };
+		}
+
+		case 'renameGroup': {
+			const groupId = this.getNodeParameter('groupId', index) as number;
+			const name = this.getNodeParameter('groupName', index) as string;
+
+			if (!name || name.trim() === '') {
+				throw new Error('Group name cannot be empty');
+			}
+
+			await apiRequest.call(this, 'PUT', `/keyword-groups/${groupId}`, {
+				name: name.trim(),
+			}, {}, index);
+			return { success: true, group_id: groupId, name: name.trim() };
+		}
+
+		case 'deleteGroup': {
+			const groupId = this.getNodeParameter('groupId', index) as number;
+
+			await apiRequest.call(this, 'DELETE', `/keyword-groups/${groupId}`, {}, {}, index);
+			return { success: true, deleted: true, group_id: groupId };
+		}
+
+		default:
+			throw new Error(`Unknown Keyword Groups operation: ${operation}`);
+	}
+}

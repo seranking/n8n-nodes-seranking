@@ -165,10 +165,14 @@ To use this node, you need:
 1. Open any workflow and add the **SE Ranking** node
 2. Click on **Create New Credential**
 3. Enter your **API Token**
-4. Select **Data API** as API Type
+4. Select **API Type**:
+   - **Data API** — SEO research data (domains, keywords, backlinks, SERP)
+   - **Project API** — Project management, tracking, audits, sub-accounts
 5. Click **Save**
 
 The node will automatically test your credentials by making a test request to the SE Ranking API.
+
+> **Note:** Data API and Project API use different tokens. Data API tokens are UUID format; Project API tokens are 40-character hex format. Get both from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html).
 
 ---
 
@@ -176,11 +180,13 @@ The node will automatically test your credentials by making a test request to th
 
 - **n8n version**: 1.0.0 or higher
 - **Node.js version**: 18.x or higher
-- **SE Ranking API**: v1 (Data API)
+- **SE Ranking API**: v1 (Data API) + Project API (`api4.seranking.com`)
 
 ## Operations
 
-This node provides access to 6 SE Ranking resources with 62 total operations:
+This node provides access to **20 SE Ranking resources** with **171 total operations** across two API types:
+
+### Data API (6 resources, 65 operations)
 
 ### AI Search (5 operations)
 
@@ -265,6 +271,158 @@ This node provides access to 6 SE Ranking resources with 62 total operations:
 - List Tasks - List recent SERP tasks (last 24 hours)
 - Get Advanced Results - Retrieve detailed SERP results with all features
 - Get Locations - Get available location IDs for SERP queries
+
+---
+
+### Project API (14 resources, 106 operations)
+
+### Project Management (17 operations)
+
+- List Projects - Get all projects
+- Add Project - Create a new project
+- Change Project Settings - Update project configuration
+- Delete Project - Remove a project
+- List Search Engines - Get search engines for a project
+- Add Search Engine - Add search engine to project
+- Change Search Engine - Update search engine settings
+- Delete Search Engine - Remove search engine from project
+- List Keywords - Get project keywords
+- Add Keywords - Add keywords to project
+- Delete Keywords - Remove keywords from project
+- Get Project Stats - Overall project statistics
+- Get Keyword Positions - Keyword ranking positions over time
+- Get Ads Chart - Advertising data for keywords
+- Get Historical Dates - Available historical check dates
+- Set Manual Position - Manually set a keyword position
+- Run Position Check - Trigger a position recheck
+
+### Project Groups (5 operations)
+
+- List Groups - Get all project groups
+- Add Group - Create a project group
+- Rename Group - Update group name
+- Delete Group - Remove a project group
+- Move Projects to Group - Move projects into a group
+
+### AI Result Tracker (13 operations)
+
+- Get Site Brand - Get brand name for a site
+- Save Site Brand - Set brand name for a site
+- List LLM Engines - Get all LLM engines for a site
+- Get LLM Engine - Get specific LLM engine details
+- Create LLM Engine - Add LLM engine (ChatGPT, Gemini, Perplexity, Google AI)
+- Update LLM Engine - Modify LLM engine settings
+- Delete LLM Engine - Remove LLM engine from site
+- Get LLM Status - Check LLM engine processing status
+- Get LLM Statistics - Presence and overlap stats
+- List Prompts - Get prompts for an LLM engine
+- Add Prompts - Add keywords/prompts to LLM engine
+- Delete Prompts - Remove prompts from LLM engine
+- Get Prompt Rankings - Prompt ranking data over time
+
+### Keyword Groups (5 operations)
+
+- List Groups - Get keyword groups for a project
+- Add Group - Create a keyword group
+- Move Keywords - Move keywords to a group
+- Rename Group - Update keyword group name
+- Delete Group - Remove a keyword group
+
+### Competitors (7 operations)
+
+- Add Competitor - Add competitor to project
+- List Competitors - Get all competitors for a project
+- Get Keyword Positions - Competitor ranking positions
+- Delete Competitor - Remove a competitor
+- Get TOP 10 Results - SERP top 10 for a keyword
+- Get TOP 100 Results - SERP top 100 for a keyword
+- Get All Competitors - All competitors from SERP data
+
+### URL Tags (4 operations)
+
+- List Tags - Get all URL tags for a site
+- Add Tag - Create a URL tag
+- Update Tag Assignment - Assign tags to URLs/domains
+- Delete Tag - Remove a URL tag
+
+### Analytics Traffic (2 operations)
+
+- Get Google Search Console Data - GSC queries with impressions, clicks, CTR
+- Calculate SEO Potential - Estimated traffic and revenue potential
+
+### Account System (3 operations)
+
+- Get Account Balance - Account balance and currency
+- Get User Profile - Account profile information
+- Get Subscription Data - Subscription type and status
+
+### Sub-Account Management (8 operations)
+
+- List Sub-Accounts - Get all sub-accounts
+- Get Sub-Account Details - Sub-account settings and permissions
+- Create Sub-Account - Create a new sub-account
+- Delete Sub-Account - Remove a sub-account
+- Update Sub-Account - Modify sub-account settings
+- List Shared Projects - Projects shared with sub-account
+- List Owned Projects - Projects owned by sub-account
+- Share Projects - Share projects with sub-account
+
+### General Data (4 operations)
+
+- List Search Engines - Available search engines and regions
+- List Languages for Google - Google language codes
+- List Volume Regions - Regions for keyword volume checks
+- Get Keyword Search Volume - Search volume for keywords in a region
+
+### Marketing Plan (5 operations)
+
+- List Plan Items - Get marketing plan checklist
+- Add Task - Add custom task to plan
+- Update Task - Modify task title and description
+- Set Task Status - Mark task as complete/incomplete
+- Delete Task - Remove a custom task
+
+### Website Audit (Project) (12 operations)
+
+- Create Audit - Launch a website audit
+- List Audits - Get all audits
+- Get Audit Status - Check audit progress
+- Get Audit Report - Full audit results
+- Get Crawled Pages - Pages found during audit
+- Get Pages by Issue - Pages affected by specific issue
+- Get All Issues for URL - All issues for a specific page
+- Get All Links - Internal/external links found
+- Get Audit History - Historical audit data
+- Update Audit Title - Rename an audit
+- Delete Audit - Remove an audit
+- Recheck Audit - Re-run an audit
+
+### Backlink Checker (17 operations)
+
+- List Backlinks - Get monitored backlinks
+- Add Backlink - Add a backlink to monitor
+- Import Backlinks List - Bulk import backlinks
+- Update Import Settings - Configure GSC auto-import
+- Start GSC Import - Import backlinks from Google Search Console
+- Get GSC Import Status - Check GSC import progress
+- Delete Backlinks - Remove monitored backlinks
+- Recheck Backlinks - Re-check backlink status or index
+- Get Backlink Statistics - Backlink portfolio stats
+- List Disavowed Backlinks - Get disavowed backlinks
+- Add Disavowed Backlinks - Add URLs to disavow list
+- Delete Disavowed Backlink - Remove from disavow list
+- List Backlink Groups - Get backlink groups
+- Create Backlink Group - Create a backlink group
+- Delete Backlink Group - Remove a backlink group
+- Rename Backlink Group - Update group name
+- Move Backlinks to Group - Move backlinks between groups
+
+### Search Volume (4 operations)
+
+- Create Volume Check - Submit keyword volume check request
+- List Volume Checks - Get submitted check requests
+- Get Volume Check Results - Retrieve volume check results
+- Delete Volume Check - Remove a check request
 
 ## Usage Examples
 
@@ -543,12 +701,16 @@ return dominated;
 
 This node implements the following SE Ranking APIs:
 
+**Data API** (`api.seranking.com/v1`):
 - [AI Search API](https://seranking.com/api/data/ai-search/)
 - [Backlinks API](https://seranking.com/api/data/backlinks/)
 - [Domain Analysis API](https://seranking.com/api/data/domain-analysis/)
 - [Keyword Research API](https://seranking.com/api/data/keyword-research/)
 - [Website Audit API](https://seranking.com/api/data/website-audit/)
 - [SERP API](https://seranking.com/api/data/serp/)
+
+**Project API** (`api4.seranking.com`):
+- [Project API Documentation](https://seranking.com/api/project/)
 
 For detailed API specifications, visit [SE Ranking API Documentation](https://seranking.com/api.html).
 
@@ -631,7 +793,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Features
 
-✅ **65 Operations** - Comprehensive coverage across 6 major resources  
+✅ **171 Operations** - Comprehensive coverage across 20 resources (Data API + Project API)
 
 ✅ **Pingback Webhooks** - Event-driven notifications for SERP task completion
 
@@ -968,6 +1130,37 @@ n8n-nodes-seranking/
 │       │       ├── KeywordResearchDescription.ts                 # Keyword Research UI definitions
 │       │       ├── WebsiteAuditDescription.ts                    # Website Audit UI definitions
 │       │       └── SerpClassicDescription.ts                     # SERP Classic UI definitions
+│       ├── projectApi/
+│       │   ├── operations/
+│       │   │   ├── ProjectManagementOperations.ts                # Project Management operations
+│       │   │   ├── ProjectGroupsOperations.ts                    # Project Groups operations
+│       │   │   ├── AiResultTrackerOperations.ts                  # AI Result Tracker operations
+│       │   │   ├── KeywordGroupsOperations.ts                    # Keyword Groups operations
+│       │   │   ├── CompetitorsOperations.ts                      # Competitors operations
+│       │   │   ├── UrlTagsOperations.ts                          # URL Tags operations
+│       │   │   ├── AnalyticsTrafficOperations.ts                 # Analytics Traffic operations
+│       │   │   ├── AccountSystemOperations.ts                    # Account System operations
+│       │   │   ├── SubAccountOperations.ts                       # Sub-Account operations
+│       │   │   ├── GeneralDataOperations.ts                      # General Data operations
+│       │   │   ├── MarketingPlanOperations.ts                    # Marketing Plan operations
+│       │   │   ├── WebsiteAuditOperations.ts                     # Website Audit (Project) operations
+│       │   │   ├── BacklinkCheckerOperations.ts                  # Backlink Checker operations
+│       │   │   └── SearchVolumeOperations.ts                     # Search Volume operations
+│       │   └── descriptions/
+│       │       ├── ProjectManagementDescription.ts               # Project Management UI definitions
+│       │       ├── ProjectGroupsDescription.ts                   # Project Groups UI definitions
+│       │       ├── AiResultTrackerDescription.ts                 # AI Result Tracker UI definitions
+│       │       ├── KeywordGroupsDescription.ts                   # Keyword Groups UI definitions
+│       │       ├── CompetitorsDescription.ts                     # Competitors UI definitions
+│       │       ├── UrlTagsDescription.ts                         # URL Tags UI definitions
+│       │       ├── AnalyticsTrafficDescription.ts                # Analytics Traffic UI definitions
+│       │       ├── AccountSystemDescription.ts                   # Account System UI definitions
+│       │       ├── SubAccountDescription.ts                      # Sub-Account UI definitions
+│       │       ├── GeneralDataDescription.ts                     # General Data UI definitions
+│       │       ├── MarketingPlanDescription.ts                   # Marketing Plan UI definitions
+│       │       ├── WebsiteAuditDescription.ts                    # Website Audit (Project) UI definitions
+│       │       ├── BacklinkCheckerDescription.ts                 # Backlink Checker UI definitions
+│       │       └── SearchVolumeDescription.ts                    # Search Volume UI definitions
 │       └── utils/
 │           ├── validators.ts                                     # Input validators
 │           └── apiRequest.ts                                     # API request handler
@@ -1041,7 +1234,7 @@ n8n-nodes-seranking/
 
 ## Keywords
 
-n8n, n8n-custom-node, seranking, seo, keyword-research, domain-analysis, ai-search, llm-visibility, serp-tracking, competitive-analysis, seo-automation, workflow-automation
+n8n, n8n-custom-node, seranking, seo, keyword-research, domain-analysis, ai-search, llm-visibility, serp-tracking, competitive-analysis, seo-automation, workflow-automation, project-management, backlink-checker, website-audit, search-volume, marketing-plan, sub-account, ai-result-tracker
 
 ---
 

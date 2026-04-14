@@ -1,7 +1,7 @@
 {
     "name": "@seranking/n8n-nodes-seranking",
-    "version": "1.4.0",
-    "description": "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, and Website Audit",
+    "version": "1.5.7",
+    "description": "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, Website Audit, Project Management, Project Groups, AI Result Tracker, Keyword Groups, Competitors, URL Tags, Analytics Traffic, Account System, Sub-Account Management, General Data, Marketing Plan, Backlink Checker, Search Volume",
     "license": "MIT",
     "homepage": "https://github.com/seranking/n8n-nodes-seranking",
     "author": {
@@ -28,7 +28,22 @@
         "domain-analysis",
         "ai-search",
         "serp-task",
-        "website-audit"
+        "website-audit",
+        "project-management",
+        "project-groups",
+        "ai-result-tracker",
+        "llm-tracking",
+        "keyword-groups",
+        "competitors",
+        "url-tags",
+        "analytics-traffic",
+        "account-system",
+        "sub-account",
+        "general-data",
+        "marketing-plan",
+        "website-audit-project",
+        "backlink-checker",
+        "search-volume"
     ],
     "n8n": {
         "n8nNodesApiVersion": 1,
