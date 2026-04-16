@@ -129,6 +129,19 @@ export async function AiResultTrackerOperations(
 			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/prompts/rankings`, {}, query, index);
 		}
 
+		case 'getPromptAnswer': {
+			const llmId = this.getNodeParameter('llmId', index) as number;
+			const k2siteLlmId = this.getNodeParameter('k2siteLlmId', index) as number;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = {};
+			if (additionalFields.date) query.date = additionalFields.date;
+
+			// NOTE: SE Ranking docs call this path param `keyword_id`, but the endpoint actually
+			// expects `k2site_llm_id` (the keyword-LLM link ID from List Prompts).
+			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/prompts/${k2siteLlmId}/answer`, {}, query, index);
+		}
+
 		default:
 			throw new Error(`Unknown AI Result Tracker operation: ${operation}`);
 	}

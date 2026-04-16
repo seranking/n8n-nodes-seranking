@@ -55,6 +55,12 @@ export const aiResultTrackerOperations: INodeProperties[] = [
 				action: 'Get LLM status',
 			},
 			{
+				name: 'Get Prompt Answer',
+				value: 'getPromptAnswer',
+				description: 'Get the full AI answer text, sources, brands, and organic URLs for a tracked prompt',
+				action: 'Get prompt answer',
+			},
+			{
 				name: 'Get Prompt Rankings',
 				value: 'getPromptRankings',
 				description: 'Get ranking data for prompts tracked by an LLM engine',
@@ -130,6 +136,7 @@ export const aiResultTrackerFields: INodeProperties[] = [
 					'addPrompts',
 					'deletePrompts',
 					'getPromptRankings',
+					'getPromptAnswer',
 				],
 			},
 		},
@@ -273,7 +280,7 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				name: 'from',
 				type: 'string',
 				default: '',
-				placeholder: '2024-01-01',
+				placeholder: '2026-01-01',
 				description: 'Start date (YYYY-MM-DD). Defaults to current date.',
 			},
 			{
@@ -281,7 +288,7 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				name: 'to',
 				type: 'string',
 				default: '',
-				placeholder: '2024-01-31',
+				placeholder: '2026-01-31',
 				description: 'End date (YYYY-MM-DD). Defaults to current date.',
 			},
 			{
@@ -378,7 +385,7 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				name: 'dateFrom',
 				type: 'string',
 				default: '',
-				placeholder: '2024-01-01',
+				placeholder: '2026-01-01',
 				description: 'Start date (YYYY-MM-DD). Defaults to current date.',
 			},
 			{
@@ -386,7 +393,7 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				name: 'dateTo',
 				type: 'string',
 				default: '',
-				placeholder: '2024-01-31',
+				placeholder: '2026-01-31',
 				description: 'End date (YYYY-MM-DD). Defaults to current date.',
 			},
 			{
@@ -402,6 +409,44 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				type: 'number',
 				default: 0,
 				description: 'Offset from the beginning of the list',
+			},
+		],
+	},
+	// ─── GET PROMPT ANSWER fields ───────────────────────────────────────────
+	{
+		displayName: 'Keyword-LLM Link ID',
+		name: 'k2siteLlmId',
+		type: 'number',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['aiResultTracker'],
+				operation: ['getPromptAnswer'],
+			},
+		},
+		default: 0,
+		description: 'Value of the <code>k2site_llm_id</code> field from List Prompts (the SE Ranking docs call this parameter <code>keyword_id</code>, but the endpoint actually expects <code>k2site_llm_id</code>)',
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['aiResultTracker'],
+				operation: ['getPromptAnswer'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Date',
+				name: 'date',
+				type: 'string',
+				default: '',
+				placeholder: '2026-04-01',
+				description: 'Date of the cached answer (YYYY-MM-DD). Defaults to current date. Full text retained for last 30 days only.',
 			},
 		],
 	},

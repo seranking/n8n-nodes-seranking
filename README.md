@@ -184,7 +184,7 @@ The node will automatically test your credentials by making a test request to th
 
 ## Operations
 
-This node provides access to **20 SE Ranking resources** with **171 total operations** across two API types:
+This node provides access to **20 SE Ranking resources** with **172 total operations** across two API types:
 
 ### Data API (6 resources, 65 operations)
 
@@ -274,7 +274,7 @@ This node provides access to **20 SE Ranking resources** with **171 total operat
 
 ---
 
-### Project API (14 resources, 106 operations)
+### Project API (14 resources, 107 operations)
 
 ### Project Management (17 operations)
 
@@ -304,7 +304,7 @@ This node provides access to **20 SE Ranking resources** with **171 total operat
 - Delete Group - Remove a project group
 - Move Projects to Group - Move projects into a group
 
-### AI Result Tracker (13 operations)
+### AI Result Tracker (14 operations)
 
 - Get Site Brand - Get brand name for a site
 - Save Site Brand - Set brand name for a site
@@ -319,6 +319,7 @@ This node provides access to **20 SE Ranking resources** with **171 total operat
 - Add Prompts - Add keywords/prompts to LLM engine
 - Delete Prompts - Remove prompts from LLM engine
 - Get Prompt Rankings - Prompt ranking data over time
+- Get Prompt Answer - Full AI answer text, cited sources, detected brands, and organic URLs (Google AI Overview) for a tracked prompt on a given date
 
 ### Keyword Groups (5 operations)
 
@@ -718,7 +719,12 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Version History
 
-### v1.3.6 (Current)
+### v1.5.8 (Current)
+
+* ✅ **NEW: Get Prompt Answer (AI Result Tracker)** - Returns full AI answer text, cited source URLs, detected brand mentions, and (for Google AI Overview) top organic URLs for a tracked prompt on a given date. Cost: 0 credits.
+* 📝 **Note on SE Ranking docs quirk** - The endpoint's path param is documented as `keyword_id` but actually requires `k2site_llm_id` from `List Prompts`. The node field is labeled accordingly.
+
+### v1.3.6
 
 * 🔧 **FIX: Rate limiting compatibility** - Replaced setTimeout with n8n-workflow sleep function for n8n verified node compliance
 
@@ -793,7 +799,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Features
 
-✅ **171 Operations** - Comprehensive coverage across 20 resources (Data API + Project API)
+✅ **172 Operations** - Comprehensive coverage across 20 resources (Data API + Project API)
 
 ✅ **Pingback Webhooks** - Event-driven notifications for SERP task completion
 
