@@ -39,22 +39,7 @@ export async function apiRequest(
     }
 
     const isDataApi = DATA_API_RESOURCES.has(resource);
-
-    // Pick correct token based on resource
-    const credentials = await this.getCredentials('seRankingApi');
-    const token = isDataApi
-        ? credentials.apiToken
-        : credentials.projectApiToken;
-
-    if (!token) {
-        throw new NodeOperationError(
-            this.getNode(),
-            isDataApi
-                ? 'Data API token not configured. Add your Data API token in the SE Ranking credentials.'
-                : 'Project API token not configured. Add your Project API token in the SE Ranking credentials.',
-            { itemIndex },
-        );
-    }
+    const credentialType = isDataApi ? 'seRankingApi' : 'seRankingProjectApi';
 
     // Cast method to IHttpRequestMethods early
     const httpMethod = method.toUpperCase() as IHttpRequestMethods;
@@ -63,9 +48,6 @@ export async function apiRequest(
         method: httpMethod,
         timeout: 60000,
         url: '',
-        headers: {
-            'Authorization': `Token ${token}`,
-        },
     };
 
     // Check if this is a full URL download (for export download)
@@ -157,17 +139,39 @@ export async function apiRequest(
     }
 
     try {
-        const response = await this.helpers.httpRequest(options);
+        const response = await this.helpers.httpRequestWithAuthentication.call(
+            this,
+            credentialType,
+            options,
+        );
         return response;
     } catch (error: any) {
+        // Missing credential check
+        if (error.message?.includes('does not require credentials') || error.message?.includes('No credentials')) {
+            const missingCred = isDataApi
+                ? 'SE Ranking API credential not configured'
+                : 'SE Ranking Project API credential not configured';
+            const missingDesc = isDataApi
+                ? 'This resource requires the SE Ranking API credential. Click the node, find the "SE Ranking API" credential slot, and create/select your Data API token.'
+                : 'This resource requires the SE Ranking Project API credential. Click the node, find the "SE Ranking Project API" credential slot, and create/select your Project API token.';
+            throw new NodeOperationError(
+                this.getNode(),
+                missingCred,
+                {
+                    itemIndex,
+                    description: missingDesc,
+                },
+            );
+        }
+
         // Enhanced error handling with detailed context
         const errorData = error.response?.body || error.response?.data || {};
         const statusCode = error.statusCode || error.response?.status || 'Unknown';
-        
+
         // Determine specific error type and provide helpful message
         let errorMessage = 'Unknown error occurred';
         let errorDescription = '';
-        
+
         if (statusCode === 400) {
             errorMessage = 'Bad Request - Invalid parameters';
             errorDescription = `Check parameter values and required fields. API response: ${JSON.stringify(errorData)}`;

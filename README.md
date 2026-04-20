@@ -89,10 +89,9 @@ Open `http://localhost:5678` and add the SE Ranking node to your workflow.
 ### Step 4: Configure Credentials
 
 1. Add SE Ranking node
-2. Click "Create New Credential"
-3. Enter your **Data API Token** (required)
-4. Enter your **Project API Token** (optional — only if using Project API resources)
-5. Save
+2. Click "Create New Credential" for **SE Ranking API** (Data API) — enter your Data API token
+3. (Optional) Click "Create New Credential" for **SE Ranking Project API** — enter your Project API token
+4. Save
 
 ### Docker Installation
 
@@ -163,14 +162,13 @@ To use this node, you need:
 ### Setting up credentials in n8n
 
 1. Open any workflow and add the **SE Ranking** node
-2. Click on **Create New Credential**
-3. Enter your **API Token (Data API)** — required
-4. Enter your **API Token (Project API)** — optional, only needed for Project API resources
-5. Click **Save**
+2. In the **SE Ranking API** credential slot, click "Create New Credential" and enter your **Data API token** — required for all Data API resources
+3. In the **SE Ranking Project API** credential slot, click "Create New Credential" and enter your **Project API token** — only needed for Project API resources
+4. Click **Save**
 
-The node will automatically test your Data API credentials by making a test request to the SE Ranking API.
+Each credential is tested independently when saved. The node automatically routes requests to the correct API and credential based on the resource you select.
 
-> **Note:** Data API and Project API use different tokens. Data API tokens are UUID format; Project API tokens are 40-character hex format. Get both from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html). The node automatically routes to the correct API based on the resource you select.
+> **Note:** Data API and Project API use different tokens. Data API tokens are UUID format; Project API tokens are 40-character hex format. Get both from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html).
 
 ---
 
@@ -880,7 +878,7 @@ For more details, see [n8n's rate limiting documentation](https://docs.n8n.io/in
 **Solution**:
 
 1. Verify API token is correct (copy from SE Ranking dashboard)
-2. For Project API resources, ensure the Project API Token field is filled
+2. For Project API resources, ensure the SE Ranking Project API credential is configured
 3. Check token hasn't expired
 4. Regenerate token in SE Ranking dashboard if needed
 5. Test credentials using the "Test" button in n8n

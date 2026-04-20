@@ -51,7 +51,8 @@
             "dist/nodes/SeRanking/SeRanking.node.js"
         ],
         "credentials": [
-            "dist/credentials/SeRankingApi.credentials.js"
+            "dist/credentials/SeRankingApi.credentials.js",
+            "dist/credentials/SeRankingProjectApi.credentials.js"
         ]
     },
     "scripts": {

@@ -78,6 +78,42 @@ export class SeRanking implements INodeType {
 			{
 				name: 'seRankingApi',
 				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'aiSearch',
+							'backlinks',
+							'domainAnalysis',
+							'keywordResearch',
+							'serpClassic',
+							'websiteAudit',
+						],
+					},
+				},
+			},
+			{
+				name: 'seRankingProjectApi',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'accountSystem',
+							'aiResultTracker',
+							'analyticsTraffic',
+							'backlinkChecker',
+							'competitors',
+							'generalData',
+							'keywordGroups',
+							'marketingPlan',
+							'projectGroups',
+							'projectManagement',
+							'searchVolume',
+							'subAccount',
+							'urlTags',
+							'websiteAuditProject',
+						],
+					},
+				},
 			},
 		],
 		properties: [
