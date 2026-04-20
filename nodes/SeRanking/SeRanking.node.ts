@@ -66,7 +66,7 @@ export class SeRanking implements INodeType {
 		icon: 'file:seranking.svg',
 		group: ['transform'],
 		version: 1,
-		subtitle: '={{$parameter["apiType"] === "projectApi" ? "Project" : "Data"}} — {{$parameter["resource"] + ": " + $parameter["operation"]}}',
+		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
 		description: 'Interact with SE Ranking API for SEO data',
 		defaults: {
 			name: 'SE Ranking',
@@ -81,71 +81,7 @@ export class SeRanking implements INodeType {
 			},
 		],
 		properties: [
-			// API Type selector
-			{
-				displayName: 'API Type',
-				name: 'apiType',
-				type: 'options',
-				noDataExpression: true,
-				options: [
-					{
-						name: 'Data API',
-						value: 'dataApi',
-						description: 'SEO research data (domains, keywords, backlinks, etc.)',
-					},
-					{
-						name: 'Project API',
-						value: 'projectApi',
-						description: 'Project management, groups, and AI result tracking',
-					},
-				],
-				default: 'dataApi',
-			},
-
-			// Data API resources
-			{
-				displayName: 'Resource',
-				name: 'resource',
-				type: 'options',
-				noDataExpression: true,
-				displayOptions: {
-					show: { apiType: ['dataApi'] },
-				},
-				options: [
-					{
-						name: 'AI Search',
-						value: 'aiSearch',
-						description: 'LLM visibility and AI search data',
-					},
-					{
-						name: 'Backlinks',
-						value: 'backlinks',
-						description: 'Backlink analysis and authority metrics',
-					},
-					{
-						name: 'Domain Analysis',
-						value: 'domainAnalysis',
-						description: 'Domain keyword rankings and competitor analysis',
-					},
-					{
-						name: 'Keyword Research',
-						value: 'keywordResearch',
-						description: 'Keyword metrics, volume, CPC, and related keywords',
-					},
-					{
-						name: 'SERP Classic',
-						value: 'serpClassic',
-						description: 'SERP tracking and results retrieval',
-					},
-					{
-						name: 'Website Audit',
-						value: 'websiteAudit',
-						description: 'Site crawling, technical SEO, and on-page analysis',
-					},
-				],
-				default: 'domainAnalysis',
-			},
-			// Resource selector
+			// Resource selector (all resources — flat dropdown, standard n8n pattern)
 			{
 				displayName: 'Resource',
 				name: 'resource',
@@ -153,14 +89,9 @@ export class SeRanking implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Project Management',
-						value: 'projectManagement',
-						description: 'Manage projects and search engine configurations',
-					},
-					{
-						name: 'Project Groups',
-						value: 'projectGroups',
-						description: 'Manage project groups within the account',
+						name: 'Account System',
+						value: 'accountSystem',
+						description: 'Account balance, profile, and subscription info',
 					},
 					{
 						name: 'AI Result Tracker',
@@ -168,19 +99,9 @@ export class SeRanking implements INodeType {
 						description: 'Track brand visibility across AI search engines',
 					},
 					{
-						name: 'Keyword Groups',
-						value: 'keywordGroups',
-						description: 'Manage keyword groups within a project',
-					},
-					{
-						name: 'Competitors',
-						value: 'competitors',
-						description: 'Manage competitors and retrieve ranking data',
-					},
-					{
-						name: 'URL Tags',
-						value: 'urlTags',
-						description: 'Manage landing page tags within a site',
+						name: 'AI Search',
+						value: 'aiSearch',
+						description: 'LLM visibility and AI search data',
 					},
 					{
 						name: 'Analytics Traffic',
@@ -188,14 +109,24 @@ export class SeRanking implements INodeType {
 						description: 'Google Search Console data and SEO potential',
 					},
 					{
-						name: 'Account System',
-						value: 'accountSystem',
-						description: 'Account balance, profile, and subscription info',
+						name: 'Backlink Checker',
+						value: 'backlinkChecker',
+						description: 'Backlink monitoring, disavow, and groups',
 					},
 					{
-						name: 'Sub-Account Management',
-						value: 'subAccount',
-						description: 'Manage sub-accounts, sharing, and permissions',
+						name: 'Backlinks',
+						value: 'backlinks',
+						description: 'Backlink analysis and authority metrics',
+					},
+					{
+						name: 'Competitors',
+						value: 'competitors',
+						description: 'Manage competitors and retrieve ranking data',
+					},
+					{
+						name: 'Domain Analysis',
+						value: 'domainAnalysis',
+						description: 'Domain keyword rankings and competitor analysis',
 					},
 					{
 						name: 'General Data',
@@ -203,27 +134,62 @@ export class SeRanking implements INodeType {
 						description: 'System search engines, languages, regions, and keyword volume',
 					},
 					{
+						name: 'Keyword Groups',
+						value: 'keywordGroups',
+						description: 'Manage keyword groups within a project',
+					},
+					{
+						name: 'Keyword Research',
+						value: 'keywordResearch',
+						description: 'Keyword metrics, volume, CPC, and related keywords',
+					},
+					{
 						name: 'Marketing Plan',
 						value: 'marketingPlan',
 						description: 'Marketing plan checklists and tasks',
 					},
 					{
-						name: 'Website Audit',
-						value: 'websiteAuditProject',
-						description: 'Technical SEO audits lifecycle management',
+						name: 'Project Groups',
+						value: 'projectGroups',
+						description: 'Manage project groups within the account',
 					},
 					{
-						name: 'Backlink Checker',
-						value: 'backlinkChecker',
-						description: 'Backlink monitoring, disavow, and groups',
+						name: 'Project Management',
+						value: 'projectManagement',
+						description: 'Manage projects and search engine configurations',
 					},
 					{
 						name: 'Search Volume',
 						value: 'searchVolume',
 						description: 'Keyword search volume check requests',
 					},
+					{
+						name: 'SERP Classic',
+						value: 'serpClassic',
+						description: 'SERP tracking and results retrieval',
+					},
+					{
+						name: 'Sub-Account Management',
+						value: 'subAccount',
+						description: 'Manage sub-accounts, sharing, and permissions',
+					},
+					{
+						name: 'URL Tags',
+						value: 'urlTags',
+						description: 'Manage landing page tags within a site',
+					},
+					{
+						name: 'Website Audit (Data)',
+						value: 'websiteAudit',
+						description: 'Site crawling, technical SEO, and on-page analysis',
+					},
+					{
+						name: 'Website Audit (Project)',
+						value: 'websiteAuditProject',
+						description: 'Technical SEO audits lifecycle management',
+					},
 				],
-				default: 'projectManagement',
+				default: 'domainAnalysis',
 			},
 			// AI Search
 			...aiSearchOperations,

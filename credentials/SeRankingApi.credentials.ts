@@ -1,5 +1,4 @@
 import {
-	IAuthenticateGeneric,
 	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
@@ -12,7 +11,7 @@ export class SeRankingApi implements ICredentialType {
 
 	properties: INodeProperties[] = [
 		{
-			displayName: 'API Token',
+			displayName: 'API Token (Data API)',
 			name: 'apiToken',
 			type: 'string',
 			typeOptions: {
@@ -20,43 +19,28 @@ export class SeRankingApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Your SE Ranking API token from the API Dashboard',
+			description: 'Token for Data API — domain analysis, keywords, backlinks, SERP, etc.',
 		},
 		{
-			displayName: 'API Type',
-			name: 'apiType',
-			type: 'options',
-			options: [
-				{
-					name: 'Data API',
-					value: 'data',
-					description: 'Used for positions, rankings, keyword data.',
-				},
-				{
-					name: 'Project API',
-					value: 'project',
-					description: 'Used for managing sites, accounts, etc.',
-				},
-			],
-			default: 'data',
-			description: 'Choose which SE Ranking API you want to connect to',
+			displayName: 'API Token (Project API)',
+			name: 'projectApiToken',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: '',
+			description: 'Token for Project API — project management, competitors, audit, etc. Leave empty if not using Project API resources.',
 		},
 	];
 
-	authenticate: IAuthenticateGeneric = {
-		type: 'generic',
-		properties: {
+	test: ICredentialTestRequest = {
+		request: {
+			baseURL: 'https://api.seranking.com/v1',
+			url: '/account/subscription',
+			method: 'GET',
 			headers: {
 				'Authorization': '=Token {{$credentials.apiToken}}',
 			},
-		},
-	};
-
-	test: ICredentialTestRequest = {
-		request: {
-			baseURL: '={{$credentials.apiType === "project" ? "https://api4.seranking.com" : "https://api.seranking.com/v1"}}',
-			url: '={{$credentials.apiType === "project" ? "/sites" : "/account/subscription"}}',
-			method: 'GET',
 		},
 	};
 }

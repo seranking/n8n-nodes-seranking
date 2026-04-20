@@ -21,37 +21,66 @@ export async function apiRequest(
     }
     lastRequestTime = Date.now();
     
+    // Resource-based API routing
+    const DATA_API_RESOURCES = new Set([
+        'aiSearch',
+        'backlinks',
+        'domainAnalysis',
+        'keywordResearch',
+        'serpClassic',
+        'websiteAudit',
+    ]);
+
+    let resource: string;
+    try {
+        resource = this.getNodeParameter('resource', itemIndex) as string;
+    } catch {
+        resource = '';
+    }
+
+    const isDataApi = DATA_API_RESOURCES.has(resource);
+
+    // Pick correct token based on resource
     const credentials = await this.getCredentials('seRankingApi');
-        
+    const token = isDataApi
+        ? credentials.apiToken
+        : credentials.projectApiToken;
+
+    if (!token) {
+        throw new NodeOperationError(
+            this.getNode(),
+            isDataApi
+                ? 'Data API token not configured. Add your Data API token in the SE Ranking credentials.'
+                : 'Project API token not configured. Add your Project API token in the SE Ranking credentials.',
+            { itemIndex },
+        );
+    }
+
     // Cast method to IHttpRequestMethods early
     const httpMethod = method.toUpperCase() as IHttpRequestMethods;
-    
+
     const options: IHttpRequestOptions = {
         method: httpMethod,
         timeout: 60000,
         url: '',
+        headers: {
+            'Authorization': `Token ${token}`,
+        },
     };
 
     // Check if this is a full URL download (for export download)
     if (query._fullUrl) {
         options.url = endpoint;
         delete query._fullUrl;
-        
+
         options.returnFullResponse = true;
         options.encoding = 'arraybuffer';
         options.json = false;
     } else {
-        let baseUrl;
-        if (endpoint.startsWith('/site-audit/') || endpoint.startsWith('/backlinks/') || endpoint.startsWith('/ai-search/') || endpoint.startsWith('/domain/') || endpoint.startsWith('/keywords/')) {
-            baseUrl = 'https://api.seranking.com/v1';
-        } else if (credentials.apiType === 'project') {
-            // Project API endpoints
-            baseUrl = 'https://api4.seranking.com';
-        } else {
-            // Default to Data API
-            baseUrl = 'https://api.seranking.com/v1';
-        }
-        
+        const baseUrl = isDataApi
+            ? 'https://api.seranking.com/v1'
+            : 'https://api4.seranking.com';
+
         options.url = `${baseUrl}${endpoint}`;
         options.json = true;
     }
@@ -128,12 +157,7 @@ export async function apiRequest(
     }
 
     try {
-        // Use n8n's httpRequest helper (handles multipart/form-data automatically)
-        const response = await this.helpers.httpRequestWithAuthentication.call(
-        this,
-        'seRankingApi',
-        options
-        );
+        const response = await this.helpers.httpRequest(options);
         return response;
     } catch (error: any) {
         // Enhanced error handling with detailed context
