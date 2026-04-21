@@ -96,15 +96,25 @@ export async function AiResultTrackerOperations(
 			if (additionalFields.limit !== undefined) query.limit = additionalFields.limit;
 			if (additionalFields.offset !== undefined) query.offset = additionalFields.offset;
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/prompts`, {}, query, index);
+			let endpoint = `/sites/${siteId}/airt/llm/${llmId}/prompts`;
+			if (additionalFields.groupIds) {
+				const ids = additionalFields.groupIds.split(',').map((id: string) => id.trim());
+				endpoint += '?' + ids.map((id: string) => `group_ids[]=${encodeURIComponent(id)}`).join('&');
+			}
+
+			return await apiRequest.call(this, 'GET', endpoint, {}, query, index);
 		}
 
 		case 'addPrompts': {
 			const llmId = this.getNodeParameter('llmId', index) as number;
 			const promptsStr = this.getNodeParameter('prompts', index) as string;
 			const prompts = promptsStr.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/airt/llm/${llmId}/prompts`, { prompts }, {}, index);
+			const body: any = { prompts };
+			if (additionalFields.groupId) body.group_id = additionalFields.groupId;
+
+			return await apiRequest.call(this, 'POST', `/sites/${siteId}/airt/llm/${llmId}/prompts`, body, {}, index);
 		}
 
 		case 'deletePrompts': {
@@ -126,7 +136,13 @@ export async function AiResultTrackerOperations(
 			if (additionalFields.limit !== undefined) query.limit = additionalFields.limit;
 			if (additionalFields.offset !== undefined) query.offset = additionalFields.offset;
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/prompts/rankings`, {}, query, index);
+			let endpoint = `/sites/${siteId}/airt/llm/${llmId}/prompts/rankings`;
+			if (additionalFields.groupIds) {
+				const ids = additionalFields.groupIds.split(',').map((id: string) => id.trim());
+				endpoint += '?' + ids.map((id: string) => `group_ids[]=${encodeURIComponent(id)}`).join('&');
+			}
+
+			return await apiRequest.call(this, 'GET', endpoint, {}, query, index);
 		}
 
 		case 'getPromptAnswer': {

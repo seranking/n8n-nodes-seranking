@@ -316,6 +316,14 @@ export const aiResultTrackerFields: INodeProperties[] = [
 		},
 		options: [
 			{
+				displayName: 'Group IDs',
+				name: 'groupIds',
+				type: 'string',
+				default: '',
+				placeholder: '12,18',
+				description: 'Comma-separated prompt group IDs to filter by',
+			},
+			{
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
@@ -347,6 +355,28 @@ export const aiResultTrackerFields: INodeProperties[] = [
 		default: '',
 		placeholder: 'best seo tool,seo rank tracker,website audit tool',
 		description: 'Comma-separated list of keyword prompts to add (max 255 chars each)',
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['aiResultTracker'],
+				operation: ['addPrompts'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Group ID',
+				name: 'groupId',
+				type: 'number',
+				default: 0,
+				description: 'Target prompt group ID. Defaults to the site\'s default group.',
+			},
+		],
 	},
 
 	// ─── DELETE PROMPTS fields ──────────────────────────────────────────────
@@ -397,6 +427,14 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				description: 'End date (YYYY-MM-DD). Defaults to current date.',
 			},
 			{
+				displayName: 'Group IDs',
+				name: 'groupIds',
+				type: 'string',
+				default: '',
+				placeholder: '12,18',
+				description: 'Comma-separated prompt group IDs to filter by',
+			},
+			{
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
@@ -425,7 +463,7 @@ export const aiResultTrackerFields: INodeProperties[] = [
 			},
 		},
 		default: 0,
-		description: 'Value of the <code>k2site_llm_id</code> field from List Prompts (the SE Ranking docs call this parameter <code>keyword_id</code>, but the endpoint actually expects <code>k2site_llm_id</code>)',
+		description: 'Value of the <code>k2site_llm_id</code> field from List Prompts',
 	},
 	{
 		displayName: 'Additional Fields',
