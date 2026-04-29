@@ -223,7 +223,7 @@ export async function ProjectManagementOperations(
 				body.keywords = typeof keywordsJson === 'string' ? JSON.parse(keywordsJson) : keywordsJson;
 			}
 
-			return await apiRequest.call(this, 'POST', `/api/sites/${siteId}/recheck`, body, {}, index);
+			return await apiRequest.call(this, 'POST', `/sites/${siteId}/recheck`, body, {}, index);
 		}
 
 		default:

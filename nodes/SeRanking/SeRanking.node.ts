@@ -1,6 +1,8 @@
 import {
 	IExecuteFunctions,
+	ILoadOptionsFunctions,
 	INodeExecutionData,
+	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
@@ -19,6 +21,7 @@ import { serpClassicOperations, serpClassicFields } from './dataApi/descriptions
 import { projectManagementOperations, projectManagementFields } from './projectApi/descriptions/ProjectManagementDescription';
 import { projectGroupsOperations, projectGroupsFields } from './projectApi/descriptions/ProjectGroupsDescription';
 import { aiResultTrackerOperations, aiResultTrackerFields } from './projectApi/descriptions/AiResultTrackerDescription';
+import { airtGroupsOperations, airtGroupsFields } from './projectApi/descriptions/AirtGroupsDescription';
 import { keywordGroupsOperations, keywordGroupsFields } from './projectApi/descriptions/KeywordGroupsDescription';
 import { competitorsOperations, competitorsFields } from './projectApi/descriptions/CompetitorsDescription';
 import { urlTagsOperations, urlTagsFields } from './projectApi/descriptions/UrlTagsDescription';
@@ -45,6 +48,7 @@ import { SerpClassicOperations } from './dataApi/operations/SerpClassicOperation
 import { ProjectManagementOperations } from './projectApi/operations/ProjectManagementOperations';
 import { ProjectGroupsOperations } from './projectApi/operations/ProjectGroupsOperations';
 import { AiResultTrackerOperations } from './projectApi/operations/AiResultTrackerOperations';
+import { AirtGroupsOperations } from './projectApi/operations/AirtGroupsOperations';
 import { KeywordGroupsOperations } from './projectApi/operations/KeywordGroupsOperations';
 import { CompetitorsOperations } from './projectApi/operations/CompetitorsOperations';
 import { UrlTagsOperations } from './projectApi/operations/UrlTagsOperations';
@@ -99,6 +103,7 @@ export class SeRanking implements INodeType {
 						resource: [
 							'accountSystem',
 							'aiResultTracker',
+							'airtGroups',
 							'analyticsTraffic',
 							'backlinkChecker',
 							'competitors',
@@ -133,6 +138,11 @@ export class SeRanking implements INodeType {
 						name: 'AI Result Tracker',
 						value: 'aiResultTracker',
 						description: 'Track brand visibility across AI search engines',
+					},
+					{
+						name: 'AIRT Groups',
+						value: 'airtGroups',
+						description: 'Manage AI Result Tracker prompt groups',
 					},
 					{
 						name: 'AI Search',
@@ -254,6 +264,9 @@ export class SeRanking implements INodeType {
 			// AI Result Tracker
 			...aiResultTrackerOperations,
 			...aiResultTrackerFields,
+			// AIRT Groups
+			...airtGroupsOperations,
+			...airtGroupsFields,
 			// Keyword Groups
 			...keywordGroupsOperations,
 			...keywordGroupsFields,
@@ -289,6 +302,43 @@ export class SeRanking implements INodeType {
 			...searchVolumeFields,
             ],
 	};
+
+	methods = {
+		loadOptions: {
+			async getAuditIssueCodes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const auditId = this.getCurrentNodeParameter('auditId') as number;
+				if (!auditId) {
+					return [];
+				}
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'seRankingProjectApi',
+					{
+						method: 'GET',
+						url: `https://api4.seranking.com/audit/${auditId}/report`,
+						json: true,
+					},
+				);
+
+				const codes = new Set<string>();
+				const sections = (response && response.sections) || [];
+				for (const section of sections) {
+					const props = section && section.props;
+					if (props && typeof props === 'object') {
+						for (const key of Object.keys(props)) {
+							codes.add(key);
+						}
+					}
+				}
+
+				return Array.from(codes)
+					.sort()
+					.map((code) => ({ name: code, value: code }));
+			},
+		},
+	};
+
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
@@ -325,6 +375,9 @@ export class SeRanking implements INodeType {
 						break;
 					case 'aiResultTracker':
 						responseData = await AiResultTrackerOperations.call(this, i);
+						break;
+					case 'airtGroups':
+						responseData = await AirtGroupsOperations.call(this, i);
 						break;
 					case 'keywordGroups':
 						responseData = await KeywordGroupsOperations.call(this, i);

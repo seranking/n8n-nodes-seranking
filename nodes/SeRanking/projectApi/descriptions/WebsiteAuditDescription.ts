@@ -239,10 +239,14 @@ export const websiteAuditFields: INodeProperties[] = [
 
 	// ─── Get Pages by Issue fields ──────────────────────────────────────────
 	{
-		displayName: 'Issue Code',
+		displayName: 'Issue Code Name or ID',
 		name: 'issueCode',
-		type: 'string',
+		type: 'options',
 		required: true,
+		typeOptions: {
+			loadOptionsMethod: 'getAuditIssueCodes',
+			loadOptionsDependsOn: ['auditId'],
+		},
 		displayOptions: {
 			show: {
 				resource: ['websiteAuditProject'],
@@ -250,8 +254,7 @@ export const websiteAuditFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		placeholder: 'title_duplicate',
-		description: 'Unique issue code',
+		description: 'Issue code from the audit report. Set the Audit ID first; the dropdown will populate from the audit\'s issue codes. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 	},
 	{
 		displayName: 'Additional Fields',
