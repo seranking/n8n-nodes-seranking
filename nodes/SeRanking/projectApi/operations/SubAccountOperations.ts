@@ -1,6 +1,10 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// Sub-Account Management under unified docs: /project-management/users/...
+// user_id moves from path to query string.
+// /users/{id}/own-sites was renamed to /users/owned-sites in new docs (note the s).
+
 export async function SubAccountOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -15,12 +19,12 @@ export async function SubAccountOperations(
 			if (additionalFields.limit !== undefined) query.limit = additionalFields.limit;
 			if (additionalFields.offset !== undefined) query.offset = additionalFields.offset;
 
-			return await apiRequest.call(this, 'GET', '/users', {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/users', {}, query, index);
 		}
 
 		case 'getSubAccount': {
 			const id = this.getNodeParameter('subAccountId', index) as number;
-			return await apiRequest.call(this, 'GET', `/users/${id}`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/users', {}, { user_id: id }, index);
 		}
 
 		case 'createSubAccount': {
@@ -46,12 +50,12 @@ export async function SubAccountOperations(
 			}
 
 			const body = [{ key: 'data', value: data }];
-			return await apiRequest.call(this, 'POST', '/users', body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/users', body, {}, index);
 		}
 
 		case 'deleteSubAccount': {
 			const id = this.getNodeParameter('subAccountId', index) as number;
-			await apiRequest.call(this, 'DELETE', `/users/${id}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/users', {}, { user_id: id }, index);
 			return { success: true, deleted: true, account_id: id };
 		}
 
@@ -74,18 +78,19 @@ export async function SubAccountOperations(
 			}
 
 			const body = [{ key: 'data', value: data }];
-			await apiRequest.call(this, 'PATCH', `/users/${id}`, body, {}, index);
+			await apiRequest.call(this, 'PATCH', `/project-management/users?user_id=${id}`, body, {}, index);
 			return { success: true, account_id: id };
 		}
 
 		case 'listSharedSites': {
 			const id = this.getNodeParameter('subAccountId', index) as number;
-			return await apiRequest.call(this, 'GET', `/users/${id}/shared-sites`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/users/shared-sites', {}, { user_id: id }, index);
 		}
 
 		case 'listOwnedSites': {
 			const id = this.getNodeParameter('subAccountId', index) as number;
-			return await apiRequest.call(this, 'GET', `/users/${id}/own-sites`, {}, {}, index);
+			// Rename: /users/{id}/own-sites → /users/owned-sites?user_id=
+			return await apiRequest.call(this, 'GET', '/project-management/users/owned-sites', {}, { user_id: id }, index);
 		}
 
 		case 'shareProjects': {
@@ -93,7 +98,9 @@ export async function SubAccountOperations(
 			const siteIdsStr = this.getNodeParameter('siteIds', index) as string;
 			const siteIds = siteIdsStr.split(',').map((s) => parseInt(s.trim(), 10));
 
-			return await apiRequest.call(this, 'POST', `/users/${id}/shared-sites`, siteIds, {}, index);
+			// Per docs: body is { site_ids: [...] }. Note prior quirk where API rejected arrays and accepted
+			// a single integer — needs re-verification under unified API (see QUIRKS.md).
+			return await apiRequest.call(this, 'POST', '/project-management/users/shared-sites', { site_ids: siteIds }, { user_id: id }, index);
 		}
 
 		default:

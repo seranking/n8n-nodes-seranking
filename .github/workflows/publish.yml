@@ -12,7 +12,7 @@ jobs:
 
     permissions:
       id-token: write
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -32,3 +32,15 @@ jobs:
 
       - name: Publish with provenance
         run: npm publish --provenance --access public
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "SE Ranking n8n Node - v${{ steps.version.outputs.VERSION }}"
+          body_path: release-notes-v${{ steps.version.outputs.VERSION }}.md
+          fail_on_unmatched_files: false
+          generate_release_notes: false

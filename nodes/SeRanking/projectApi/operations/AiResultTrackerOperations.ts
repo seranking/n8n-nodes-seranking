@@ -1,6 +1,10 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// AIRT paths under unified docs: /project-management/airt/...
+// site_id / llm_id / k2site_llm_id move from path to query string.
+// Plural→singular rename: /airt/brands → /airt/brand.
+
 export async function AiResultTrackerOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -11,7 +15,7 @@ export async function AiResultTrackerOperations(
 	switch (operation) {
 		// ─── Brands ──────────────────────────────────────────────────────────
 		case 'getSiteBrand': {
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/brands`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/airt/brand', {}, { site_id: siteId }, index);
 		}
 
 		case 'saveSiteBrand': {
@@ -24,17 +28,17 @@ export async function AiResultTrackerOperations(
 				throw new Error('Brand name cannot exceed 255 characters');
 			}
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/airt/brands`, { brand: brand.trim() }, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/airt/brand', { brand: brand.trim() }, { site_id: siteId }, index);
 		}
 
 		// ─── LLM Engines ────────────────────────────────────────────────────
 		case 'listLlmEngines': {
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/airt/llm', {}, { site_id: siteId }, index);
 		}
 
 		case 'getLlmEngine': {
 			const llmId = this.getNodeParameter('llmId', index) as number;
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/airt/llm', {}, { site_id: siteId, llm_id: llmId }, index);
 		}
 
 		case 'createLlmEngine': {
@@ -50,7 +54,7 @@ export async function AiResultTrackerOperations(
 			if (additionalFields.regionName) body.region_name = additionalFields.regionName;
 			if (additionalFields.langCode) body.lang_code = additionalFields.langCode;
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/airt/llm`, body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/airt/llm', body, { site_id: siteId }, index);
 		}
 
 		case 'updateLlmEngine': {
@@ -61,30 +65,30 @@ export async function AiResultTrackerOperations(
 			if (updateFields.regionName !== undefined) body.region_name = updateFields.regionName || null;
 			if (updateFields.langCode !== undefined) body.lang_code = updateFields.langCode || null;
 
-			return await apiRequest.call(this, 'PATCH', `/sites/${siteId}/airt/llm/${llmId}`, body, {}, index);
+			return await apiRequest.call(this, 'PATCH', `/project-management/airt/llm?site_id=${siteId}&llm_id=${llmId}`, body, {}, index);
 		}
 
 		case 'deleteLlmEngine': {
 			const llmId = this.getNodeParameter('llmId', index) as number;
-			await apiRequest.call(this, 'DELETE', `/sites/${siteId}/airt/llm/${llmId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/airt/llm', {}, { site_id: siteId, llm_id: llmId }, index);
 			return { success: true, deleted: true, llm_id: llmId };
 		}
 
 		case 'getLlmStatus': {
 			const llmId = this.getNodeParameter('llmId', index) as number;
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/status`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/airt/llm/status', {}, { site_id: siteId, llm_id: llmId }, index);
 		}
 
 		case 'getLlmStatistics': {
 			const llmId = this.getNodeParameter('llmId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId, llm_id: llmId };
 			if (additionalFields.from) query.from = additionalFields.from;
 			if (additionalFields.to) query.to = additionalFields.to;
 			if (additionalFields.top !== undefined) query.top = additionalFields.top;
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/statistics`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/airt/llm/statistics', {}, query, index);
 		}
 
 		// ─── Prompts ────────────────────────────────────────────────────────
@@ -92,11 +96,11 @@ export async function AiResultTrackerOperations(
 			const llmId = this.getNodeParameter('llmId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId, llm_id: llmId };
 			if (additionalFields.limit !== undefined) query.limit = additionalFields.limit;
 			if (additionalFields.offset !== undefined) query.offset = additionalFields.offset;
 
-			let endpoint = `/sites/${siteId}/airt/llm/${llmId}/prompts`;
+			let endpoint = '/project-management/airt/prompts';
 			if (additionalFields.groupIds) {
 				const ids = additionalFields.groupIds.split(',').map((id: string) => id.trim());
 				endpoint += '?' + ids.map((id: string) => `group_ids[]=${encodeURIComponent(id)}`).join('&');
@@ -114,7 +118,7 @@ export async function AiResultTrackerOperations(
 			const body: any = { prompts };
 			if (additionalFields.groupId) body.group_id = additionalFields.groupId;
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/airt/llm/${llmId}/prompts`, body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/airt/prompts', body, { site_id: siteId, llm_id: llmId }, index);
 		}
 
 		case 'deletePrompts': {
@@ -122,7 +126,8 @@ export async function AiResultTrackerOperations(
 			const idsStr = this.getNodeParameter('k2siteLlmIds', index) as string;
 			const k2siteLlmIds = idsStr.split(',').map((id) => parseInt(id.trim(), 10));
 
-			await apiRequest.call(this, 'DELETE', `/sites/${siteId}/airt/llm/${llmId}/prompts`, { k2site_llm_ids: k2siteLlmIds }, {}, index);
+			// Spec change: was DELETE → now POST /airt/prompts/delete
+			await apiRequest.call(this, 'POST', '/project-management/airt/prompts/delete', { k2site_llm_ids: k2siteLlmIds }, { site_id: siteId, llm_id: llmId }, index);
 			return { success: true, deleted: true, k2site_llm_ids: k2siteLlmIds };
 		}
 
@@ -130,13 +135,15 @@ export async function AiResultTrackerOperations(
 			const llmId = this.getNodeParameter('llmId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId, llm_id: llmId };
 			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
 			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
 			if (additionalFields.limit !== undefined) query.limit = additionalFields.limit;
 			if (additionalFields.offset !== undefined) query.offset = additionalFields.offset;
+			// NEW in v2.0.0 — mode=groups returns aggregated per-group time series
+			if (additionalFields.mode) query.mode = additionalFields.mode;
 
-			let endpoint = `/sites/${siteId}/airt/llm/${llmId}/prompts/rankings`;
+			let endpoint = '/project-management/airt/prompts/rankings';
 			if (additionalFields.groupIds) {
 				const ids = additionalFields.groupIds.split(',').map((id: string) => id.trim());
 				endpoint += '?' + ids.map((id: string) => `group_ids[]=${encodeURIComponent(id)}`).join('&');
@@ -150,12 +157,11 @@ export async function AiResultTrackerOperations(
 			const k2siteLlmId = this.getNodeParameter('k2siteLlmId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId, llm_id: llmId, k2site_llm_id: k2siteLlmId };
 			if (additionalFields.date) query.date = additionalFields.date;
 
-			// NOTE: SE Ranking docs call this path param `keyword_id`, but the endpoint actually
-			// expects `k2site_llm_id` (the keyword-LLM link ID from List Prompts).
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/airt/llm/${llmId}/prompts/${k2siteLlmId}/answer`, {}, query, index);
+			// Three names for the same ID: pass as `k2site_llm_id`; response calls it `prompt_llm_id`.
+			return await apiRequest.call(this, 'GET', '/project-management/airt/prompts/answer', {}, query, index);
 		}
 
 		default:

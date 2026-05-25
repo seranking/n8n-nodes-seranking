@@ -82,43 +82,6 @@ export class SeRanking implements INodeType {
 			{
 				name: 'seRankingApi',
 				required: true,
-				displayOptions: {
-					show: {
-						resource: [
-							'aiSearch',
-							'backlinks',
-							'domainAnalysis',
-							'keywordResearch',
-							'serpClassic',
-							'websiteAudit',
-						],
-					},
-				},
-			},
-			{
-				name: 'seRankingProjectApi',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: [
-							'accountSystem',
-							'aiResultTracker',
-							'airtGroups',
-							'analyticsTraffic',
-							'backlinkChecker',
-							'competitors',
-							'generalData',
-							'keywordGroups',
-							'marketingPlan',
-							'projectGroups',
-							'projectManagement',
-							'searchVolume',
-							'subAccount',
-							'urlTags',
-							'websiteAuditProject',
-						],
-					},
-				},
 			},
 		],
 		properties: [
@@ -313,10 +276,11 @@ export class SeRanking implements INodeType {
 
 				const response = await this.helpers.httpRequestWithAuthentication.call(
 					this,
-					'seRankingProjectApi',
+					'seRankingApi',
 					{
 						method: 'GET',
-						url: `https://api4.seranking.com/audit/${auditId}/report`,
+						url: 'https://api.seranking.com/v1/project-management/audits/report',
+						qs: { audit_id: auditId },
 						json: true,
 					},
 				);

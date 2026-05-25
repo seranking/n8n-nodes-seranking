@@ -84,6 +84,54 @@ export const websiteAuditOperations: INodeProperties[] = [
 				description: 'Update the title of an audit',
 				action: 'Update audit title',
 			},
+			{
+				name: 'Get Audit Settings',
+				value: 'getAuditSettings',
+				description: 'Get the full configuration of an audit',
+				action: 'Get audit settings',
+			},
+			{
+				name: 'Update Audit Settings',
+				value: 'updateAuditSettings',
+				description: 'Partially update audit configuration',
+				action: 'Update audit settings',
+			},
+			{
+				name: 'Reset Audit Settings',
+				value: 'resetAuditSettings',
+				description: 'Restore all audit settings to defaults',
+				action: 'Reset audit settings',
+			},
+			{
+				name: 'List Audit Sitemaps',
+				value: 'listAuditSitemaps',
+				description: 'List configured sitemaps for an audit',
+				action: 'List audit sitemaps',
+			},
+			{
+				name: 'Add Audit Sitemap',
+				value: 'addAuditSitemap',
+				description: 'Register a sitemap URL as a crawl source',
+				action: 'Add audit sitemap',
+			},
+			{
+				name: 'Delete Audit Sitemap',
+				value: 'deleteAuditSitemap',
+				description: 'Remove a sitemap from crawl sources',
+				action: 'Delete audit sitemap',
+			},
+			{
+				name: 'List Audit Source Pages',
+				value: 'listAuditSourcePages',
+				description: 'List uploaded custom page lists',
+				action: 'List audit source pages',
+			},
+			{
+				name: 'Delete Audit Source Pages',
+				value: 'deleteAuditSourcePages',
+				description: 'Remove an uploaded custom page list',
+				action: 'Delete audit source pages',
+			},
 		],
 		default: 'listAudits',
 	},
@@ -99,7 +147,7 @@ export const websiteAuditFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['websiteAuditProject'],
-				operation: ['getStatus', 'getReport', 'getPages', 'getPagesByIssue', 'getIssues', 'getLinks', 'getHistory', 'updateTitle', 'deleteAudit', 'recheckAudit'],
+				operation: ['getStatus', 'getReport', 'getPages', 'getPagesByIssue', 'getIssues', 'getLinks', 'getHistory', 'updateTitle', 'deleteAudit', 'recheckAudit', 'getAuditSettings', 'updateAuditSettings', 'resetAuditSettings', 'listAuditSitemaps', 'addAuditSitemap', 'deleteAuditSitemap', 'listAuditSourcePages', 'deleteAuditSourcePages'],
 			},
 		},
 		default: 0,
@@ -395,5 +443,71 @@ export const websiteAuditFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'New title for the audit report (max 300 characters)',
+	},
+
+	// ─── Update Audit Settings ──────────────────────────────────────────
+	{
+		displayName: 'Settings JSON',
+		name: 'settingsJson',
+		type: 'string',
+		typeOptions: { rows: 5 },
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['updateAuditSettings'],
+			},
+		},
+		default: '{}',
+		description: 'JSON object of settings to update (partial update — only send changed fields). E.g. {"max_pages": 5000, "schedule_type": "week"}',
+	},
+
+	// ─── Add Audit Sitemap ──────────────────────────────────────────────
+	{
+		displayName: 'Sitemap URL',
+		name: 'sitemapUrl',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['addAuditSitemap'],
+			},
+		},
+		default: '',
+		placeholder: 'https://example.com/sitemap.xml',
+		description: 'Absolute URL of the sitemap to register as a crawl source',
+	},
+
+	// ─── Delete Audit Sitemap ───────────────────────────────────────────
+	{
+		displayName: 'Sitemap ID',
+		name: 'sitemapId',
+		type: 'number',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['deleteAuditSitemap'],
+			},
+		},
+		default: 0,
+		description: 'ID of the sitemap to remove (from List Audit Sitemaps)',
+	},
+
+	// ─── Delete Audit Source Pages ──────────────────────────────────────
+	{
+		displayName: 'Source Pages List ID',
+		name: 'sourcePagesListId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['deleteAuditSourcePages'],
+			},
+		},
+		default: '',
+		description: 'ID of the uploaded page list to remove (from List Audit Source Pages)',
 	},
 ];

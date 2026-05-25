@@ -1,6 +1,11 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// Marketing Plan under unified docs: /project-management/marketing-plan
+// Path rename: /checklist → /marketing-plan
+// site_id / task_id move from path to query string.
+// Method changes: updateTask + setTaskStatus now PATCH (was PUT); deleteTask now DELETE (was DELETE — unchanged).
+
 export async function MarketingPlanOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -10,7 +15,7 @@ export async function MarketingPlanOperations(
 
 	switch (operation) {
 		case 'listPlanItems': {
-			return await apiRequest.call(this, 'GET', `/checklist/${siteId}`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/marketing-plan', {}, { site_id: siteId }, index);
 		}
 
 		case 'addTask': {
@@ -21,7 +26,7 @@ export async function MarketingPlanOperations(
 			const body: any = { title, text };
 			if (additionalFields.forAll !== undefined) body.for_all = additionalFields.forAll;
 
-			return await apiRequest.call(this, 'POST', `/checklist/${siteId}/task`, body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/marketing-plan/tasks', body, { site_id: siteId }, index);
 		}
 
 		case 'updateTask': {
@@ -29,7 +34,7 @@ export async function MarketingPlanOperations(
 			const title = this.getNodeParameter('taskTitle', index) as string;
 			const text = this.getNodeParameter('taskText', index) as string;
 
-			await apiRequest.call(this, 'PUT', `/checklist/${siteId}/task`, {
+			await apiRequest.call(this, 'PATCH', `/project-management/marketing-plan/tasks?site_id=${siteId}`, {
 				task_id: taskId,
 				title,
 				text,
@@ -41,7 +46,7 @@ export async function MarketingPlanOperations(
 			const taskId = this.getNodeParameter('taskId', index) as string;
 			const checked = this.getNodeParameter('checked', index) as boolean;
 
-			await apiRequest.call(this, 'PUT', `/checklist/${siteId}/task`, {
+			await apiRequest.call(this, 'PATCH', `/project-management/marketing-plan/tasks?site_id=${siteId}`, {
 				task_id: taskId,
 				checked,
 			}, {}, index);
@@ -50,7 +55,7 @@ export async function MarketingPlanOperations(
 
 		case 'deleteTask': {
 			const taskId = this.getNodeParameter('deleteTaskId', index) as number;
-			await apiRequest.call(this, 'DELETE', `/checklist/${siteId}/task/${taskId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/marketing-plan/tasks', {}, { site_id: siteId, task_id: taskId }, index);
 			return { success: true, deleted: true, task_id: taskId };
 		}
 

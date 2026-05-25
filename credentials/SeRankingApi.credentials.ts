@@ -8,7 +8,7 @@ import {
 export class SeRankingApi implements ICredentialType {
 	name = 'seRankingApi';
 	displayName = 'SE Ranking API';
-	documentationUrl = 'https://seranking.com/api-google-organic.html';
+	documentationUrl = 'https://seranking.com/api/';
 
 	properties: INodeProperties[] = [
 		{
@@ -20,7 +20,7 @@ export class SeRankingApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Your SE Ranking Data API token from the API Dashboard',
+			description: 'Your SE Ranking API token from the API Dashboard. As of 2026-05 a single unified token authenticates both Data API and Project API endpoints.',
 		},
 	];
 

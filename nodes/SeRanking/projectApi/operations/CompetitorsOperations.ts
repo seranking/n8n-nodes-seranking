@@ -1,6 +1,13 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// Competitors under unified docs: /project-management/competitors
+// site_id / competitor_id move from path to query string.
+// Path renames: /competitors/site/{id} → /competitors?site_id=;
+//   /competitors/top10/{id} → /competitors/serp10?site_id=;
+//   /competitors/top100/{id} → /competitors/serp100?site_id=;
+//   /competitors/all/{id} → /competitors/metrics?site_id=
+
 export async function CompetitorsOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -21,31 +28,31 @@ export async function CompetitorsOperations(
 			if (additionalFields.name) body.name = additionalFields.name;
 			if (additionalFields.subdomainMatch !== undefined) body.subdomain_match = additionalFields.subdomainMatch;
 
-			return await apiRequest.call(this, 'POST', '/competitors', body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/competitors', body, {}, index);
 		}
 
 		case 'listCompetitors': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
-			return await apiRequest.call(this, 'GET', `/competitors/site/${siteId}`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/competitors', {}, { site_id: siteId }, index);
 		}
 
 		case 'getPositions': {
 			const competitorId = this.getNodeParameter('competitorId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { competitor_id: competitorId };
 			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
 			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
 			if (additionalFields.siteEngineId) query.site_engine_id = additionalFields.siteEngineId;
 			if (additionalFields.withSerpFeatures !== undefined) query.with_serp_features = additionalFields.withSerpFeatures;
 
-			return await apiRequest.call(this, 'GET', `/competitors/${competitorId}/positions`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/competitors/positions', {}, query, index);
 		}
 
 		case 'deleteCompetitor': {
 			const competitorId = this.getNodeParameter('competitorId', index) as number;
 
-			await apiRequest.call(this, 'DELETE', `/competitors/${competitorId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/competitors', {}, { competitor_id: competitorId }, index);
 			return { success: true, deleted: true, competitor_id: competitorId };
 		}
 
@@ -56,12 +63,13 @@ export async function CompetitorsOperations(
 			const keywordId = this.getNodeParameter('keywordId', index) as number;
 
 			const query: any = {
+				site_id: siteId,
 				date,
 				site_engine_id: siteEngineId,
 				keyword_id: keywordId,
 			};
 
-			return await apiRequest.call(this, 'GET', `/competitors/top10/${siteId}`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/competitors/serp10', {}, query, index);
 		}
 
 		case 'getTop100': {
@@ -72,6 +80,7 @@ export async function CompetitorsOperations(
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
 			const query: any = {
+				site_id: siteId,
 				date,
 				site_engine_id: siteEngineId,
 				keyword_id: keywordId,
@@ -79,7 +88,7 @@ export async function CompetitorsOperations(
 
 			if (additionalFields.top !== undefined) query.top = additionalFields.top;
 
-			return await apiRequest.call(this, 'GET', `/competitors/top100/${siteId}`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/competitors/serp100', {}, query, index);
 		}
 
 		case 'getAllCompetitors': {
@@ -89,6 +98,7 @@ export async function CompetitorsOperations(
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
 			const query: any = {
+				site_id: siteId,
 				date,
 				site_engine_id: siteEngineId,
 			};
@@ -101,7 +111,7 @@ export async function CompetitorsOperations(
 				});
 			}
 
-			return await apiRequest.call(this, 'GET', `/competitors/all/${siteId}`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/competitors/metrics', {}, query, index);
 		}
 
 		default:

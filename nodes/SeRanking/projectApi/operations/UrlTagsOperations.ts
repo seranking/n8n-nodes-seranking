@@ -1,6 +1,9 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// URL Tags under unified docs: /project-management/sites/url-tags
+// site_id / tag_id move from path to query string.
+
 export async function UrlTagsOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -10,7 +13,7 @@ export async function UrlTagsOperations(
 	switch (operation) {
 		case 'listTags': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/url-tags`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/sites/url-tags', {}, { site_id: siteId }, index);
 		}
 
 		case 'addTag': {
@@ -27,7 +30,7 @@ export async function UrlTagsOperations(
 				body.domains = additionalFields.domains.split(',').map((d: string) => d.trim());
 			}
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/url-tags`, body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/sites/url-tags', body, { site_id: siteId }, index);
 		}
 
 		case 'updateAssignment': {
@@ -45,7 +48,7 @@ export async function UrlTagsOperations(
 				body.domains = additionalFields.domains.split(',').map((d: string) => d.trim());
 			}
 
-			await apiRequest.call(this, 'PUT', `/sites/${siteId}/url-tags`, body, {}, index);
+			await apiRequest.call(this, 'PATCH', `/project-management/sites/url-tags?site_id=${siteId}`, body, {}, index);
 			return { success: true, tag_ids: tagIds };
 		}
 
@@ -53,7 +56,7 @@ export async function UrlTagsOperations(
 			const siteId = this.getNodeParameter('siteId', index) as number;
 			const tagId = this.getNodeParameter('tagId', index) as number;
 
-			await apiRequest.call(this, 'DELETE', `/sites/${siteId}/url-tags/${tagId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/sites/url-tags', {}, { site_id: siteId, tag_id: tagId }, index);
 			return { success: true, deleted: true, tag_id: tagId };
 		}
 

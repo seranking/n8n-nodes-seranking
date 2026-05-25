@@ -1,8 +1,14 @@
 import { IExecuteFunctions, NodeOperationError, IHttpRequestOptions, IHttpRequestMethods, sleep } from 'n8n-workflow';
 
+// Unified SE Ranking API base URL (as of 2026-05 — single host for Data API + Project API).
+// Data API ops emit paths like /backlinks/..., /ai-search/..., /domain/...
+// Project API ops emit paths like /project-management/sites?site_id=..., /project-management/airt/llm?site_id=...
+const BASE_URL = 'https://api.seranking.com/v1';
+const CREDENTIAL_TYPE = 'seRankingApi';
+
 // Rate limiting variables
 let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 300; // 300ms 
+const MIN_REQUEST_INTERVAL = 300; // 300ms
 
 export async function apiRequest(
     this: IExecuteFunctions,
@@ -20,26 +26,6 @@ export async function apiRequest(
         await sleep(waitTime);
     }
     lastRequestTime = Date.now();
-    
-    // Resource-based API routing
-    const DATA_API_RESOURCES = new Set([
-        'aiSearch',
-        'backlinks',
-        'domainAnalysis',
-        'keywordResearch',
-        'serpClassic',
-        'websiteAudit',
-    ]);
-
-    let resource: string;
-    try {
-        resource = this.getNodeParameter('resource', itemIndex) as string;
-    } catch {
-        resource = '';
-    }
-
-    const isDataApi = DATA_API_RESOURCES.has(resource);
-    const credentialType = isDataApi ? 'seRankingApi' : 'seRankingProjectApi';
 
     // Cast method to IHttpRequestMethods early
     const httpMethod = method.toUpperCase() as IHttpRequestMethods;
@@ -59,11 +45,7 @@ export async function apiRequest(
         options.encoding = 'arraybuffer';
         options.json = false;
     } else {
-        const baseUrl = isDataApi
-            ? 'https://api.seranking.com/v1'
-            : 'https://api4.seranking.com';
-
-        options.url = `${baseUrl}${endpoint}`;
+        options.url = `${BASE_URL}${endpoint}`;
         options.json = true;
     }
 
@@ -110,12 +92,12 @@ export async function apiRequest(
             // Build proper multipart/form-data for n8n
             // n8n's httpRequest helper expects simple key-value pairs
             const formDataBody: Record<string, any> = {};
-            
+
             // Add keywords as array - n8n will handle the multipart encoding
             body.keywords.forEach((kw: string, index: number) => {
                 formDataBody[`keywords[${index}]`] = kw;
             });
-            
+
             // Add other fields directly without wrapping
             if (body.cols) {
                 formDataBody.cols = body.cols;
@@ -126,7 +108,7 @@ export async function apiRequest(
             if (body.sort_order) {
                 formDataBody.sort_order = body.sort_order;
             }
-            
+
             options.body = formDataBody;
             options.headers = {
                 ...options.headers,
@@ -141,25 +123,19 @@ export async function apiRequest(
     try {
         const response = await this.helpers.httpRequestWithAuthentication.call(
             this,
-            credentialType,
+            CREDENTIAL_TYPE,
             options,
         );
         return response;
     } catch (error: any) {
         // Missing credential check
         if (error.message?.includes('does not require credentials') || error.message?.includes('No credentials')) {
-            const missingCred = isDataApi
-                ? 'SE Ranking API credential not configured'
-                : 'SE Ranking Project API credential not configured';
-            const missingDesc = isDataApi
-                ? 'This resource requires the SE Ranking API credential. Click the node, find the "SE Ranking API" credential slot, and create/select your Data API token.'
-                : 'This resource requires the SE Ranking Project API credential. Click the node, find the "SE Ranking Project API" credential slot, and create/select your Project API token.';
             throw new NodeOperationError(
                 this.getNode(),
-                missingCred,
+                'SE Ranking API credential not configured',
                 {
                     itemIndex,
-                    description: missingDesc,
+                    description: 'Click the node, find the "SE Ranking API" credential slot, and create/select your API token. As of 2026-05 a single unified token covers all endpoints.',
                 },
             );
         }
@@ -203,8 +179,8 @@ export async function apiRequest(
         } else {
             errorMessage = errorData?.message || errorData?.error || error.message || 'Request failed';
         }
-        
-        
+
+
         throw new NodeOperationError(
             this.getNode(),
             `SE Ranking API Error: ${errorMessage}`,

@@ -1,6 +1,10 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// AIRT prompt groups under unified docs: /project-management/airt/prompts/groups
+// site_id / group_id move from path to query string.
+// Path renames: /prompt-groups → /prompts/groups; /order, /keywords, /moveKeywords, /moveGroupKeywords are restructured.
+
 export async function AirtGroupsOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -11,7 +15,7 @@ export async function AirtGroupsOperations(
 	switch (operation) {
 		case 'listPromptGroups': {
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
-			const query: any = {};
+			const query: any = { site_id: siteId };
 
 			if (additionalFields.keysCount === true) {
 				query.keys_count = 1;
@@ -30,7 +34,7 @@ export async function AirtGroupsOperations(
 			return await apiRequest.call(
 				this,
 				'GET',
-				`/sites/${siteId}/airt/prompt-groups`,
+				'/project-management/airt/prompts/groups',
 				{},
 				query,
 				index,
@@ -47,9 +51,9 @@ export async function AirtGroupsOperations(
 			return await apiRequest.call(
 				this,
 				'POST',
-				`/sites/${siteId}/airt/prompt-groups`,
+				'/project-management/airt/prompts/groups',
 				{ name: name.trim() },
-				{},
+				{ site_id: siteId },
 				index,
 			);
 		}
@@ -65,7 +69,7 @@ export async function AirtGroupsOperations(
 			return await apiRequest.call(
 				this,
 				'PATCH',
-				`/sites/${siteId}/airt/prompt-groups/${groupId}`,
+				`/project-management/airt/prompts/groups?site_id=${siteId}&group_id=${groupId}`,
 				{ name: name.trim() },
 				{},
 				index,
@@ -78,9 +82,9 @@ export async function AirtGroupsOperations(
 			await apiRequest.call(
 				this,
 				'DELETE',
-				`/sites/${siteId}/airt/prompt-groups/${groupId}`,
+				'/project-management/airt/prompts/groups',
 				{},
-				{},
+				{ site_id: siteId, group_id: groupId },
 				index,
 			);
 			return { success: true, deleted: true, group_id: groupId };
@@ -106,9 +110,9 @@ export async function AirtGroupsOperations(
 			await apiRequest.call(
 				this,
 				'POST',
-				`/sites/${siteId}/airt/prompt-groups/${groupId}/order`,
+				'/project-management/airt/prompts/groups/order',
 				body,
-				{},
+				{ site_id: siteId, group_id: groupId },
 				index,
 			);
 			return { success: true, group_id: groupId, ...body };
@@ -120,9 +124,9 @@ export async function AirtGroupsOperations(
 			await apiRequest.call(
 				this,
 				'DELETE',
-				`/sites/${siteId}/airt/prompt-groups/${groupId}/keywords`,
+				'/project-management/airt/prompts/groups/prompts',
 				{},
-				{},
+				{ site_id: siteId, group_id: groupId },
 				index,
 			);
 			return { success: true, emptied: true, group_id: groupId };
@@ -143,9 +147,9 @@ export async function AirtGroupsOperations(
 			await apiRequest.call(
 				this,
 				'POST',
-				`/sites/${siteId}/airt/prompt-groups/${groupId}/moveKeywords`,
+				'/project-management/airt/prompts/groups/move',
 				{ k2site_llm_ids: ids },
-				{},
+				{ site_id: siteId, group_id: groupId },
 				index,
 			);
 			return { success: true, group_id: groupId, moved: ids };
@@ -162,9 +166,9 @@ export async function AirtGroupsOperations(
 			await apiRequest.call(
 				this,
 				'POST',
-				`/sites/${siteId}/airt/prompt-groups/moveGroupKeywords`,
+				'/project-management/airt/prompts/groups/transfer',
 				{ from_group_id: fromGroupId, to_group_id: toGroupId },
-				{},
+				{ site_id: siteId },
 				index,
 			);
 			return { success: true, from_group_id: fromGroupId, to_group_id: toGroupId };

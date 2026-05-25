@@ -89,9 +89,10 @@ Open `http://localhost:5678` and add the SE Ranking node to your workflow.
 ### Step 4: Configure Credentials
 
 1. Add SE Ranking node
-2. Click "Create New Credential" for **SE Ranking API** (Data API) — enter your Data API token
-3. (Optional) Click "Create New Credential" for **SE Ranking Project API** — enter your Project API token
-4. Save
+2. Click "Create New Credential" for **SE Ranking API** — enter your API token
+3. Save
+
+> **v2.0.0 note:** SE Ranking unified its two APIs (Data API + Project API) onto a single host (`api.seranking.com`) with a single token in 2026-05. The node now uses one credential type for everything. If you're upgrading from v1.x, see the Migration section below.
 
 ### Docker Installation
 
@@ -156,19 +157,25 @@ Then restart n8n
 
 To use this node, you need:
 
-1. **SE Ranking Account** - Sign up at [seranking.com](https://seranking.com/)
-2. **API Token** - Generate from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html)
+1. **SE Ranking Account** — Sign up at [seranking.com](https://seranking.com/)
+2. **API Token** — Generate from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html)
 
 ### Setting up credentials in n8n
 
 1. Open any workflow and add the **SE Ranking** node
-2. In the **SE Ranking API** credential slot, click "Create New Credential" and enter your **Data API token** — required for all Data API resources
-3. In the **SE Ranking Project API** credential slot, click "Create New Credential" and enter your **Project API token** — only needed for Project API resources
-4. Click **Save**
+2. In the **SE Ranking API** credential slot, click "Create New Credential" and enter your API token
+3. Click **Save** — the credential is tested by hitting `GET /v1/account/subscription`
 
-Each credential is tested independently when saved. The node automatically routes requests to the correct API and credential based on the resource you select.
+### Migrating from v1.x
 
-> **Note:** Data API and Project API use different tokens. Data API tokens are UUID format; Project API tokens are 40-character hex format. Get both from your [SE Ranking API Dashboard](https://online.seranking.com/admin.api.dashboard.html).
+v1.x used two separate credential types (`seRankingApi` for Data API and `seRankingProjectApi` for Project API) with two different base URLs and two different tokens. As of v2.0.0:
+
+- One credential type covers everything: **SE Ranking API**
+- One token works against all endpoints — get the unified token from the [API Dashboard](https://online.seranking.com/admin.api.dashboard.html)
+- Old base URL `api4.seranking.com` is deprecated; everything now lives under `api.seranking.com/v1`
+- Project API endpoints moved under `/v1/project-management/...` path prefix
+
+If you're upgrading and have saved credentials of type `seRankingProjectApi`, you'll need to re-save them as `seRankingApi` on each affected node. The v1.5.13 release is preserved on npm for rollback (`npm install @seranking/n8n-nodes-seranking@1.5.13`).
 
 ---
 

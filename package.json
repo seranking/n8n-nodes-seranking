@@ -1,7 +1,7 @@
 {
     "name": "@seranking/n8n-nodes-seranking",
-    "version": "1.5.13",
-    "description": "n8n connector for SE Ranking API - AI Search, Backlinks, Domain Analysis, Keyword Research, Website Audit, Project Management, Project Groups, AI Result Tracker, Keyword Groups, Competitors, URL Tags, Analytics Traffic, Account System, Sub-Account Management, General Data, Marketing Plan, Backlink Checker, Search Volume",
+    "version": "2.0.0",
+    "description": "n8n connector for SE Ranking API (unified host, single token). Resources: AI Search, Backlinks, Domain Analysis, Keyword Research, Website Audit, Project Management, Project Groups, AI Result Tracker, AIRT Groups, Keyword Groups, Competitors, URL Tags, Analytics Traffic, Account System, Sub-Account Management, General Data, Marketing Plan, Backlink Checker, Search Volume",
     "license": "MIT",
     "homepage": "https://github.com/seranking/n8n-nodes-seranking",
     "author": {
@@ -51,8 +51,7 @@
             "dist/nodes/SeRanking/SeRanking.node.js"
         ],
         "credentials": [
-            "dist/credentials/SeRankingApi.credentials.js",
-            "dist/credentials/SeRankingProjectApi.credentials.js"
+            "dist/credentials/SeRankingApi.credentials.js"
         ]
     },
     "scripts": {

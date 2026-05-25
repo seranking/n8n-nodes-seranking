@@ -1,6 +1,9 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// All paths use the unified host (api.seranking.com/v1) and the /project-management/ prefix.
+// IDs that were previously REST path params (siteId, siteEngineId, keywordIds) now travel as query params.
+
 export async function ProjectManagementOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -10,7 +13,7 @@ export async function ProjectManagementOperations(
 	switch (operation) {
 		// ─── Projects ───────────────────────────────────────────────────────
 		case 'listProjects': {
-			return await apiRequest.call(this, 'GET', '/sites', {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/sites', {}, {}, index);
 		}
 
 		case 'addProject': {
@@ -18,19 +21,20 @@ export async function ProjectManagementOperations(
 			const title = this.getNodeParameter('projectTitle', index) as string;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const body: any = { url, title };
+			const item: any = { url, title };
 
-			if (additionalFields.depth !== undefined) body.depth = additionalFields.depth;
-			if (additionalFields.subdomainMatch !== undefined) body.subdomain_match = additionalFields.subdomainMatch;
-			if (additionalFields.exactUrl !== undefined) body.exact_url = additionalFields.exactUrl;
-			if (additionalFields.checkFreq) body.check_freq = additionalFields.checkFreq;
-			if (additionalFields.checkDay) body.check_day = additionalFields.checkDay;
-			if (additionalFields.siteGroupId) body.site_group_id = additionalFields.siteGroupId;
-			if (additionalFields.autoReports !== undefined) body.auto_reports = additionalFields.autoReports;
-			if (additionalFields.disableAudit !== undefined) body.disable_audit = additionalFields.disableAudit;
-			if (additionalFields.isActive !== undefined) body.is_active = additionalFields.isActive;
+			if (additionalFields.depth !== undefined) item.depth = additionalFields.depth;
+			if (additionalFields.subdomainMatch !== undefined) item.subdomain_match = additionalFields.subdomainMatch;
+			if (additionalFields.exactUrl !== undefined) item.exact_url = additionalFields.exactUrl;
+			if (additionalFields.checkFreq) item.check_freq = additionalFields.checkFreq;
+			if (additionalFields.checkDay) item.check_day = additionalFields.checkDay;
+			if (additionalFields.siteGroupId) item.site_group_id = additionalFields.siteGroupId;
+			if (additionalFields.autoReports !== undefined) item.auto_reports = additionalFields.autoReports;
+			if (additionalFields.disableAudit !== undefined) item.disable_audit = additionalFields.disableAudit;
+			if (additionalFields.isActive !== undefined) item.is_active = additionalFields.isActive;
 
-			return await apiRequest.call(this, 'POST', '/sites', body, {}, index);
+			// New docs spec body as array-of-objects.
+			return await apiRequest.call(this, 'POST', '/project-management/sites', [item], {}, index);
 		}
 
 		case 'changeProject': {
@@ -48,20 +52,20 @@ export async function ProjectManagementOperations(
 			if (updateFields.siteGroupId) body.site_group_id = updateFields.siteGroupId;
 			if (updateFields.isActive !== undefined) body.is_active = updateFields.isActive;
 
-			await apiRequest.call(this, 'PUT', `/sites/${siteId}`, body, {}, index);
+			await apiRequest.call(this, 'PATCH', `/project-management/sites?site_id=${siteId}`, body, {}, index);
 			return { success: true, site_id: siteId };
 		}
 
 		case 'deleteProject': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
-			await apiRequest.call(this, 'DELETE', `/sites/${siteId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/sites', {}, { site_id: siteId }, index);
 			return { success: true, deleted: true, site_id: siteId };
 		}
 
 		// ─── Search Engines ─────────────────────────────────────────────────
 		case 'listSearchEngines': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/search-engines`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/sites/search-engines', {}, { site_id: siteId }, index);
 		}
 
 		case 'addSearchEngine': {
@@ -80,7 +84,7 @@ export async function ProjectManagementOperations(
 			if (additionalFields.paidResults !== undefined) body.paid_results = additionalFields.paidResults;
 			if (additionalFields.featuredSnippet !== undefined) body.featured_snippet = additionalFields.featuredSnippet;
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/search-engines`, body, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/sites/search-engines', body, { site_id: siteId }, index);
 		}
 
 		case 'changeSearchEngine': {
@@ -98,14 +102,14 @@ export async function ProjectManagementOperations(
 			if (updateFields.paidResults !== undefined) body.paid_results = updateFields.paidResults;
 			if (updateFields.featuredSnippet !== undefined) body.featured_snippet = updateFields.featuredSnippet;
 
-			await apiRequest.call(this, 'PUT', `/sites/${siteId}/search-engines/${siteEngineId}`, body, {}, index);
+			await apiRequest.call(this, 'PATCH', `/project-management/sites/search-engines?site_id=${siteId}&site_engine_id=${siteEngineId}`, body, {}, index);
 			return { success: true, site_id: siteId, site_engine_id: siteEngineId };
 		}
 
 		case 'deleteSearchEngine': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
 			const siteEngineId = this.getNodeParameter('siteEngineId', index) as number;
-			await apiRequest.call(this, 'DELETE', `/sites/${siteId}/search-engines/${siteEngineId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/sites/search-engines', {}, { site_id: siteId, site_engine_id: siteEngineId }, index);
 			return { success: true, deleted: true, site_id: siteId, site_engine_id: siteEngineId };
 		}
 
@@ -114,10 +118,10 @@ export async function ProjectManagementOperations(
 			const siteId = this.getNodeParameter('siteId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId };
 			if (additionalFields.siteEngineId) query.site_engine_id = additionalFields.siteEngineId;
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/keywords`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/keywords', {}, query, index);
 		}
 
 		case 'addKeywords': {
@@ -125,7 +129,7 @@ export async function ProjectManagementOperations(
 			const keywordsJson = this.getNodeParameter('keywordsJson', index) as string;
 			const keywords = typeof keywordsJson === 'string' ? JSON.parse(keywordsJson) : keywordsJson;
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/keywords`, keywords, {}, index);
+			return await apiRequest.call(this, 'POST', '/project-management/keywords', keywords, { site_id: siteId }, index);
 		}
 
 		case 'deleteKeywords': {
@@ -133,26 +137,27 @@ export async function ProjectManagementOperations(
 			const keywordIdsStr = this.getNodeParameter('keywordIds', index) as string;
 			const keywordIds = keywordIdsStr.split(',').map((id) => parseInt(id.trim(), 10));
 
-			const query: any = {};
+			const query: any = { site_id: siteId };
 			keywordIds.forEach((id, i) => {
 				query[`keywords_ids[${i}]`] = id;
 			});
 
-			await apiRequest.call(this, 'DELETE', `/sites/${siteId}/keywords`, {}, query, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/keywords', {}, query, index);
 			return { success: true, deleted: true, keyword_ids: keywordIds };
 		}
 
 		// ─── Statistics & Data ──────────────────────────────────────────────
 		case 'getStats': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/stat`, {}, {}, index);
+			// Renamed: was /sites/{id}/stat → now /sites/summary?site_id=
+			return await apiRequest.call(this, 'GET', '/project-management/sites/summary', {}, { site_id: siteId }, index);
 		}
 
 		case 'getPositions': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId };
 			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
 			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
 			if (additionalFields.siteEngineId) query.site_engine_id = additionalFields.siteEngineId;
@@ -160,14 +165,14 @@ export async function ProjectManagementOperations(
 			if (additionalFields.withLandingPages !== undefined) query.with_landing_pages = additionalFields.withLandingPages;
 			if (additionalFields.withSerpFeatures !== undefined) query.with_serp_features = additionalFields.withSerpFeatures;
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/positions`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/sites/positions', {}, query, index);
 		}
 
 		case 'getAds': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId };
 			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
 			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
 			if (additionalFields.siteEngineIds) {
@@ -181,17 +186,18 @@ export async function ProjectManagementOperations(
 				});
 			}
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/ads`, {}, query, index);
+			return await apiRequest.call(this, 'GET', '/project-management/sites/ads-stats', {}, query, index);
 		}
 
 		case 'getHistoricalDates': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = {};
+			const query: any = { site_id: siteId };
 			if (additionalFields.siteEngineId) query.site_engine_id = additionalFields.siteEngineId;
 
-			return await apiRequest.call(this, 'GET', `/sites/${siteId}/historicalDates`, {}, query, index);
+			// Renamed: was /sites/{id}/historicalDates → now /sites/positions/checkpoints?site_id=
+			return await apiRequest.call(this, 'GET', '/project-management/sites/positions/checkpoints', {}, query, index);
 		}
 
 		// ─── Manual Position & Recheck ──────────────────────────────────────
@@ -202,7 +208,8 @@ export async function ProjectManagementOperations(
 			const siteEngineId = this.getNodeParameter('manualSiteEngineId', index) as number;
 			const position = this.getNodeParameter('position', index) as number;
 
-			await apiRequest.call(this, 'PUT', `/sites/${siteId}/position`, {
+			// Renamed: was PUT /sites/{id}/position → now PATCH /sites/positions?site_id=
+			await apiRequest.call(this, 'PATCH', `/project-management/sites/positions?site_id=${siteId}`, {
 				keyword_id: keywordId,
 				date,
 				site_engine_id: siteEngineId,
@@ -223,7 +230,45 @@ export async function ProjectManagementOperations(
 				body.keywords = typeof keywordsJson === 'string' ? JSON.parse(keywordsJson) : keywordsJson;
 			}
 
-			return await apiRequest.call(this, 'POST', `/sites/${siteId}/recheck`, body, {}, index);
+			// Renamed: was /sites/{id}/recheck → now /sites/positions/recheck?site_id=
+			return await apiRequest.call(this, 'POST', '/project-management/sites/positions/recheck', body, { site_id: siteId }, index);
+		}
+
+		// ─── NEW in v2.0.0 (unified docs) ──────────────────────────────────
+		case 'listCheckDates': {
+			const siteId = this.getNodeParameter('siteId', index) as number;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = { site_id: siteId };
+			if (additionalFields.siteEngineId) query.site_engine_id = additionalFields.siteEngineId;
+			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
+			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
+
+			return await apiRequest.call(this, 'GET', '/project-management/sites/check-dates', {}, query, index);
+		}
+
+		case 'getRankingTrends': {
+			const siteId = this.getNodeParameter('siteId', index) as number;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = { site_id: siteId };
+			if (additionalFields.siteEngineId) query.site_engine_id = additionalFields.siteEngineId;
+			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
+			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
+			if (additionalFields.metricType) query.type = additionalFields.metricType;
+			if (additionalFields.groupId) query.group_id = additionalFields.groupId;
+			if (additionalFields.keywordsIds) {
+				additionalFields.keywordsIds.split(',').forEach((id: string, i: number) => {
+					query[`keywords_ids[${i}]`] = parseInt(id.trim(), 10);
+				});
+			}
+			if (additionalFields.tagsIds) {
+				additionalFields.tagsIds.split(',').forEach((id: string, i: number) => {
+					query[`tags_ids[${i}]`] = parseInt(id.trim(), 10);
+				});
+			}
+
+			return await apiRequest.call(this, 'GET', '/project-management/sites/positions/history', {}, query, index);
 		}
 
 		default:

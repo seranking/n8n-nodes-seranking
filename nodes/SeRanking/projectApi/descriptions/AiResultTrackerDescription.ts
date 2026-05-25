@@ -448,6 +448,17 @@ export const aiResultTrackerFields: INodeProperties[] = [
 				default: 0,
 				description: 'Offset from the beginning of the list',
 			},
+			{
+				displayName: 'Mode',
+				name: 'mode',
+				type: 'options',
+				options: [
+					{ name: 'Per Prompt (Default)', value: '' },
+					{ name: 'Aggregated by Group', value: 'groups' },
+				],
+				default: '',
+				description: 'Set to "groups" to get aggregated time-series per prompt group (mention_presence/link_presence as percentages) instead of per-prompt rankings',
+			},
 		],
 	},
 	// ─── GET PROMPT ANSWER fields ───────────────────────────────────────────

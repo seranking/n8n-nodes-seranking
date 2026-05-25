@@ -1,6 +1,9 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { apiRequest } from '../../utils/apiRequest';
 
+// Keyword Groups under unified docs: /project-management/keywords/groups
+// group_id / site_id move from path to query string.
+
 export async function KeywordGroupsOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -10,7 +13,7 @@ export async function KeywordGroupsOperations(
 	switch (operation) {
 		case 'listGroups': {
 			const siteId = this.getNodeParameter('siteId', index) as number;
-			return await apiRequest.call(this, 'GET', `/keyword-groups/${siteId}`, {}, {}, index);
+			return await apiRequest.call(this, 'GET', '/project-management/keywords/groups', {}, { site_id: siteId }, index);
 		}
 
 		case 'addGroup': {
@@ -21,7 +24,7 @@ export async function KeywordGroupsOperations(
 				throw new Error('Group name cannot be empty');
 			}
 
-			return await apiRequest.call(this, 'POST', '/keyword-groups', {
+			return await apiRequest.call(this, 'POST', '/project-management/keywords/groups', {
 				name: name.trim(),
 				site_id: siteId,
 			}, {}, index);
@@ -32,9 +35,9 @@ export async function KeywordGroupsOperations(
 			const keywordIdsStr = this.getNodeParameter('keywordIds', index) as string;
 			const keywordIds = keywordIdsStr.split(',').map((id) => parseInt(id.trim(), 10));
 
-			await apiRequest.call(this, 'POST', `/keyword-groups/${groupId}/keywords`, {
+			await apiRequest.call(this, 'POST', '/project-management/keywords/groups/move', {
 				keyword_ids: keywordIds,
-			}, {}, index);
+			}, { group_id: groupId }, index);
 			return { success: true, group_id: groupId, moved_keywords: keywordIds };
 		}
 
@@ -46,7 +49,7 @@ export async function KeywordGroupsOperations(
 				throw new Error('Group name cannot be empty');
 			}
 
-			await apiRequest.call(this, 'PUT', `/keyword-groups/${groupId}`, {
+			await apiRequest.call(this, 'PATCH', `/project-management/keywords/groups?group_id=${groupId}`, {
 				name: name.trim(),
 			}, {}, index);
 			return { success: true, group_id: groupId, name: name.trim() };
@@ -55,7 +58,7 @@ export async function KeywordGroupsOperations(
 		case 'deleteGroup': {
 			const groupId = this.getNodeParameter('groupId', index) as number;
 
-			await apiRequest.call(this, 'DELETE', `/keyword-groups/${groupId}`, {}, {}, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/keywords/groups', {}, { group_id: groupId }, index);
 			return { success: true, deleted: true, group_id: groupId };
 		}
 
