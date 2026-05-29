@@ -183,11 +183,11 @@ If you're upgrading and have saved credentials of type `seRankingProjectApi`, yo
 
 - **n8n version**: 1.0.0 or higher
 - **Node.js version**: 18.x or higher
-- **SE Ranking API**: v1 (Data API) + Project API (`api4.seranking.com`)
+- **SE Ranking API**: unified host `api.seranking.com/v1`
 
 ## Operations
 
-This node provides access to **20 SE Ranking resources** with **172 total operations** across two API types:
+This node provides access to **21 SE Ranking resources** with **190 total operations** on the unified API:
 
 ### Data API (6 resources, 65 operations)
 
@@ -703,33 +703,57 @@ return dominated;
 
 ## API Documentation
 
-This node implements the following SE Ranking APIs:
+This node implements the SE Ranking unified API (`api.seranking.com/v1`):
 
-**Data API** (`api.seranking.com/v1`):
-- [AI Search API](https://seranking.com/api/data/ai-search/)
-- [Backlinks API](https://seranking.com/api/data/backlinks/)
-- [Domain Analysis API](https://seranking.com/api/data/domain-analysis/)
-- [Keyword Research API](https://seranking.com/api/data/keyword-research/)
-- [Website Audit API](https://seranking.com/api/data/website-audit/)
-- [SERP API](https://seranking.com/api/data/serp/)
+**Data API resources:**
+- [AI Search](https://seranking.com/api/data/ai-search/)
+- [Backlinks](https://seranking.com/api/data/backlinks/)
+- [Domain Analysis](https://seranking.com/api/data/domain-analysis/)
+- [Keyword Research](https://seranking.com/api/data/keyword-research/)
+- [Website Audit](https://seranking.com/api/data/website-audit/)
 
-**Project API** (`api4.seranking.com`):
-- [Project API Documentation](https://seranking.com/api/project/)
+**Project API resources** (under `/v1/project-management/`):
+- [Project Management](https://seranking.com/api/project/project-management/)
+- [AI Result Tracker](https://seranking.com/api/project/ai-result-tracker/)
+- [Competitors](https://seranking.com/api/project/competitors/)
+- [Backlink Checker](https://seranking.com/api/project/backlink-checker/)
+- [Website Audit (Project)](https://seranking.com/api/project/audit/)
+- [And more...](https://seranking.com/api/project/)
 
-For detailed API specifications, visit [SE Ranking API Documentation](https://seranking.com/api.html).
+For detailed API specifications, visit [SE Ranking API Documentation](https://seranking.com/api/).
 
 ---
 
 ## Version History
 
-### v1.5.8 (Current)
+### v2.0.1 (Current)
 
-* ✅ **NEW: Get Prompt Answer (AI Result Tracker)** - Returns full AI answer text, cited source URLs, detected brand mentions, and (for Google AI Overview) top organic URLs for a tracked prompt on a given date. Cost: 0 credits.
-* 📝 **Note on SE Ranking docs quirk** - The endpoint's path param is documented as `keyword_id` but actually requires `k2site_llm_id` from `List Prompts`. The node field is labeled accordingly.
+* 🐛 **FIX: Keyword Groups → Move Keywords** — was returning 400; API expects body key `keywords_ids` (plural), not `keyword_ids`
+* 🐛 **FIX: Sub-Account → Share Projects** — `site_ids` must be a single integer per request; now loops one call per site so multiple IDs work
+* 🐛 **FIX: Backlink Checker → Move to Group** — added missing Target Group ID field to the UI
+
+### v2.0.0
+
+* **BREAKING: API Unification** — single credential, single host (`api.seranking.com`). Old `seRankingProjectApi` credential type removed. Re-save affected nodes with unified `SE Ranking API` credential.
+* ✅ **10 new operations** — List Check Dates, Get Ranking Trends, Audit Settings (get/update/reset), Audit Sitemaps (list/add/delete), Audit Source Pages (list/delete), AIRT Rankings group mode
+* 🐛 **FIX: Update Audit Title** — was returning 400 since April 2026, now works
+* 🐛 **FIX: Run Position Check** — /api/ prefix bug resolved by unification
+* ⚠️ **Deprecated: Search Volume + Volume Regions** — 6 ops return 404 on unified host (friendly error with guidance)
+* 📊 **Total: 190 operations across 21 resources**
+
+### v1.5.13
+
+* ✅ **NEW: AIRT Groups resource (8 operations)** — manage AI Result Tracker prompt groups
+* ✅ **NEW: Dynamic Issue Code dropdown** — Get Pages by Issue auto-populates from audit report
+* 🐛 **FIX: Run Position Check URL** — removed incorrect `/api/` prefix
+
+### v1.5.8
+
+* ✅ **NEW: Get Prompt Answer (AI Result Tracker)** - Returns full AI answer text, cited source URLs, detected brand mentions, and organic URLs for a tracked prompt.
 
 ### v1.3.6
 
-* 🔧 **FIX: Rate limiting compatibility** - Replaced setTimeout with n8n-workflow sleep function for n8n verified node compliance
+* 🔧 **FIX: Rate limiting compatibility** - Replaced setTimeout with n8n-workflow sleep function
 
 ### v1.3.5 
 
@@ -802,7 +826,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Features
 
-✅ **172 Operations** - Comprehensive coverage across 20 resources (Data API + Project API)
+✅ **190 Operations** - Comprehensive coverage across 21 resources (unified API)
 
 ✅ **Pingback Webhooks** - Event-driven notifications for SERP task completion
 
@@ -885,7 +909,7 @@ For more details, see [n8n's rate limiting documentation](https://docs.n8n.io/in
 **Solution**:
 
 1. Verify API token is correct (copy from SE Ranking dashboard)
-2. For Project API resources, ensure the SE Ranking Project API credential is configured
+2. Ensure your SE Ranking API credential has the correct unified token
 3. Check token hasn't expired
 4. Regenerate token in SE Ranking dashboard if needed
 5. Test credentials using the "Test" button in n8n

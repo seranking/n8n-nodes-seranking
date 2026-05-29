@@ -98,9 +98,15 @@ export async function SubAccountOperations(
 			const siteIdsStr = this.getNodeParameter('siteIds', index) as string;
 			const siteIds = siteIdsStr.split(',').map((s) => parseInt(s.trim(), 10));
 
-			// Per docs: body is { site_ids: [...] }. Note prior quirk where API rejected arrays and accepted
-			// a single integer — needs re-verification under unified API (see QUIRKS.md).
-			return await apiRequest.call(this, 'POST', '/project-management/users/shared-sites', { site_ids: siteIds }, { user_id: id }, index);
+			// API quirk: site_ids must be a SINGLE integer per request, NOT an array.
+			// Array form returns 400 "site_ids: This value should be of type integer".
+			// Verified 2026-05-28 on unified API. Loop one request per site to share multiple.
+			const shared: number[] = [];
+			for (const siteId of siteIds) {
+				await apiRequest.call(this, 'POST', `/project-management/users/shared-sites?user_id=${id}`, { site_ids: siteId }, {}, index);
+				shared.push(siteId);
+			}
+			return { success: true, user_id: id, shared_sites: shared };
 		}
 
 		default:

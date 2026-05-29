@@ -35,8 +35,10 @@ export async function KeywordGroupsOperations(
 			const keywordIdsStr = this.getNodeParameter('keywordIds', index) as string;
 			const keywordIds = keywordIdsStr.split(',').map((id) => parseInt(id.trim(), 10));
 
+			// API expects body key `keywords_ids` (plural), not `keyword_ids` as docs state.
+			// Verified 2026-05-28: `keyword_ids` returns 400 "No keywords ids in request".
 			await apiRequest.call(this, 'POST', '/project-management/keywords/groups/move', {
-				keyword_ids: keywordIds,
+				keywords_ids: keywordIds,
 			}, { group_id: groupId }, index);
 			return { success: true, group_id: groupId, moved_keywords: keywordIds };
 		}

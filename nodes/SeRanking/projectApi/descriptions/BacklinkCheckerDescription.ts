@@ -540,6 +540,20 @@ export const backlinkCheckerFields: INodeProperties[] = [
 
 	// ─── Move to Group fields ───────────────────────────────────────────────
 	{
+		displayName: 'Target Group ID',
+		name: 'targetGroupId',
+		type: 'number',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['backlinkChecker'],
+				operation: ['moveToGroup'],
+			},
+		},
+		default: 0,
+		description: 'Destination backlink group ID to move backlinks/groups into',
+	},
+	{
 		displayName: 'Backlink IDs',
 		name: 'backlinkIds',
 		type: 'string',
