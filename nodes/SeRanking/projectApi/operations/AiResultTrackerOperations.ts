@@ -157,10 +157,12 @@ export async function AiResultTrackerOperations(
 			const k2siteLlmId = this.getNodeParameter('k2siteLlmId', index) as number;
 			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
 
-			const query: any = { site_id: siteId, llm_id: llmId, k2site_llm_id: k2siteLlmId };
+			const query: any = { site_id: siteId, llm_id: llmId, prompt_llm_id: k2siteLlmId };
 			if (additionalFields.date) query.date = additionalFields.date;
 
-			// Three names for the same ID: pass as `k2site_llm_id`; response calls it `prompt_llm_id`.
+			// Param-name quirk (verified 2026-06-03): the value is the k2site_llm_id from List Prompts,
+			// but the /answer query KEY must be `prompt_llm_id`. Sending `k2site_llm_id` returns 400
+			// (the docs are wrong). Response echoes it as `prompt_llm_id` too.
 			return await apiRequest.call(this, 'GET', '/project-management/airt/prompts/answer', {}, query, index);
 		}
 

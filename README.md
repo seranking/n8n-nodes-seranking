@@ -1,6 +1,6 @@
 # n8n-nodes-seranking
 
-This is an n8n custom node that lets you use [SE Ranking](https://seranking.com/) in your n8n workflows.
+n8n community node for [SE Ranking](https://seranking.com/)'s unified API — 190 operations across 21 resources: AI Search, Backlinks, Domain Analysis, Keyword Research, SERP Classic, Website Audits, Project Management, Competitors, Backlink Checker, Sub-Accounts, and more.
 
 SE Ranking is a comprehensive SEO platform providing keyword research, competitor analysis, website audits, backlink monitoring, and AI search visibility tracking.
 
