@@ -1168,6 +1168,7 @@ n8n-nodes-seranking/
 │       │   │   ├── ProjectManagementOperations.ts                # Project Management operations
 │       │   │   ├── ProjectGroupsOperations.ts                    # Project Groups operations
 │       │   │   ├── AiResultTrackerOperations.ts                  # AI Result Tracker operations
+│       │   │   ├── AirtGroupsOperations.ts                       # AIRT Groups (prompt groups) operations
 │       │   │   ├── KeywordGroupsOperations.ts                    # Keyword Groups operations
 │       │   │   ├── CompetitorsOperations.ts                      # Competitors operations
 │       │   │   ├── UrlTagsOperations.ts                          # URL Tags operations
@@ -1183,6 +1184,7 @@ n8n-nodes-seranking/
 │       │       ├── ProjectManagementDescription.ts               # Project Management UI definitions
 │       │       ├── ProjectGroupsDescription.ts                   # Project Groups UI definitions
 │       │       ├── AiResultTrackerDescription.ts                 # AI Result Tracker UI definitions
+│       │       ├── AirtGroupsDescription.ts                      # AIRT Groups UI definitions
 │       │       ├── KeywordGroupsDescription.ts                   # Keyword Groups UI definitions
 │       │       ├── CompetitorsDescription.ts                     # Competitors UI definitions
 │       │       ├── UrlTagsDescription.ts                         # URL Tags UI definitions
