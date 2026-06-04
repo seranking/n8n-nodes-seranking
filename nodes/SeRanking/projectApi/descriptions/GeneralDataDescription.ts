@@ -25,6 +25,12 @@ export const generalDataOperations: INodeProperties[] = [
 				action: 'List languages for Google',
 			},
 			{
+				name: 'List Regions for Google',
+				value: 'listGoogleRegions',
+				description: 'Get a list of Google regions (region ID + name) for location targeting',
+				action: 'List regions for Google',
+			},
+			{
 				name: 'List Search Engines',
 				value: 'listSearchEngines',
 				description: 'Get a list of available search engines with regions',

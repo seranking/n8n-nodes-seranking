@@ -25,6 +25,10 @@ export async function GeneralDataOperations(
 			return await apiRequest.call(this, 'GET', '/project-management/system/google/languages', {}, {}, index);
 		}
 
+		case 'listGoogleRegions': {
+			return await apiRequest.call(this, 'GET', '/project-management/system/google/regions', {}, {}, index);
+		}
+
 		case 'listVolumeRegions': {
 			throw new Error(
 				'listVolumeRegions: The /system/volume-regions endpoint is not available under the unified API (HTTP 404 as of 2026-05-22). ' +

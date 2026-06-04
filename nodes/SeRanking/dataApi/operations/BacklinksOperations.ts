@@ -343,9 +343,25 @@ export async function BacklinksOperations(
 
 		case 'getDomainAuthorityDistribution': {
 			const target = this.getNodeParameter('target', index) as string;
-			
+
 			endpoint = '/backlinks/authority/domain/distribution';
 			params.target = target;
+			break;
+		}
+
+		case 'getDomainAuthorityHistory': {
+			const target = this.getNodeParameter('target', index) as string;
+			const dateFrom = this.getNodeParameter('dateFrom', index) as string;
+			const dateTo = this.getNodeParameter('dateTo', index) as string;
+
+			if (!validateDateFormat(dateFrom) || !validateDateFormat(dateTo)) {
+				throw new Error('Date must be in YYYY-MM-DD format');
+			}
+
+			endpoint = '/backlinks/authority/domain/history';
+			params.target = target;
+			params.date_from = dateFrom;
+			params.date_to = dateTo;
 			break;
 		}
 
