@@ -174,14 +174,39 @@ export async function WebsiteAuditOperations(
 
 		case 'listAuditSourcePages': {
 			const auditId = this.getNodeParameter('auditId', index) as number;
-			return await apiRequest.call(this, 'GET', '/project-management/audits/source_pages', {}, { audit_id: auditId }, index);
+			return await apiRequest.call(this, 'GET', '/project-management/audits/source-pages', {}, { audit_id: auditId }, index);
 		}
 
 		case 'deleteAuditSourcePages': {
 			const auditId = this.getNodeParameter('auditId', index) as number;
 			const listId = this.getNodeParameter('sourcePagesListId', index) as string;
-			await apiRequest.call(this, 'DELETE', '/project-management/audits/source_pages', {}, { audit_id: auditId, list_id: listId }, index);
+			await apiRequest.call(this, 'DELETE', '/project-management/audits/source-pages', {}, { audit_id: auditId, list_id: listId }, index);
 			return { success: true, deleted: true, list_id: listId };
+		}
+
+		case 'addAuditSourcePages': {
+			const auditId = this.getNodeParameter('auditId', index) as number;
+			const binaryPropertyName = this.getNodeParameter('binaryPropertyName', index) as string;
+			const binaryData = this.helpers.assertBinaryData(index, binaryPropertyName);
+			const buffer = await this.helpers.getBinaryDataBuffer(index, binaryPropertyName);
+
+			// multipart/form-data: form field `file` = UTF-8 .txt, one URL per line. Returns {added:N}.
+			// Inline query string for audit_id (matches the node's defensive mutation style).
+			return await apiRequest.call(
+				this,
+				'POST',
+				`/project-management/audits/source-pages?audit_id=${auditId}`,
+				{
+					_fileUpload: {
+						fieldName: 'file',
+						filename: binaryData.fileName || 'source-pages.txt',
+						contentType: 'text/plain',
+						data: buffer,
+					},
+				},
+				{},
+				index,
+			);
 		}
 
 		default:

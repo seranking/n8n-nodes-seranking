@@ -132,6 +132,12 @@ export const websiteAuditOperations: INodeProperties[] = [
 				description: 'Remove an uploaded custom page list',
 				action: 'Delete audit source pages',
 			},
+			{
+				name: 'Add Audit Source Pages',
+				value: 'addAuditSourcePages',
+				description: 'Upload a .txt list of URLs (one per line) as a custom page list',
+				action: 'Add audit source pages',
+			},
 		],
 		default: 'listAudits',
 	},
@@ -147,7 +153,7 @@ export const websiteAuditFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['websiteAuditProject'],
-				operation: ['getStatus', 'getReport', 'getPages', 'getPagesByIssue', 'getIssues', 'getLinks', 'getHistory', 'updateTitle', 'deleteAudit', 'recheckAudit', 'getAuditSettings', 'updateAuditSettings', 'resetAuditSettings', 'listAuditSitemaps', 'addAuditSitemap', 'deleteAuditSitemap', 'listAuditSourcePages', 'deleteAuditSourcePages'],
+				operation: ['getStatus', 'getReport', 'getPages', 'getPagesByIssue', 'getIssues', 'getLinks', 'getHistory', 'updateTitle', 'deleteAudit', 'recheckAudit', 'getAuditSettings', 'updateAuditSettings', 'resetAuditSettings', 'listAuditSitemaps', 'addAuditSitemap', 'deleteAuditSitemap', 'listAuditSourcePages', 'deleteAuditSourcePages', 'addAuditSourcePages'],
 			},
 		},
 		default: 0,
@@ -509,5 +515,21 @@ export const websiteAuditFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'ID of the uploaded page list to remove (from List Audit Source Pages)',
+	},
+
+	// ─── Add Audit Source Pages ─────────────────────────────────────────
+	{
+		displayName: 'Input Binary Field',
+		name: 'binaryPropertyName',
+		type: 'string',
+		required: true,
+		default: 'data',
+		displayOptions: {
+			show: {
+				resource: ['websiteAuditProject'],
+				operation: ['addAuditSourcePages'],
+			},
+		},
+		description: 'Name of the binary property holding the UTF-8 .txt file (one URL per line) to upload',
 	},
 ];

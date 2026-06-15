@@ -146,6 +146,35 @@ export async function ProjectManagementOperations(
 			return { success: true, deleted: true, keyword_ids: keywordIds };
 		}
 
+		case 'editKeyword': {
+			const siteId = this.getNodeParameter('siteId', index) as number;
+			const keywordId = this.getNodeParameter('editKeywordId', index) as number;
+			const updateFields = this.getNodeParameter('updateFields', index, {}) as any;
+
+			const body: any = {};
+			if (updateFields.keyword) body.keyword = updateFields.keyword;
+			if (updateFields.group_id) body.group_id = updateFields.group_id;
+			if (updateFields.target_url) body.target_url = updateFields.target_url;
+			if (updateFields.is_strict !== undefined) body.is_strict = updateFields.is_strict;
+			if (updateFields.comment !== undefined && updateFields.comment !== '') body.comment = updateFields.comment;
+			if (updateFields.site_engine_ids) {
+				body.site_engine_ids = String(updateFields.site_engine_ids)
+					.split(',')
+					.map((v: string) => parseInt(v.trim(), 10));
+			}
+
+			// PATCH uses an inline query string (defensive pattern shared by the node's other PATCH ops).
+			await apiRequest.call(
+				this,
+				'PATCH',
+				`/project-management/keywords?site_id=${siteId}&keyword_id=${keywordId}`,
+				body,
+				{},
+				index,
+			);
+			return { success: true, keyword_id: keywordId, updated: Object.keys(body) };
+		}
+
 		// ─── Statistics & Data ──────────────────────────────────────────────
 		case 'getStats': {
 			const siteId = this.getNodeParameter('siteId', index) as number;

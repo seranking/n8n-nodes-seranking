@@ -135,6 +135,12 @@ export const projectManagementOperations: INodeProperties[] = [
 				action: 'Delete search engine from project',
 			},
 			{
+				name: 'Edit Keyword',
+				value: 'editKeyword',
+				description: 'Update fields of an existing keyword in a project',
+				action: 'Edit keyword',
+			},
+			{
 				name: 'Get Ads Chart',
 				value: 'getAds',
 				description: 'Get advertisement statistics by date',
@@ -233,6 +239,7 @@ export const projectManagementFields: INodeProperties[] = [
 					'runRecheck',
 					'listCheckDates',
 					'getRankingTrends',
+					'editKeyword',
 				],
 			},
 		},
@@ -733,6 +740,85 @@ export const projectManagementFields: INodeProperties[] = [
 		default: '',
 		placeholder: '1,2,3',
 		description: 'Comma-separated keyword IDs to delete',
+	},
+
+	// ─── EDIT KEYWORD fields ────────────────────────────────────────────────
+	{
+		displayName: 'Keyword ID',
+		name: 'editKeywordId',
+		type: 'number',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['projectManagement'],
+				operation: ['editKeyword'],
+			},
+		},
+		default: 0,
+		description: 'Unique ID of the keyword to edit',
+	},
+	{
+		displayName: 'Update Fields',
+		name: 'updateFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['projectManagement'],
+				operation: ['editKeyword'],
+			},
+		},
+		description: 'Fields to update. Provide at least one (the API rejects an empty update, and a comment alone is not accepted — include Keyword or Group ID).',
+		options: [
+			{
+				displayName: 'Keyword',
+				name: 'keyword',
+				type: 'string',
+				default: '',
+				description: 'The keyword text',
+			},
+			{
+				displayName: 'Group ID',
+				name: 'group_id',
+				type: 'number',
+				default: 0,
+				description: 'Keyword group ID to move the keyword into',
+			},
+			{
+				displayName: 'Target URL',
+				name: 'target_url',
+				type: 'string',
+				default: '',
+				description: 'Target landing-page URL for the keyword',
+			},
+			{
+				displayName: 'Strict URL Match',
+				name: 'is_strict',
+				type: 'options',
+				options: [
+					{ name: 'No', value: 0 },
+					{ name: 'Yes', value: 1 },
+				],
+				default: 0,
+				description: 'Whether to require a strict match of the target URL',
+			},
+			{
+				displayName: 'Comment',
+				name: 'comment',
+				type: 'string',
+				default: '',
+				description: 'Free-text note for the keyword',
+			},
+			{
+				displayName: 'Search Engine IDs',
+				name: 'site_engine_ids',
+				type: 'string',
+				default: '',
+				placeholder: '1149319,1149320',
+				description: 'Comma-separated search engine (site_engine_id) values to assign',
+			},
+		],
 	},
 
 	// ─── SET MANUAL POSITION fields ─────────────────────────────────────────

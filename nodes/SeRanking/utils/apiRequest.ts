@@ -88,7 +88,26 @@ export async function apiRequest(
 
     // Add body data
     if (method !== 'GET' && body != null && (Array.isArray(body) || Object.keys(body).length > 0)) {
-        if (body.keywords && Array.isArray(body.keywords)) {
+        if (body._fileUpload) {
+            // Dependency-free multipart/form-data: build the request body as a Buffer ourselves.
+            // (n8n's verified-community-node rules disallow runtime deps such as `form-data`, so we
+            // assemble the multipart envelope by hand.) SE Ranking rejects a file part with no
+            // filename, so the part is always named. Byte format verified live → 201 {added:N}.
+            const f = body._fileUpload;
+            const boundary = `----serankingFormBoundary${Date.now().toString(16)}`;
+            const preamble = Buffer.from(
+                `--${boundary}\r\n` +
+                `Content-Disposition: form-data; name="${f.fieldName}"; filename="${f.filename}"\r\n` +
+                `Content-Type: ${f.contentType}\r\n\r\n`,
+            );
+            const epilogue = Buffer.from(`\r\n--${boundary}--\r\n`);
+            options.body = Buffer.concat([preamble, f.data, epilogue]);
+            options.headers = {
+                ...options.headers,
+                'Content-Type': `multipart/form-data; boundary=${boundary}`,
+            };
+            options.json = false;
+        } else if (body.keywords && Array.isArray(body.keywords)) {
             // Build proper multipart/form-data for n8n
             // n8n's httpRequest helper expects simple key-value pairs
             const formDataBody: Record<string, any> = {};

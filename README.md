@@ -1,6 +1,6 @@
 # n8n-nodes-seranking
 
-n8n community node for [SE Ranking](https://seranking.com/)'s unified API — 190 operations across 21 resources: AI Search, Backlinks, Domain Analysis, Keyword Research, SERP Classic, Website Audits, Project Management, Competitors, Backlink Checker, Sub-Accounts, and more.
+n8n community node for [SE Ranking](https://seranking.com/)'s unified API — 194 operations across 21 resources: AI Search, Backlinks, Domain Analysis, Keyword Research, SERP Classic, Website Audits, Project Management, Competitors, Backlink Checker, Sub-Accounts, and more.
 
 SE Ranking is a comprehensive SEO platform providing keyword research, competitor analysis, website audits, backlink monitoring, and AI search visibility tracking.
 
@@ -187,7 +187,7 @@ If you're upgrading and have saved credentials of type `seRankingProjectApi`, yo
 
 ## Operations
 
-This node provides access to **21 SE Ranking resources** with **190 total operations** on the unified API:
+This node provides access to **21 SE Ranking resources** with **194 total operations** on the unified API:
 
 ### Data API (6 resources, 65 operations)
 
@@ -279,7 +279,7 @@ This node provides access to **21 SE Ranking resources** with **190 total operat
 
 ### Project API (14 resources, 107 operations)
 
-### Project Management (17 operations)
+### Project Management (20 operations)
 
 - List Projects - Get all projects
 - Add Project - Create a new project
@@ -386,7 +386,7 @@ This node provides access to **21 SE Ranking resources** with **190 total operat
 - Set Task Status - Mark task as complete/incomplete
 - Delete Task - Remove a custom task
 
-### Website Audit (Project) (12 operations)
+### Website Audit (Project) (21 operations)
 
 - Create Audit - Launch a website audit
 - List Audits - Get all audits
@@ -739,7 +739,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 * 🐛 **FIX: Update Audit Title** — was returning 400 since April 2026, now works
 * 🐛 **FIX: Run Position Check** — /api/ prefix bug resolved by unification
 * ⚠️ **Deprecated: Search Volume + Volume Regions** — 6 ops return 404 on unified host (friendly error with guidance)
-* 📊 **Total: 190 operations across 21 resources**
+* 📊 **Total: 192 operations across 21 resources**
 
 ### v1.5.13
 
@@ -826,7 +826,7 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Features
 
-✅ **190 Operations** - Comprehensive coverage across 21 resources (unified API)
+✅ **192 Operations** - Comprehensive coverage across 21 resources (unified API)
 
 ✅ **Pingback Webhooks** - Event-driven notifications for SERP task completion
 
