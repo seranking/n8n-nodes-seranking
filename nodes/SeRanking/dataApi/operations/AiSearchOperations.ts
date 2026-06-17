@@ -153,7 +153,12 @@ export async function AiSearchOperations(
 			};
 			if (primaryBrand) body.primary.brand = primaryBrand.trim(); // NEW: only add brand if provided
 
-			return await apiRequest.call(this, 'POST', '/ai-search/overview/leaderboard', body, {}, index);
+			// Leaderboard is a heavy synchronous endpoint (7,500 credits, cross-engine
+			// computation). A cold/uncached heavy set can exceed SE Ranking's ~60s gateway
+			// cap, which returns a 504. Allow up to 180s client-side, and retry the 504 up
+			// to 2x — safe because incomplete requests don't bill and the server caches
+			// partial compute, so a retry completes far faster (504 -> ~27s -> sub-second).
+			return await apiRequest.call(this, 'POST', '/ai-search/overview/leaderboard', body, {}, index, 180000, 2);
 		}
 
 		default:

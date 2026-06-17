@@ -10,13 +10,25 @@ const CREDENTIAL_TYPE = 'seRankingApi';
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 300; // 300ms
 
+// A 504 / gateway-timeout is safe to retry for read-only ops: SE Ranking caps heavy
+// leaderboard compute at ~60s and 504s, but caches partial progress, so a retry
+// completes faster (504 -> ~27s -> sub-second). Incomplete requests don't bill credits.
+function isGatewayTimeout(err: any): boolean {
+    const code = err?.statusCode ?? err?.response?.status ?? err?.httpCode;
+    if (code === 504 || code === '504') return true;
+    const msg = String(err?.message || '').toLowerCase();
+    return msg.includes('gateway tim') || msg.includes('504');
+}
+
 export async function apiRequest(
     this: IExecuteFunctions,
     method: string,
     endpoint: string,
     body: any = {},
     query: any = {},
-    itemIndex = 0
+    itemIndex = 0,
+    timeoutMs = 60000,
+    retryOn504 = 0
 ): Promise<any> {
     // Rate limiting: enforce minimum delay between requests
     const now = Date.now();
@@ -32,7 +44,7 @@ export async function apiRequest(
 
     const options: IHttpRequestOptions = {
         method: httpMethod,
-        timeout: 60000,
+        timeout: timeoutMs,
         url: '',
     };
 
@@ -140,12 +152,29 @@ export async function apiRequest(
     }
 
     try {
-        const response = await this.helpers.httpRequestWithAuthentication.call(
-            this,
-            CREDENTIAL_TYPE,
-            options,
-        );
-        return response;
+        let lastError: any;
+        for (let attempt = 0; attempt <= retryOn504; attempt++) {
+            if (attempt > 0) {
+                // Bounded backoff before retrying a gateway timeout (2s, 4s, ...).
+                await sleep(2000 * attempt);
+            }
+            try {
+                return await this.helpers.httpRequestWithAuthentication.call(
+                    this,
+                    CREDENTIAL_TYPE,
+                    options,
+                );
+            } catch (err: any) {
+                lastError = err;
+                // Opt-in retry (retryOn504 > 0) only — never re-issues a mutating op.
+                // Safe because 504s don't bill and the server caches partial compute.
+                if (attempt < retryOn504 && isGatewayTimeout(err)) {
+                    continue;
+                }
+                throw err;
+            }
+        }
+        throw lastError;
     } catch (error: any) {
         // Missing credential check
         if (error.message?.includes('does not require credentials') || error.message?.includes('No credentials')) {
@@ -192,9 +221,14 @@ export async function apiRequest(
         } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
             errorMessage = 'Connection Failed';
             errorDescription = 'Cannot reach SE Ranking API. Check your internet connection';
-        } else if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+        } else if (
+            error.code === 'ETIMEDOUT' ||
+            error.code === 'ECONNABORTED' ||
+            error.message?.includes('timeout') ||
+            error.message?.includes('aborted')
+        ) {
             errorMessage = 'Request Timeout';
-            errorDescription = 'Request exceeded 60 seconds. Try with fewer items or use a faster operation';
+            errorDescription = `The request exceeded the node's ${Math.round(timeoutMs / 1000)}s timeout before SE Ranking responded (the API was reached, not offline). Heavy endpoints such as Get AI Search Leaderboard compute on demand and can take longer the first time a domain is queried; the result is cached afterward. Retry in a moment — a previously-computed domain returns almost instantly. You can also reduce the number of competitors/engines.`;
         } else {
             errorMessage = errorData?.message || errorData?.error || error.message || 'Request failed';
         }

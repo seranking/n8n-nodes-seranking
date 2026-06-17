@@ -1,6 +1,6 @@
 {
     "name": "@seranking/n8n-nodes-seranking",
-    "version": "2.0.5",
+    "version": "2.0.6",
     "description": "n8n community node for SE Ranking's unified API — 194 operations across 21 resources: AI Search, Backlinks, Domain Analysis, Keyword Research, SERP Classic, Website Audits, Project Management, Competitors, Backlink Checker, Sub-Accounts, and more",
     "license": "MIT",
     "homepage": "https://github.com/seranking/n8n-nodes-seranking",
