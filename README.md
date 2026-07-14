@@ -1,6 +1,6 @@
 # n8n-nodes-seranking
 
-n8n community node for [SE Ranking](https://seranking.com/)'s unified API — 194 operations across 21 resources: AI Search, Backlinks, Domain Analysis, Keyword Research, SERP Classic, Website Audits, Project Management, Competitors, Backlink Checker, Sub-Accounts, and more.
+n8n community node for [SE Ranking](https://seranking.com/)'s unified API — 225 operations across 22 resources: AI Search, SE Visible (AI visibility), Backlinks, Domain Analysis, Keyword Research, SERP Classic, Website Audits, Project Management, Competitors, Backlink Checker, Sub-Accounts, and more.
 
 SE Ranking is a comprehensive SEO platform providing keyword research, competitor analysis, website audits, backlink monitoring, and AI search visibility tracking.
 
@@ -187,7 +187,7 @@ If you're upgrading and have saved credentials of type `seRankingProjectApi`, yo
 
 ## Operations
 
-This node provides access to **21 SE Ranking resources** with **194 total operations** on the unified API:
+This node provides access to **22 SE Ranking resources** with **225 total operations** on the unified API:
 
 ### Data API (6 resources, 65 operations)
 
@@ -277,7 +277,7 @@ This node provides access to **21 SE Ranking resources** with **194 total operat
 
 ---
 
-### Project API (14 resources, 107 operations)
+### Project API (14 resources, 114 operations)
 
 ### Project Management (20 operations)
 
@@ -307,7 +307,7 @@ This node provides access to **21 SE Ranking resources** with **194 total operat
 - Delete Group - Remove a project group
 - Move Projects to Group - Move projects into a group
 
-### AI Result Tracker (14 operations)
+### AI Result Tracker (21 operations)
 
 - Get Site Brand - Get brand name for a site
 - Save Site Brand - Set brand name for a site
@@ -323,6 +323,13 @@ This node provides access to **21 SE Ranking resources** with **194 total operat
 - Delete Prompts - Remove prompts from LLM engine
 - Get Prompt Rankings - Prompt ranking data over time
 - Get Prompt Answer - Full AI answer text, cited sources, detected brands, and organic URLs (Google AI Overview) for a tracked prompt on a given date
+- Get Sources Summary - Aggregated source mention opportunities and competitor citation counts
+- List Source Domains - Source domains cited in AI answers, with coverage and mention metrics
+- List Source Pages - Individual source URLs cited in AI answers, with usage metrics
+- Get Sources Recommendations - Recommended source domains to target for AI visibility
+- Get Competitors Breakdown - Per-prompt, per-day brand and source breakdown for competitors
+- Get Competitors Check Dates - Dates on which a tracked prompt has competitor data
+- Get Competitors Source Metrics - SEO metrics for sources cited in a prompt answer on a specific date
 
 ### Keyword Groups (5 operations)
 
@@ -427,6 +434,49 @@ This node provides access to **21 SE Ranking resources** with **194 total operat
 - List Volume Checks - Get submitted check requests
 - Get Volume Check Results - Retrieve volume check results
 - Delete Volume Check - Remove a check request
+
+### SE Visible API (1 resource, 24 operations)
+
+### SE Visible (24 operations)
+
+SE Visible is SE Ranking's AI-visibility product (`/v1/se-visible/*`). It uses the same
+API token, but **SE Visible API access must be enabled for your account** — without it,
+every SE Visible request returns 401 even with a valid key. The API is limited to
+**1 request/second**; the node throttles automatically.
+
+**Projects**
+- List Projects - Get all SE Visible projects in the account
+- Create Project - Create a project (async — poll Get Project Details for processing status)
+- Get Project Details - Project metadata, processing status, topics, and check dates
+- Delete Project - Soft-delete a project (restorable)
+
+**Brands**
+- List Tracked Brands - Brands tracked in the project (primary brand first)
+- Create Competitor Brand - Add a competitor brand to track
+- List Mentioned Brands - Brands detected in AI answers (competitor discovery)
+- Get Aggregated Brand Metrics - Visibility metrics grouped by brand/topic/prompt (table data)
+- Update Brand - Change a brand's domain and/or aliases
+- Delete Brand - Remove a competitor brand (the primary brand cannot be deleted)
+- Add Aliases to Brand - Add alternative names to a tracked brand
+
+**Topics**
+- Create Topics - Add topics to a project
+- Update Topic Title - Rename a topic
+- Delete Topic - Delete a topic and all prompts grouped under it
+
+**Prompts & Results**
+- List Prompts - Prompts (or topics with aggregated metrics) with visibility data
+- Create Prompts - Add prompts to a topic
+- Delete Prompts - Bulk-delete prompts
+- Move Prompts - Move prompts to another topic (atomic)
+- Get Prompt Details - A single prompt's text, topic, and parse status
+- Get Prompt Results - Results for a prompt, one per model run
+- Get Prompt Result Details - One result's full text, source URLs, and mentioned brands
+- Download Raw Response - Raw LLM response dump (HTML) for a prompt result
+
+**Sources & Subscription**
+- Get Project Sources - Domains or URLs AI models cited across the project
+- Get Subscription - SE Visible plan and usage limits (projects, prompts, seats)
 
 ## Usage Examples
 
@@ -712,6 +762,9 @@ This node implements the SE Ranking unified API (`api.seranking.com/v1`):
 - [Keyword Research](https://seranking.com/api/data/keyword-research/)
 - [Website Audit](https://seranking.com/api/data/website-audit/)
 
+**SE Visible API** (under `/v1/se-visible/`):
+- [SE Visible API](https://seranking.com/api/) — AI-visibility projects, brands, topics, prompts, and cited sources
+
 **Project API resources** (under `/v1/project-management/`):
 - [Project Management](https://seranking.com/api/project/project-management/)
 - [AI Result Tracker](https://seranking.com/api/project/ai-result-tracker/)
@@ -726,7 +779,35 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Version History
 
-### v2.0.1 (Current)
+### v2.1.0 (Current)
+
+* ✅ **NEW: SE Visible resource (24 operations)** — full AI-visibility surface: projects, brands (incl. aggregated metrics), topics, prompts & per-model results, raw response dump, cited sources, subscription. Requires SE Visible API access on the account; 1 req/sec rate limit handled by the node.
+* ✅ **NEW: AI Result Tracker — Sources & Competitors (7 operations)** — Sources Summary / Source Domains / Source Pages / Recommendations + Competitors Breakdown / Check Dates / Source Metrics
+* 🔧 Domain inputs accept bare domains (scheme added automatically); country codes normalized to the API's expected case
+* 📊 **Total: 225 operations across 22 resources**
+
+### v2.0.6
+
+* 🐛 **FIX: AI Search → Get Leaderboard** — retries on gateway 504 (heavy/cold requests); accurate timeout message
+
+### v2.0.5
+
+* ✅ **NEW: Edit Keyword (Project Management) + Add Audit Source Pages (Website Audit Project)** — file upload without runtime dependencies
+* 🐛 **FIX: List/Delete Audit Source Pages** — correct `source-pages` endpoint path
+
+### v2.0.4
+
+* ✅ **NEW: List Google Regions (General Data) + Get Domain Authority History (Backlink Checker)**
+
+### v2.0.3
+
+* 🔧 Maintenance release — CI updates (Node 24 opt-in)
+
+### v2.0.2
+
+* 🐛 **FIX: AI Result Tracker → Get Prompt Answer** — correct `prompt_llm_id` query parameter
+
+### v2.0.1
 
 * 🐛 **FIX: Keyword Groups → Move Keywords** — was returning 400; API expects body key `keywords_ids` (plural), not `keyword_ids`
 * 🐛 **FIX: Sub-Account → Share Projects** — `site_ids` must be a single integer per request; now loops one call per site so multiple IDs work

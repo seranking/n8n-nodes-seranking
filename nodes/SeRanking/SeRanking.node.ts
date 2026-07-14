@@ -34,6 +34,9 @@ import { websiteAuditOperations as websiteAuditProjectOperations, websiteAuditFi
 import { backlinkCheckerOperations, backlinkCheckerFields } from './projectApi/descriptions/BacklinkCheckerDescription';
 import { searchVolumeOperations, searchVolumeFields } from './projectApi/descriptions/SearchVolumeDescription';
 
+// Import SE Visible descriptions
+import { seVisibleOperations, seVisibleFields } from './seVisibleApi/descriptions/SeVisibleDescription';
+
 
 // Import Data API operations
 import { AiSearchOperations } from './dataApi/operations/AiSearchOperations';
@@ -60,6 +63,9 @@ import { MarketingPlanOperations } from './projectApi/operations/MarketingPlanOp
 import { WebsiteAuditOperations as WebsiteAuditProjectOperations } from './projectApi/operations/WebsiteAuditOperations';
 import { BacklinkCheckerOperations } from './projectApi/operations/BacklinkCheckerOperations';
 import { SearchVolumeOperations } from './projectApi/operations/SearchVolumeOperations';
+
+// Import SE Visible operations
+import { SeVisibleOperations } from './seVisibleApi/operations/SeVisibleOperations';
 
 
 
@@ -168,6 +174,11 @@ export class SeRanking implements INodeType {
 						description: 'Manage projects and search engine configurations',
 					},
 					{
+						name: 'SE Visible',
+						value: 'seVisible',
+						description: 'AI visibility tracking — projects, brands, topics, prompts, and cited sources',
+					},
+					{
 						name: 'Search Volume',
 						value: 'searchVolume',
 						description: 'Keyword search volume check requests',
@@ -263,6 +274,9 @@ export class SeRanking implements INodeType {
 			// Search Volume
 			...searchVolumeOperations,
 			...searchVolumeFields,
+			// SE Visible
+			...seVisibleOperations,
+			...seVisibleFields,
             ],
 	};
 
@@ -299,6 +313,74 @@ export class SeRanking implements INodeType {
 				return Array.from(codes)
 					.sort()
 					.map((code) => ({ name: code, value: code }));
+			},
+
+			// ─── SE Visible dropdowns ────────────────────────────────────────
+			// ⚠️ These need SE Visible API access enabled for the account,
+			// otherwise the API returns 401 and the dropdowns stay empty.
+			async getSevProjects(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'seRankingApi',
+					{
+						method: 'GET',
+						url: 'https://api.seranking.com/v1/se-visible/projects',
+						json: true,
+					},
+				);
+
+				const projects = Array.isArray(response) ? response : (response?.results || response?.items || []);
+				return projects.map((p: any) => ({
+					name: p.domain || p.title || String(p.id),
+					value: p.id,
+				}));
+			},
+
+			async getSevBrands(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const projectId = this.getCurrentNodeParameter('sevProjectId') as string;
+				if (!projectId) {
+					return [];
+				}
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'seRankingApi',
+					{
+						method: 'GET',
+						url: `https://api.seranking.com/v1/se-visible/projects/${projectId}/brands`,
+						json: true,
+					},
+				);
+
+				const brands = Array.isArray(response) ? response : (response?.results || response?.items || []);
+				return brands.map((b: any) => ({
+					name: b.is_primary ? `${b.title} (primary)` : (b.title || String(b.id)),
+					value: b.id,
+				}));
+			},
+
+			async getSevTopics(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const projectId = this.getCurrentNodeParameter('sevProjectId') as string;
+				if (!projectId) {
+					return [];
+				}
+
+				// Topics come from Get Project Details (no dedicated list endpoint).
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'seRankingApi',
+					{
+						method: 'GET',
+						url: `https://api.seranking.com/v1/se-visible/projects/${projectId}`,
+						json: true,
+					},
+				);
+
+				const topics = response?.topics || response?.project?.topics || [];
+				return topics.map((t: any) => ({
+					name: t.title || String(t.id),
+					value: t.id,
+				}));
 			},
 		},
 	};
@@ -375,6 +457,9 @@ export class SeRanking implements INodeType {
 						break;
 					case 'searchVolume':
 						responseData = await SearchVolumeOperations.call(this, i);
+						break;
+					case 'seVisible':
+						responseData = await SeVisibleOperations.call(this, i);
 						break;
 
                     default:

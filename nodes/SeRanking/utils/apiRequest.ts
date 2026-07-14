@@ -30,11 +30,14 @@ export async function apiRequest(
     timeoutMs = 60000,
     retryOn504 = 0
 ): Promise<any> {
-    // Rate limiting: enforce minimum delay between requests
+    // Rate limiting: enforce minimum delay between requests.
+    // SE Visible (/se-visible/...) is capped at 1 request/second — stricter than
+    // the rest of the unified API — so its ops get a wider interval.
+    const minInterval = endpoint.startsWith('/se-visible') ? 1100 : MIN_REQUEST_INTERVAL;
     const now = Date.now();
     const timeSinceLastRequest = now - lastRequestTime;
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-        const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
+    if (timeSinceLastRequest < minInterval) {
+        const waitTime = minInterval - timeSinceLastRequest;
         await sleep(waitTime);
     }
     lastRequestTime = Date.now();
@@ -59,6 +62,12 @@ export async function apiRequest(
     } else {
         options.url = `${BASE_URL}${endpoint}`;
         options.json = true;
+    }
+
+    // Raw non-JSON response (e.g. SE Visible raw LLM dump returns text/html)
+    if (query._rawText) {
+        delete query._rawText;
+        options.json = false;
     }
 
     // Add query parameters

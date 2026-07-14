@@ -5,6 +5,15 @@ import { apiRequest } from '../../utils/apiRequest';
 // site_id / llm_id / k2site_llm_id move from path to query string.
 // Plural→singular rename: /airt/brands → /airt/brand.
 
+// Repeatable filters (site_llm_ids[], prompt_ids[], ...) go inline on the endpoint —
+// same pattern as group_ids[] in listPrompts (options.qs can't encode PHP-style arrays).
+function appendArrayParam(endpoint: string, key: string, csv: string): string {
+	const ids = csv.split(',').map((v) => v.trim()).filter((v) => v.length > 0);
+	if (ids.length === 0) return endpoint;
+	const sep = endpoint.includes('?') ? '&' : '?';
+	return endpoint + sep + ids.map((v) => `${key}[]=${encodeURIComponent(v)}`).join('&');
+}
+
 export async function AiResultTrackerOperations(
 	this: IExecuteFunctions,
 	index: number
@@ -164,6 +173,101 @@ export async function AiResultTrackerOperations(
 			// but the /answer query KEY must be `prompt_llm_id`. Sending `k2site_llm_id` returns 400
 			// (the docs are wrong). Response echoes it as `prompt_llm_id` too.
 			return await apiRequest.call(this, 'GET', '/project-management/airt/prompts/answer', {}, query, index);
+		}
+
+		// ─── Sources ────────────────────────────────────────────────────────
+		// All Sources endpoints aggregate across ALL project engines by default;
+		// narrow with site_llm_ids[]. Several counters come back as numeric strings.
+		case 'getSourcesSummary':
+		case 'getSourcesRecommendations': {
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = { site_id: siteId };
+			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
+			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
+
+			let endpoint =
+				operation === 'getSourcesSummary'
+					? '/project-management/airt/sources/summary'
+					: '/project-management/airt/sources/recommendations';
+			if (additionalFields.siteLlmIds) endpoint = appendArrayParam(endpoint, 'site_llm_ids', additionalFields.siteLlmIds);
+			if (additionalFields.promptIds) endpoint = appendArrayParam(endpoint, 'prompt_ids', additionalFields.promptIds);
+			if (additionalFields.groupIds) endpoint = appendArrayParam(endpoint, 'group_ids', additionalFields.groupIds);
+
+			return await apiRequest.call(this, 'GET', endpoint, {}, query, index);
+		}
+
+		case 'listSourceDomains':
+		case 'listSourcePages': {
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = { site_id: siteId };
+			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
+			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
+			if (additionalFields.isBrandMentioned) query.is_brand_mentioned = additionalFields.isBrandMentioned;
+			if (additionalFields.hasLink) query.has_link = additionalFields.hasLink;
+			if (additionalFields.search) query.search = additionalFields.search;
+			if (additionalFields.limit !== undefined) query.limit = additionalFields.limit;
+			if (additionalFields.offset !== undefined) query.offset = additionalFields.offset;
+			if (additionalFields.sort) query.sort = additionalFields.sort;
+			if (additionalFields.sortOrder) query.sort_order = additionalFields.sortOrder;
+			if (operation === 'listSourcePages' && additionalFields.domainId) query.domain_id = additionalFields.domainId;
+
+			let endpoint =
+				operation === 'listSourceDomains'
+					? '/project-management/airt/sources/domains'
+					: '/project-management/airt/sources/pages';
+			if (additionalFields.siteLlmIds) endpoint = appendArrayParam(endpoint, 'site_llm_ids', additionalFields.siteLlmIds);
+			if (additionalFields.promptIds) endpoint = appendArrayParam(endpoint, 'prompt_ids', additionalFields.promptIds);
+			if (additionalFields.groupIds) endpoint = appendArrayParam(endpoint, 'group_ids', additionalFields.groupIds);
+			if (additionalFields.competitorIds) endpoint = appendArrayParam(endpoint, 'competitor_ids', additionalFields.competitorIds);
+
+			return await apiRequest.call(this, 'GET', endpoint, {}, query, index);
+		}
+
+		// ─── Competitors ────────────────────────────────────────────────────
+		case 'getCompetitorsBreakdown': {
+			const llmId = this.getNodeParameter('llmId', index) as number;
+			const promptLlmIdsStr = this.getNodeParameter('promptLlmIds', index) as string;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			// Breakdown takes PLURAL prompt_llm_ids[] (1–50); Check Dates and Source
+			// Metrics take SINGULAR prompt_llm_id — do not mix them up.
+			const query: any = { site_id: siteId, llm_id: llmId };
+			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
+			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
+			if (additionalFields.includeCachedCopyUrl === false) query.include_cached_copy_url = 0;
+			if (additionalFields.compact) query.compact = 1;
+
+			const endpoint = appendArrayParam('/project-management/airt/competitors', 'prompt_llm_ids', promptLlmIdsStr);
+
+			return await apiRequest.call(this, 'GET', endpoint, {}, query, index);
+		}
+
+		case 'getCompetitorsCheckDates': {
+			const llmId = this.getNodeParameter('llmId', index) as number;
+			const promptLlmId = this.getNodeParameter('promptLlmId', index) as number;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = { site_id: siteId, llm_id: llmId, prompt_llm_id: promptLlmId };
+			if (additionalFields.dateFrom) query.date_from = additionalFields.dateFrom;
+			if (additionalFields.dateTo) query.date_to = additionalFields.dateTo;
+
+			// Response key is `dates` (array of YYYY-MM-DD strings), not `items`.
+			return await apiRequest.call(this, 'GET', '/project-management/airt/competitors/dates', {}, query, index);
+		}
+
+		case 'getCompetitorsSourceMetrics': {
+			const llmId = this.getNodeParameter('llmId', index) as number;
+			const promptLlmId = this.getNodeParameter('promptLlmId', index) as number;
+			const date = this.getNodeParameter('date', index) as string;
+			const additionalFields = this.getNodeParameter('additionalFields', index, {}) as any;
+
+			const query: any = { site_id: siteId, llm_id: llmId, prompt_llm_id: promptLlmId, date };
+			if (additionalFields.mode) query.mode = additionalFields.mode;
+
+			// 200 with empty items[] = no sources cited on that date (not an error).
+			return await apiRequest.call(this, 'GET', '/project-management/airt/competitors/source-metrics', {}, query, index);
 		}
 
 		default:
