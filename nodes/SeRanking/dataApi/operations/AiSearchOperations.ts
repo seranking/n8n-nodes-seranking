@@ -66,13 +66,8 @@ export async function AiSearchOperations(
 			if (additionalFields.sortOrder) params.sort_order = additionalFields.sortOrder;
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
-			// NEW: filter params
-			if (additionalFields.volumeFrom) params['filter[volume][from]'] = additionalFields.volumeFrom;
-			if (additionalFields.volumeTo) params['filter[volume][to]'] = additionalFields.volumeTo;
-			if (additionalFields.keywordCountFrom) params['filter[keyword_count][from]'] = additionalFields.keywordCountFrom;
-			if (additionalFields.keywordCountTo) params['filter[keyword_count][to]'] = additionalFields.keywordCountTo;
-			if (additionalFields.charactersCountFrom) params['filter[characters_count][from]'] = additionalFields.charactersCountFrom;
-			if (additionalFields.charactersCountTo) params['filter[characters_count][to]'] = additionalFields.charactersCountTo;
+			// filter[volume], filter[keyword_count] and filter[characters_count] are no longer
+			// supported (the API answers 400), so values saved by older node versions are not sent.
 			if (additionalFields.multiKeywordIncluded) {
 				params['filter[multi_keyword_included]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordIncluded));
 			}
@@ -101,13 +96,8 @@ export async function AiSearchOperations(
 			if (additionalFields.sortOrder) params.sort_order = additionalFields.sortOrder;
 			if (additionalFields.limit) params.limit = additionalFields.limit;
 			if (additionalFields.offset) params.offset = additionalFields.offset;
-			// NEW: filter params
-			if (additionalFields.volumeFrom) params['filter[volume][from]'] = additionalFields.volumeFrom;
-			if (additionalFields.volumeTo) params['filter[volume][to]'] = additionalFields.volumeTo;
-			if (additionalFields.keywordCountFrom) params['filter[keyword_count][from]'] = additionalFields.keywordCountFrom;
-			if (additionalFields.keywordCountTo) params['filter[keyword_count][to]'] = additionalFields.keywordCountTo;
-			if (additionalFields.charactersCountFrom) params['filter[characters_count][from]'] = additionalFields.charactersCountFrom;
-			if (additionalFields.charactersCountTo) params['filter[characters_count][to]'] = additionalFields.charactersCountTo;
+			// filter[volume], filter[keyword_count] and filter[characters_count] are no longer
+			// supported (the API answers 400), so values saved by older node versions are not sent.
 			if (additionalFields.multiKeywordIncluded) {
 				params['filter[multi_keyword_included]'] = JSON.stringify(buildMultiKeywordFilter(additionalFields.multiKeywordIncluded));
 			}

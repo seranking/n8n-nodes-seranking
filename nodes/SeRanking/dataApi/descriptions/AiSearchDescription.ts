@@ -207,51 +207,8 @@ export const aiSearchFields: INodeProperties[] = [
 				description: 'Number of results to skip for pagination',
 				typeOptions: { minValue: 0 },
 			},
-			// NEW: range and text filters
-			{
-				displayName: 'Volume From',
-				name: 'volumeFrom',
-				type: 'number',
-				default: 0,
-				description: 'Minimum monthly search volume for prompts',
-			},
-			{
-				displayName: 'Volume To',
-				name: 'volumeTo',
-				type: 'number',
-				default: 0,
-				description: 'Maximum monthly search volume (0 = no limit)',
-			},
-			{
-				displayName: 'Keyword Word Count From',
-				name: 'keywordCountFrom',
-				type: 'number',
-				default: 0,
-				description: 'Minimum number of words in a prompt',
-				typeOptions: { minValue: 1 },
-			},
-			{
-				displayName: 'Keyword Word Count To',
-				name: 'keywordCountTo',
-				type: 'number',
-				default: 0,
-				description: 'Maximum number of words in a prompt (0 = no limit)',
-			},
-			{
-				displayName: 'Characters Count From',
-				name: 'charactersCountFrom',
-				type: 'number',
-				default: 0,
-				description: 'Minimum character length of a prompt',
-				typeOptions: { minValue: 1 },
-			},
-			{
-				displayName: 'Characters Count To',
-				name: 'charactersCountTo',
-				type: 'number',
-				default: 0,
-				description: 'Maximum character length of a prompt (0 = no limit)',
-			},
+			// Text filters. The volume, keyword word count and characters count range filters
+			// were removed: the API no longer supports them on the prompts endpoints.
 			{
 				displayName: 'Include Keywords Containing',
 				name: 'multiKeywordIncluded',

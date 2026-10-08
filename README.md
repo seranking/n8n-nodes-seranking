@@ -779,6 +779,10 @@ For detailed API specifications, visit [SE Ranking API Documentation](https://se
 
 ## Version History
 
+### Unreleased
+
+* ⚠️ **REMOVED: AI Search → Get Prompts by Target / by Brand — Volume, Keyword Word Count and Characters Count filters.** The API no longer supports `filter[volume]`, `filter[keyword_count]` and `filter[characters_count]` on these endpoints (it answers `400 unsupported filter`). Values saved in existing workflows are ignored, so those workflows keep running but return unfiltered results. The Include/Exclude Keywords Containing filters are unchanged.
+
 ### v2.1.0 (Current)
 
 * ✅ **NEW: SE Visible resource (24 operations)** — full AI-visibility surface: projects, brands (incl. aggregated metrics), topics, prompts & per-model results, raw response dump, cited sources, subscription. Requires SE Visible API access on the account; 1 req/sec rate limit handled by the node.
